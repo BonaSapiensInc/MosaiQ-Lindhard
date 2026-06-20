@@ -49,9 +49,9 @@ target_include_directories(sophus PUBLIC
 
 target_compile_features(sophus PUBLIC cxx_std_20)
 
-# --- future src modules (Phase 1–4) ---
-# add_subdirectory(src)   # main executable + engine/*.cpp
-# target_link_libraries(sophus_lindhard PRIVATE sophus::sophus)
+add_executable(sophus_simulator src/main.cpp)
+
+target_link_libraries(sophus_simulator PRIVATE sophus::sophus)
 
 # --- future unit tests (CTest) ---
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")

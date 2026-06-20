@@ -99,6 +99,10 @@ template<ScalarPhysical T>
     const T k_max_square =
         (two_d_square_plus_eta_square - eta_square) / (T{4} * pi * pi);
 
+    if (!(k_max_square > T{0})) {
+        return 0;
+    }
+
     return static_cast<long>(std::sqrt(k_max_square));
 }
 

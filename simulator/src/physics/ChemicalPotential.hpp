@@ -6,6 +6,7 @@
 #include "physics/Constants.hpp"
 
 #include <cmath>
+#include <limits>
 #include <optional>
 
 namespace sophus {
@@ -41,12 +42,19 @@ find_chemical_potential(ChemicalPotentialInputs<T> inputs,
     const T prefactor = density_prefactor(inputs.tau, inputs.fermi_wavevector);
     const T target = inputs.density.raw() / prefactor;
 
+    // Legacy: γ = 1 ⇒ η = 1/τ; classical (large τ, small target) needs η ≪ 0.
     T eta_seed = T{1} / tau;
-    for (std::size_t expand = 0;
-         expand < 64 &&
-         fermi_dirac_integral(FermiDiracOrder::Half, FermiDiracEta<T>{eta_seed}) < target;
-         ++expand) {
-        eta_seed *= T{2};
+    const T F_at_seed =
+        fermi_dirac_integral(FermiDiracOrder::Half, FermiDiracEta<T>{eta_seed});
+    if (F_at_seed > target) {
+        eta_seed = std::log(std::max(target, std::numeric_limits<T>::min()));
+    } else {
+        for (std::size_t expand = 0;
+             expand < 64 &&
+             fermi_dirac_integral(FermiDiracOrder::Half, FermiDiracEta<T>{eta_seed}) < target;
+             ++expand) {
+            eta_seed *= T{2};
+        }
     }
 
     const auto eval = [&](T eta) -> NewtonEval<T> {
