@@ -37,6 +37,8 @@ endif()
 add_library(sophus STATIC
     src/core/SincQuadrature.cpp
     src/core/FermiDirac.cpp
+    src/engine/Lindhard.cpp
+    src/engine/RPA.cpp
 )
 add_library(sophus::sophus ALIAS sophus)
 
