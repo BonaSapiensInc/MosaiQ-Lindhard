@@ -1,0 +1,100 @@
+#include "core/Concepts.hpp"
+#include "core/SincQuadrature.hpp"
+
+#include <cassert>
+#include <cmath>
+#include <iostream>
+
+namespace {
+
+void assert_finite(const char* label, double value)
+{
+    assert(!std::isnan(value));
+    assert(!std::isinf(value));
+    assert(std::isfinite(value));
+    std::cout << label << " = " << value << '\n';
+}
+
+void test_sample_pipeline()
+{
+    sophus::SincQuadrature<> quad;
+    const auto samples = quad.all_samples();
+
+    assert(samples.size() == sophus::constants::default_gv_sinc_nodes * 2 + 1);
+
+    for (const auto& sample : samples) {
+        assert(std::isfinite(sample.kh));
+        assert(std::isfinite(sample.x));
+        assert(std::isfinite(sample.weight));
+        assert(sample.weight > 0.0);
+        assert(sample.x >= 0.0);
+    }
+}
+
+void test_gv_real_lindhard_finite_domain()
+{
+    sophus::GvLindhardSincArgs<> args{
+        sophus::WaveVector<>{1.0},
+        sophus::Frequency<>{0.5},
+        sophus::ReducedTemperature<>{0.05},
+        sophus::ReducedChemicalPotential<>{1.0},
+    };
+
+    sophus::SincQuadrature<> quad;
+    const double result = quad.evaluate_gv_real_lindhard(args);
+
+    assert_finite("GV Re chi^L (rational units, q=1, w=0.5, tau=0.05, gamma=1)", result);
+
+    // Physical guardrail: rational-unit real part should remain O(1), not explode.
+    assert(std::abs(result) < 10.0);
+    assert(result < 0.0);  // legacy prefactor divides by -q with positive q
+}
+
+void test_gv_real_lindhard_low_temperature()
+{
+    sophus::GvLindhardSincArgs<> args{
+        sophus::WaveVector<>{0.8},
+        sophus::Frequency<>{0.2},
+        sophus::ReducedTemperature<>{0.01},
+        sophus::ReducedChemicalPotential<>{1.0},
+    };
+
+    sophus::SincQuadrature<> quad;
+    const double result = quad.evaluate_gv_real_lindhard(args);
+
+    assert_finite("GV Re chi^L (low tau)", result);
+    assert(std::abs(result) < 10.0);
+}
+
+void test_integrate_matches_evaluate()
+{
+    sophus::GvLindhardSincArgs<> args{
+        sophus::WaveVector<>{1.2},
+        sophus::Frequency<>{0.7},
+        sophus::ReducedTemperature<>{0.08},
+        sophus::ReducedChemicalPotential<>{0.9},
+    };
+
+    sophus::SincQuadrature<> quad;
+    const double h = quad.params().step();
+    const double integrated =
+        quad.integrate(sophus::make_gv_lindhard_integrand<double>(), args) * h / (-args.q.raw());
+    const double evaluated = quad.evaluate_gv_real_lindhard(args);
+
+    assert_finite("integrate pipeline", integrated);
+    assert_finite("evaluate_gv_real_lindhard", evaluated);
+    assert(std::abs(integrated - evaluated) < 1.0e-12);
+}
+
+}  // namespace
+
+int main()
+{
+    test_sample_pipeline();
+    test_gv_real_lindhard_finite_domain();
+    test_gv_real_lindhard_low_temperature();
+    test_integrate_matches_evaluate();
+
+    std::cout << "All SincQuadrature tests passed.\n";
+    return 0;
+}

@@ -1,0 +1,46 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE (local only)
+.cursor/
+*.swp
+*~
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.xdv
+manuscript/two-fermiNotes.bib
+
+# Generated PDF (rebuild from manuscript/two-fermi.tex)
+*.pdf
+
+# CMake / C++ build
+simulator/build/
+build/
+cmake-build-*/
+*.o
+*.obj
+*.a
+*.lib
+*.dylib
+*.so
+*.dll
+*.exe
+compile_commands.json
+
+# Test / debug scratch
+Testing/
