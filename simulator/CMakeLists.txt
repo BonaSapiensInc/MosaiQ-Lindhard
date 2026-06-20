@@ -36,6 +36,7 @@ endif()
 # --- sophus library (headers + Phase 1 core implementation) ---
 add_library(sophus STATIC
     src/core/SincQuadrature.cpp
+    src/core/FermiDirac.cpp
 )
 add_library(sophus::sophus ALIAS sophus)
 
