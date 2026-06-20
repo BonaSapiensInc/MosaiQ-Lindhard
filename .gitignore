@@ -42,5 +42,4 @@ cmake-build-*/
 *.exe
 compile_commands.json
 
-# Test / debug scratch
 Testing/
