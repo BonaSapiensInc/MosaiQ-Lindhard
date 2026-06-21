@@ -1836,6 +1836,18 @@ The resulting dispersion table $\omega_p(\bar{q})$ and on-pole damping
 $\Im \varepsilon(\bar{q}, \bar{\omega}_p)$ are written without hidden mutable state;
 failed brackets are reported explicitly when no root is found on the grid.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.72\textwidth]{../output/plasmon_dispersion.pdf}
+\caption{Extracted electron plasmon dispersion trajectory (top) and corresponding Landau damping (bottom)
+for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
+The dispersion (solid line) diverges from the classical Bohm--Gross limit (dashed line) due to quantum screening,
+and terminates abruptly as it merges with the single-particle continuum
+where Landau damping $\Im[\varepsilon]$ grows exponentially.
+Roots were deterministically extracted via Brent's method on the causality-constrained $\Re[\varepsilon]$ manifold.}
+\label{fig:plasmon-dispersion}
+\end{figure}
+
 \subsection{Macroscopic sum-rule validation}
 \label{sec:sum-rule-validation}
 
