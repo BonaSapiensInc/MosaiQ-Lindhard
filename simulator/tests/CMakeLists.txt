@@ -45,3 +45,15 @@ target_link_libraries(test_sum_rules PRIVATE sophus::sophus)
 target_compile_options(test_sum_rules PRIVATE -UNDEBUG)
 
 add_test(NAME SumRulesTest COMMAND test_sum_rules)
+
+add_executable(test_t0_limit test_t0_limit.cpp)
+
+target_link_libraries(test_t0_limit PRIVATE sophus::sophus)
+
+target_compile_options(test_t0_limit PRIVATE -UNDEBUG)
+
+add_test(
+    NAME T0LimitTest
+    COMMAND test_t0_limit
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+)
