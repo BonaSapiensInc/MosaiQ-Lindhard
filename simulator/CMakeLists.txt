@@ -39,6 +39,7 @@ add_library(sophus STATIC
     src/core/FermiDirac.cpp
     src/engine/Lindhard.cpp
     src/engine/RPA.cpp
+    src/engine/PlasmonPoleExtractor.cpp
 )
 add_library(sophus::sophus ALIAS sophus)
 

@@ -5,12 +5,13 @@
 #include "physics/Constants.hpp"
 
 #include <cmath>
+#include <complex>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <limits>
-#include <string>
 
 namespace {
 
@@ -20,14 +21,17 @@ using namespace sophus;
 inline constexpr double ion_mass_ratio = 1836.15267343;
 
 inline constexpr double q_min = 0.1;
-inline constexpr double q_max = 3.0;
-inline constexpr double q_step = 0.5;
+inline constexpr double q_max = 4.0;
+inline constexpr double q_step = 0.05;
 
 inline constexpr double omega_min = 0.01;
-inline constexpr double omega_max = 2.0;
-inline constexpr double omega_step = 0.25;
+inline constexpr double omega_max = 3.0;
+inline constexpr double omega_step = 0.02;
 
 inline constexpr double coulomb_softening = 0.01;
+
+inline constexpr const char* output_directory = "output";
+inline constexpr const char* structure_factor_filename = "output_structure_factor.dat";
 
 void print_usage(const char* program)
 {
@@ -57,9 +61,9 @@ void print_usage(const char* program)
     const double q_sq = q_rational * q_rational + coulomb_softening * coulomb_softening;
     const double v_coulomb = constants::four_pi / q_sq;
     return BarePotentials<>{
-        v_coulomb,   // v_ee  (|e|²)
-        v_coulomb,   // v_ii  (|Z_i|²)
-        -v_coulomb,  // v_ei  (e · Z_i < 0 for opposite charges)
+        v_coulomb,
+        v_coulomb,
+        -v_coulomb,
     };
 }
 
@@ -82,17 +86,21 @@ void print_usage(const char* program)
     return 1.0 - std::exp(exponent);
 }
 
-/// Fluctuation–dissipation theorem: S_ee ∝ −Im χ_ee^RPA / (1 − exp(−ω̄/τ)).
-[[nodiscard]] double dynamic_structure_factor_ee(
-    const std::complex<double>& chi_ee_rpa,
-    double omega_bar_e,
-    double tau_e) noexcept
+/// Fluctuation–dissipation theorem: S_st ∝ −Im χ_st^RPA / (1 − exp(−ω̄/τ)).
+[[nodiscard]] double dynamic_structure_factor(
+    const std::complex<double>& chi_rpa,
+    double omega_bar,
+    double tau) noexcept
 {
-    const double denominator = bose_einstein_factor(omega_bar_e, tau_e);
+    const double denominator = bose_einstein_factor(omega_bar, tau);
     if (!std::isfinite(denominator) || std::abs(denominator) < 1.0e-300) {
         return std::numeric_limits<double>::quiet_NaN();
     }
-    return -chi_ee_rpa.imag() / denominator;
+    const double imag = chi_rpa.imag();
+    if (!std::isfinite(imag)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return -imag / denominator;
 }
 
 struct ComponentState {
@@ -124,6 +132,11 @@ struct ComponentState {
     }
     out.gamma = *gamma;
     return true;
+}
+
+[[nodiscard]] std::size_t grid_node_count(double min_val, double max_val, double step) noexcept
+{
+    return static_cast<std::size_t>(std::floor((max_val - min_val) / step)) + 1;
 }
 
 }  // namespace
@@ -162,29 +175,39 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::ofstream output("output_structure_factor.dat");
+    const std::filesystem::path output_dir{output_directory};
+    std::error_code ec;
+    std::filesystem::create_directories(output_dir, ec);
+    if (ec) {
+        std::cerr << "Error: cannot create output directory '" << output_dir << "': "
+                  << ec.message() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    const std::filesystem::path output_path = output_dir / structure_factor_filename;
+    std::ofstream output(output_path);
     if (!output) {
-        std::cerr << "Error: cannot open output_structure_factor.dat for writing.\n";
+        std::cerr << "Error: cannot open " << output_path << " for writing.\n";
         return EXIT_FAILURE;
     }
 
     output << std::scientific << std::setprecision(12);
-    output << "# SOPHUS-Lindhard CLI — RPA electron–ion structure factor\n";
+    output << "# SOPHUS-Lindhard CLI — multi-component RPA structure factors\n";
     output << "# r_s = " << rs << "  T_K = " << T_kelvin << '\n';
     output << "# m_e = 1  m_i/m_e = " << ion_mass_ratio << '\n';
     output << "# k_F = " << electron.k_f << " a_0^-1  n = " << number_density_from_rs(rs)
            << " a_0^-3\n";
     output << "# gamma_e = " << electron.gamma.raw() << "  tau_e = " << electron.tau.raw()
            << "  gamma_i = " << ion.gamma.raw() << "  tau_i = " << ion.tau.raw() << '\n';
-    output << "# columns: q  omega  Re(chi_ee^RPA)  Im(chi_ee^RPA)  S_ee\n";
+    output << "# omega column: electron reduced units [E_F/e/hbar]\n";
+    output << "# S_ei uses tau_e (electron thermal reference)\n";
+    output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
 
-    std::size_t rows_written = 0;
-    const std::size_t total_q =
-        static_cast<std::size_t>(std::floor((q_max - q_min) / q_step)) + 1;
-    const std::size_t total_omega =
-        static_cast<std::size_t>(std::floor((omega_max - omega_min) / omega_step)) + 1;
+    const std::size_t total_q = grid_node_count(q_min, q_max, q_step);
+    const std::size_t total_omega = grid_node_count(omega_min, omega_max, omega_step);
     std::cerr << "Scanning " << total_q << " x " << total_omega << " (q, omega) grid...\n";
 
+    std::size_t rows_written = 0;
     for (double q = q_min; q <= q_max + 0.5 * q_step; q += q_step) {
         const BarePotentials<> potentials = coulomb_potentials_rational(q);
 
@@ -206,13 +229,21 @@ int main(int argc, char* argv[])
 
             const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
 
-            const double S_ee = dynamic_structure_factor_ee(rpa.chi_ee, omega_e, electron.tau.raw());
-            if (!std::isfinite(S_ee)) {
+            const double S_ee =
+                dynamic_structure_factor(rpa.chi_ee, omega_e, electron.tau.raw());
+            const double S_ii =
+                dynamic_structure_factor(rpa.chi_ii, omega_i, ion.tau.raw());
+            const double S_ei =
+                dynamic_structure_factor(rpa.chi_ei, omega_e, electron.tau.raw());
+
+            if (!std::isfinite(S_ee) || !std::isfinite(S_ii) || !std::isfinite(S_ei)) {
                 continue;
             }
 
-            output << q << ' ' << omega_e << ' ' << rpa.chi_ee.real() << ' ' << rpa.chi_ee.imag()
-                   << ' ' << S_ee << '\n';
+            output << q << ' ' << omega_e << ' '
+                   << rpa.chi_ee.imag() << ' ' << S_ee << ' '
+                   << rpa.chi_ii.imag() << ' ' << S_ii << ' '
+                   << rpa.chi_ei.imag() << ' ' << S_ei << '\n';
             ++rows_written;
         }
     }
@@ -222,7 +253,7 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::cout << "Wrote " << rows_written << " rows to output_structure_factor.dat\n";
+    std::cout << "Wrote " << rows_written << " rows to " << output_path << '\n';
     std::cout << "  r_s = " << rs << ", T = " << T_kelvin << " K\n";
     std::cout << "  tau_e = " << electron.tau.raw() << ", tau_i = " << ion.tau.raw() << '\n';
     return EXIT_SUCCESS;

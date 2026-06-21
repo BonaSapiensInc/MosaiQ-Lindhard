@@ -42,4 +42,6 @@ cmake-build-*/
 *.exe
 compile_commands.json
 
-Testing/
+# Simulator CLI output (regenerate via sophus_simulator)
+output/*.dat
+output/*.png

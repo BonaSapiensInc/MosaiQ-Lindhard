@@ -29,3 +29,11 @@ target_link_libraries(test_rpa PRIVATE sophus::sophus)
 target_compile_options(test_rpa PRIVATE -UNDEBUG)
 
 add_test(NAME RPATest COMMAND test_rpa)
+
+add_executable(test_plasmon_pole_extractor test_plasmon_pole_extractor.cpp)
+
+target_link_libraries(test_plasmon_pole_extractor PRIVATE sophus::sophus)
+
+target_compile_options(test_plasmon_pole_extractor PRIVATE -UNDEBUG)
+
+add_test(NAME PlasmonPoleExtractorTest COMMAND test_plasmon_pole_extractor)
