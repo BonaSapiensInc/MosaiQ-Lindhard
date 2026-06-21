@@ -1,7 +1,7 @@
 # SOPHUS-Lindhard: C++20 Deterministic Physics Sandbox
 
 **Status:** Architecture Blueprint  
-**Theory Reference:** `manuscript/two-fermi.tex` — *Classical linear response representation of two-fermion plasmas*  
+**Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Purpose:** Bare-metal validation of the finite-temperature Lindhard function and RPA structure factor using the Kramers–Krönig / sinc-quadrature pathway formalized in Section IV, bypassing the analytically defective Matsubara pole-summation routes documented in Appendices F and G.
 
 ---
