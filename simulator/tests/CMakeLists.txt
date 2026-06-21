@@ -37,3 +37,11 @@ target_link_libraries(test_plasmon_pole_extractor PRIVATE sophus::sophus)
 target_compile_options(test_plasmon_pole_extractor PRIVATE -UNDEBUG)
 
 add_test(NAME PlasmonPoleExtractorTest COMMAND test_plasmon_pole_extractor)
+
+add_executable(test_sum_rules test_sum_rules.cpp)
+
+target_link_libraries(test_sum_rules PRIVATE sophus::sophus)
+
+target_compile_options(test_sum_rules PRIVATE -UNDEBUG)
+
+add_test(NAME SumRulesTest COMMAND test_sum_rules)

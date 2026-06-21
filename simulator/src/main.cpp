@@ -1,5 +1,6 @@
 #include "core/Concepts.hpp"
 #include "engine/Lindhard.hpp"
+#include "engine/PlasmonPoleExtractor.hpp"
 #include "engine/RPA.hpp"
 #include "physics/ChemicalPotential.hpp"
 #include "physics/Constants.hpp"
@@ -32,6 +33,7 @@ inline constexpr double coulomb_softening = 0.01;
 
 inline constexpr const char* output_directory = "output";
 inline constexpr const char* structure_factor_filename = "output_structure_factor.dat";
+inline constexpr const char* dispersion_filename = "output_plasmon_dispersion.dat";
 
 void print_usage(const char* program)
 {
@@ -139,6 +141,75 @@ struct ComponentState {
     return static_cast<std::size_t>(std::floor((max_val - min_val) / step)) + 1;
 }
 
+[[nodiscard]] PlasmonPoleInputs<> make_plasmon_inputs(double rs,
+                                                      double q,
+                                                      const ComponentState& electron,
+                                                      const ComponentState& ion) noexcept
+{
+    return PlasmonPoleInputs<>{
+        .q = WaveVector<>{q},
+        .electron = PlasmonSpeciesParams<>{
+            .tau = electron.tau,
+            .gamma = electron.gamma,
+            .fermi_energy = electron.E_F,
+            .mass = electron.mass,
+        },
+        .ion = PlasmonSpeciesParams<>{
+            .tau = ion.tau,
+            .gamma = ion.gamma,
+            .fermi_energy = ion.E_F,
+            .mass = ion.mass,
+        },
+        .potentials = coulomb_potentials_rational(q),
+        .wigner_seitz_radius = rs,
+    };
+}
+
+void write_run_header(std::ostream& out,
+                      double rs,
+                      double T_kelvin,
+                      const ComponentState& electron,
+                      const ComponentState& ion)
+{
+    out << std::scientific << std::setprecision(12);
+    out << "# r_s = " << rs << "  T_K = " << T_kelvin << '\n';
+    out << "# m_e = 1  m_i/m_e = " << ion_mass_ratio << '\n';
+    out << "# k_F = " << electron.k_f << " a_0^-1  n = " << number_density_from_rs(rs)
+        << " a_0^-3\n";
+    out << "# gamma_e = " << electron.gamma.raw() << "  tau_e = " << electron.tau.raw()
+        << "  gamma_i = " << ion.gamma.raw() << "  tau_i = " << ion.tau.raw() << '\n';
+}
+
+[[nodiscard]] std::size_t sweep_plasmon_dispersion(std::ostream& dispersion_out,
+                                                   double rs,
+                                                   const ComponentState& electron,
+                                                   const ComponentState& ion)
+{
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    std::size_t roots_found = 0;
+
+    for (double q = q_min; q <= q_max + 0.5 * q_step; q += q_step) {
+        const PlasmonPoleInputs<> inputs = make_plasmon_inputs(rs, q, electron, ion);
+        const double bohm_gross = PlasmonPoleExtractor::bohm_gross_frequency(
+            WaveVector<>{q},
+            electron.tau,
+            rs);
+
+        const auto state = PlasmonPoleExtractor::extract(inputs);
+        if (state.has_value()) {
+            dispersion_out << q << ' '
+                           << state->omega_raw() << ' '
+                           << state->landau_damping << ' '
+                           << bohm_gross << '\n';
+            ++roots_found;
+        } else {
+            dispersion_out << q << ' ' << nan << ' ' << nan << ' ' << bohm_gross << '\n';
+        }
+    }
+
+    return roots_found;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[])
@@ -184,27 +255,44 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    const std::filesystem::path output_path = output_dir / structure_factor_filename;
-    std::ofstream output(output_path);
-    if (!output) {
-        std::cerr << "Error: cannot open " << output_path << " for writing.\n";
+    const std::filesystem::path structure_factor_path = output_dir / structure_factor_filename;
+    const std::filesystem::path dispersion_path = output_dir / dispersion_filename;
+
+    std::ofstream structure_factor_output(structure_factor_path);
+    if (!structure_factor_output) {
+        std::cerr << "Error: cannot open " << structure_factor_path << " for writing.\n";
         return EXIT_FAILURE;
     }
 
-    output << std::scientific << std::setprecision(12);
-    output << "# SOPHUS-Lindhard CLI — multi-component RPA structure factors\n";
-    output << "# r_s = " << rs << "  T_K = " << T_kelvin << '\n';
-    output << "# m_e = 1  m_i/m_e = " << ion_mass_ratio << '\n';
-    output << "# k_F = " << electron.k_f << " a_0^-1  n = " << number_density_from_rs(rs)
-           << " a_0^-3\n";
-    output << "# gamma_e = " << electron.gamma.raw() << "  tau_e = " << electron.tau.raw()
-           << "  gamma_i = " << ion.gamma.raw() << "  tau_i = " << ion.tau.raw() << '\n';
-    output << "# omega column: electron reduced units [E_F/e/hbar]\n";
-    output << "# S_ei uses tau_e (electron thermal reference)\n";
-    output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
+    std::ofstream dispersion_output(dispersion_path);
+    if (!dispersion_output) {
+        std::cerr << "Error: cannot open " << dispersion_path << " for writing.\n";
+        return EXIT_FAILURE;
+    }
+
+    structure_factor_output << "# SOPHUS-Lindhard CLI — multi-component RPA structure factors\n";
+    write_run_header(structure_factor_output, rs, T_kelvin, electron, ion);
+    structure_factor_output << "# omega column: electron reduced units [E_F/e/hbar]\n";
+    structure_factor_output << "# S_ei uses tau_e (electron thermal reference)\n";
+    structure_factor_output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
+
+    dispersion_output << "# SOPHUS-Lindhard CLI — plasmon dispersion Re[epsilon]=0 trajectory\n";
+    write_run_header(dispersion_output, rs, T_kelvin, electron, ion);
+    dispersion_output << "# omega_p column: electron reduced units [E_F/e/hbar]\n";
+    dispersion_output << "# landau_damping = Im[epsilon(q, omega_p)] at the extracted pole\n";
+    dispersion_output << "# bohm_gross_estimate: long-wavelength Bohm-Gross anchor (same units)\n";
+    dispersion_output << "# missing roots (continuum / no bracket) are written as NaN NaN\n";
+    dispersion_output
+        << "# columns: q omega_p_electron_units landau_damping bohm_gross_estimate\n";
 
     const std::size_t total_q = grid_node_count(q_min, q_max, q_step);
     const std::size_t total_omega = grid_node_count(omega_min, omega_max, omega_step);
+
+    std::cerr << "Tracing plasmon dispersion over " << total_q << " q points...\n";
+    const std::size_t dispersion_roots =
+        sweep_plasmon_dispersion(dispersion_output, rs, electron, ion);
+    std::cerr << "  Plasmon roots found: " << dispersion_roots << " / " << total_q << '\n';
+
     std::cerr << "Scanning " << total_q << " x " << total_omega << " (q, omega) grid...\n";
 
     std::size_t rows_written = 0;
@@ -240,20 +328,26 @@ int main(int argc, char* argv[])
                 continue;
             }
 
-            output << q << ' ' << omega_e << ' '
-                   << rpa.chi_ee.imag() << ' ' << S_ee << ' '
-                   << rpa.chi_ii.imag() << ' ' << S_ii << ' '
-                   << rpa.chi_ei.imag() << ' ' << S_ei << '\n';
+            structure_factor_output << q << ' ' << omega_e << ' '
+                                    << rpa.chi_ee.imag() << ' ' << S_ee << ' '
+                                    << rpa.chi_ii.imag() << ' ' << S_ii << ' '
+                                    << rpa.chi_ei.imag() << ' ' << S_ei << '\n';
             ++rows_written;
         }
     }
 
     if (rows_written == 0) {
-        std::cerr << "Error: no finite grid points were written.\n";
+        std::cerr << "Error: no finite structure-factor grid points were written.\n";
         return EXIT_FAILURE;
     }
 
-    std::cout << "Wrote " << rows_written << " rows to " << output_path << '\n';
+    if (dispersion_roots == 0) {
+        std::cerr << "Warning: no plasmon roots were extracted on the q grid.\n";
+    }
+
+    std::cout << "Wrote " << rows_written << " rows to " << structure_factor_path << '\n';
+    std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
+              << dispersion_roots << " roots)\n";
     std::cout << "  r_s = " << rs << ", T = " << T_kelvin << " K\n";
     std::cout << "  tau_e = " << electron.tau.raw() << ", tau_i = " << ion.tau.raw() << '\n';
     return EXIT_SUCCESS;
