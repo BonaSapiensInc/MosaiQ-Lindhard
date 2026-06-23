@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render S_ee, S_ii, S_ei(q, omega) from SOPHUS multi-component RPA output."""
+"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures separately."""
 
 from __future__ import annotations
 
@@ -52,6 +52,14 @@ def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarr
     return q_grid, w_grid, value_grid
 
 
+def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ma.MaskedArray, LogNorm | None]:
+    plot_grid = np.ma.masked_invalid(np.abs(grid))
+    norm = choose_log_norm(plot_grid.filled(np.nan))
+    if norm is not None:
+        plot_grid = np.ma.masked_less_equal(plot_grid, 0.0)
+    return plot_grid, norm
+
+
 def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
     finite = grid[np.isfinite(grid)]
     if finite.size == 0:
@@ -86,38 +94,24 @@ def log_contour_levels(norm: LogNorm, n_filled: int, n_lines: int) -> tuple[np.n
     return filled, lines
 
 
-def render_component(
+def render_contour(
     q_grid: np.ndarray,
     w_grid: np.ndarray,
-    grid: np.ndarray,
+    plot_grid: np.ma.MaskedArray,
+    color_norm: LogNorm | Normalize,
     label: str,
     title: str,
     output_path: Path,
 ) -> None:
-    plot_grid = np.ma.masked_invalid(np.abs(grid))
-    norm = choose_log_norm(plot_grid.filled(np.nan))
-    if norm is not None:
-        plot_grid = np.ma.masked_less_equal(plot_grid, 0.0)
-
     cmap = cm.rainbow
-    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
     scalar_map.set_array([])
 
-    fig = plt.figure(figsize=(12, 10), layout="constrained")
-
-    ax1 = fig.add_subplot(211)
+    fig, ax = plt.subplots(figsize=(10, 7), layout="constrained")
     if isinstance(color_norm, LogNorm):
         fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
-        ax1.contourf(
-            q_grid,
-            w_grid,
-            plot_grid,
-            levels=fill_levels,
-            cmap=cmap,
-            norm=color_norm,
-        )
-        ax1.contour(
+        ax.contourf(q_grid, w_grid, plot_grid, levels=fill_levels, cmap=cmap, norm=color_norm)
+        ax.contour(
             q_grid,
             w_grid,
             plot_grid,
@@ -128,15 +122,8 @@ def render_component(
             alpha=0.75,
         )
     else:
-        ax1.contourf(
-            q_grid,
-            w_grid,
-            plot_grid,
-            levels=150,
-            cmap=cmap,
-            norm=color_norm,
-        )
-        ax1.contour(
+        ax.contourf(q_grid, w_grid, plot_grid, levels=150, cmap=cmap, norm=color_norm)
+        ax.contour(
             q_grid,
             w_grid,
             plot_grid,
@@ -146,14 +133,36 @@ def render_component(
             linewidths=0.45,
             alpha=0.75,
         )
-    frame_contour_axis(ax1)
-    ax1.set_xlabel(r"Wave vector $q \ [k_F]$")
-    ax1.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
-    ax1.set_title(f"{title} — Contour Map", fontweight="bold")
 
-    ax2 = fig.add_subplot(212, projection="3d")
+    frame_contour_axis(ax)
+    ax.set_xlabel(r"Wave vector $q \ [k_F]$")
+    ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
+    ax.set_title(f"{title} — Contour Map", fontweight="bold")
+    fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved {output_path}")
+
+
+def render_surface(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    plot_grid: np.ma.MaskedArray,
+    color_norm: LogNorm | Normalize,
+    label: str,
+    title: str,
+    output_path: Path,
+) -> None:
+    cmap = cm.rainbow
+    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
+    scalar_map.set_array([])
+
+    fig = plt.figure(figsize=(10, 8), layout="constrained")
+    ax = fig.add_subplot(111, projection="3d")
     z_surface = plot_grid.astype(float)
-    ax2.plot_surface(
+    ax.plot_surface(
         q_grid,
         w_grid,
         z_surface,
@@ -165,18 +174,47 @@ def render_component(
         antialiased=True,
         alpha=1.0,
     )
-    ax2.set_xlabel(r"$q \ [k_F]$", labelpad=10)
-    ax2.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
-    ax2.set_zlabel(label, labelpad=10)
-    ax2.set_title(f"{title} — 3D Surface", fontweight="bold")
-    ax2.view_init(elev=35, azim=-120)
-
-    fig.colorbar(scalar_map, ax=[ax1, ax2], fraction=0.025, pad=0.04, label=label)
+    ax.set_xlabel(r"$q \ [k_F]$", labelpad=10)
+    ax.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
+    ax.set_zlabel(label, labelpad=10)
+    ax.set_title(f"{title} — 3D Surface", fontweight="bold")
+    ax.view_init(elev=35, azim=-120)
+    fig.colorbar(scalar_map, ax=ax, fraction=0.04, pad=0.08, label=label)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved {output_path}")
+
+
+def render_channel(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
+    stem: str,
+    label: str,
+    title: str,
+) -> None:
+    plot_grid, norm = prepare_plot_grid(grid)
+    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+    render_contour(
+        q_grid,
+        w_grid,
+        plot_grid,
+        color_norm,
+        label,
+        title,
+        OUTPUT_DIR / f"{stem}_contour.png",
+    )
+    render_surface(
+        q_grid,
+        w_grid,
+        plot_grid,
+        color_norm,
+        label,
+        title,
+        OUTPUT_DIR / f"{stem}_3d.png",
+    )
 
 
 def main() -> None:
@@ -193,13 +231,13 @@ def main() -> None:
 
     for stem, col, title in PLOT_SPECS:
         q_grid, w_grid, value_grid = load_gridded(data, col)
-        render_component(
+        render_channel(
             q_grid,
             w_grid,
             value_grid,
+            stem,
             label=title.split("—")[0].strip(),
             title=title,
-            output_path=OUTPUT_DIR / f"{stem}_plot.png",
         )
 
 
