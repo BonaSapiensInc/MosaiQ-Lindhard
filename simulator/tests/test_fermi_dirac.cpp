@@ -9,7 +9,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 void test_fermi_dirac_half_at_zero_eta()
 {

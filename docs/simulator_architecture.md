@@ -1,4 +1,4 @@
-# SOPHUS-Lindhard: C++20 Deterministic Physics Sandbox
+# MosaiQ-Lindhard: C++20 Deterministic Physics Sandbox
 
 **Status:** Architecture Blueprint  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
@@ -8,7 +8,7 @@
 
 ## 1. Mission Statement
 
-The SOPHUS-Lindhard engine is an **absolute zero-point physics sandbox**: a C++20 system that evaluates thermodynamic and linear-response quantities with deterministic, auditable numerics. It exists to prove that the manuscript's central claim — that Hilbert-transform evaluation via sinc-quadrature is the only rigorous route when contour integration and infinite Matsubara sums fail — survives contact with silicon, not just LaTeX.
+The MosaiQ-Lindhard engine is an **absolute zero-point physics sandbox**: a C++20 system that evaluates thermodynamic and linear-response quantities with deterministic, auditable numerics. It exists to prove that the manuscript's central claim — that Hilbert-transform evaluation via sinc-quadrature is the only rigorous route when contour integration and infinite Matsubara sums fail — survives contact with silicon, not just LaTeX.
 
 Design priorities, in order:
 
@@ -93,7 +93,7 @@ evaluate_lindhard(WaveVector<T> q, Frequency<T> omega, Temperature<T> tau);
 Fundamental constants and closed-form limits are **burned into the translation unit** at compile time:
 
 ```cpp
-namespace sophus::constants {
+namespace mosaiq::constants {
     inline constexpr double hartree_to_ev = /* … */;
     inline constexpr double pi            = 3.141592653589793238462643383279502884;
     // Atomic Hartree energy, ℏ, m_e, … — single source of truth
@@ -226,7 +226,7 @@ All arrows denote **pure function calls**; no module holds process-global mutabl
 
 **Deliverables**
 
-- `sophus_simulator` CLI: `(q, ω)` grid sweep over two-component RPA
+- `mosaiq_simulator` CLI: `(q, ω)` grid sweep over two-component RPA
 - Multi-channel output: `S_ee`, `S_ii`, `S_ei` with fluctuation–dissipation consistency
 - Deterministic output manifest under `output/`
 

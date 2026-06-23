@@ -8,7 +8,7 @@
 #include <numeric>
 #include <ranges>
 
-namespace sophus {
+namespace mosaiq {
 
 namespace {
 
@@ -146,4 +146,4 @@ template LindhardResult<double> evaluate_lindhard<double>(WaveVector<double>,
                                                           ReducedTemperature<double>,
                                                           ReducedChemicalPotential<double>);
 
-}  // namespace sophus
+}  // namespace mosaiq

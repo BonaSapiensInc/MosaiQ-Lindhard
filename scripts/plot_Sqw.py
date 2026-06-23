@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures separately."""
+"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures from MosaiQ-Lindhard CLI output."""
 
 from __future__ import annotations
 

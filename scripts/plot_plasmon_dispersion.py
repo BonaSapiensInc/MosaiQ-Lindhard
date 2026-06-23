@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publication-quality plasmon dispersion and Landau damping figure (PRE style)."""
+"""Publication-quality plasmon dispersion and Landau damping figure from MosaiQ-Lindhard output (PRE style)."""
 
 from __future__ import annotations
 

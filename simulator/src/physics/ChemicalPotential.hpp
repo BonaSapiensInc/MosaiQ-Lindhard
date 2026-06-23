@@ -9,7 +9,7 @@
 #include <limits>
 #include <optional>
 
-namespace sophus {
+namespace mosaiq {
 
 struct DensityTag {};
 
@@ -73,4 +73,4 @@ find_chemical_potential(ChemicalPotentialInputs<T> inputs,
     return ReducedChemicalPotential<T>{(*eta_root) * tau};
 }
 
-}  // namespace sophus
+}  // namespace mosaiq

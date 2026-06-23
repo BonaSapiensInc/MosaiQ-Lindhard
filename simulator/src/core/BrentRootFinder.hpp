@@ -8,7 +8,7 @@
 #include <limits>
 #include <optional>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Bracketed scalar objective f(x) used by Brent's method (no derivatives).
 template<typename F>
@@ -114,4 +114,4 @@ template<ScalarPhysical T, BracketedRootFunction F>
     return std::nullopt;
 }
 
-}  // namespace sophus
+}  // namespace mosaiq

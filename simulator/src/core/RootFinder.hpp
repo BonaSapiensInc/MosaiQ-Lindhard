@@ -8,7 +8,7 @@
 #include <functional>
 #include <optional>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Value f(x) and derivative f'(x) returned together for Newton steps.
 template<ScalarPhysical T>
@@ -53,4 +53,4 @@ template<ScalarPhysical T, typename Eval>
     return x;
 }
 
-}  // namespace sophus
+}  // namespace mosaiq

@@ -15,7 +15,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 inline constexpr double rs = 2.0;
 inline constexpr double q_bar = 1.0;
@@ -122,7 +122,7 @@ void write_trajectory(double tau_value,
     assert(output);
 
     output << std::scientific << std::setprecision(16);
-    output << "# SOPHUS T=0 limit validation — finite-T KK/GV engine vs Appendix D\n";
+    output << "# MosaiQ-Lindhard T=0 limit validation — finite-T KK/GV engine vs Appendix D\n";
     output << "# r_s = " << rs << "  equivalent T_K ~ " << T_equiv_kelvin << '\n';
     output << "# q_bar = " << q_bar << "  tau = " << tau_value
            << "  gamma = " << gamma_t0 << "  (mu = epsilon_F)\n";
@@ -205,7 +205,7 @@ void test_t0_limit_convergence()
         assert(tau_convergence <= tolerance_re_tau_convergence);
     }
 
-    std::cout << "=== SOPHUS T=0 limit validation (Appendix D) ===\n";
+    std::cout << "=== MosaiQ-Lindhard T=0 limit validation (Appendix D) ===\n";
     std::cout << "r_s = " << rs << "  tau_cold = " << tau_cold
               << "  gamma = " << gamma_t0 << '\n';
     std::cout << "max |Im_engine - Im_{tau->0, Eq. (784)}| = " << max_im_vs_eq784_t0 << '\n';

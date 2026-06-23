@@ -2,7 +2,7 @@
 
 #include <numbers>
 
-namespace sophus::constants {
+namespace mosaiq::constants {
 
 /// Mathematical constants
 inline constexpr double pi = std::numbers::pi;
@@ -51,4 +51,4 @@ inline constexpr double nine_pi_over_four_cbrt = 1.7044777697860926;
     return boltzmann_hartree_per_kelvin * T_kelvin;
 }
 
-}  // namespace sophus::constants
+}  // namespace mosaiq::constants

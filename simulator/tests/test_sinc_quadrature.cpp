@@ -17,10 +17,10 @@ void assert_finite(const char* label, double value)
 
 void test_sample_pipeline()
 {
-    sophus::SincQuadrature<> quad;
+    mosaiq::SincQuadrature<> quad;
     const auto samples = quad.all_samples();
 
-    assert(samples.size() == sophus::constants::default_gv_sinc_nodes * 2 + 1);
+    assert(samples.size() == mosaiq::constants::default_gv_sinc_nodes * 2 + 1);
 
     for (const auto& sample : samples) {
         assert(std::isfinite(sample.kh));
@@ -33,14 +33,14 @@ void test_sample_pipeline()
 
 void test_gv_real_lindhard_finite_domain()
 {
-    sophus::GvLindhardSincArgs<> args{
-        sophus::WaveVector<>{1.0},
-        sophus::Frequency<>{0.5},
-        sophus::ReducedTemperature<>{0.05},
-        sophus::ReducedChemicalPotential<>{1.0},
+    mosaiq::GvLindhardSincArgs<> args{
+        mosaiq::WaveVector<>{1.0},
+        mosaiq::Frequency<>{0.5},
+        mosaiq::ReducedTemperature<>{0.05},
+        mosaiq::ReducedChemicalPotential<>{1.0},
     };
 
-    sophus::SincQuadrature<> quad;
+    mosaiq::SincQuadrature<> quad;
     const double result = quad.evaluate_gv_real_lindhard(args);
 
     assert_finite("GV Re chi^L (rational units, q=1, w=0.5, tau=0.05, gamma=1)", result);
@@ -52,14 +52,14 @@ void test_gv_real_lindhard_finite_domain()
 
 void test_gv_real_lindhard_low_temperature()
 {
-    sophus::GvLindhardSincArgs<> args{
-        sophus::WaveVector<>{0.8},
-        sophus::Frequency<>{0.2},
-        sophus::ReducedTemperature<>{0.01},
-        sophus::ReducedChemicalPotential<>{1.0},
+    mosaiq::GvLindhardSincArgs<> args{
+        mosaiq::WaveVector<>{0.8},
+        mosaiq::Frequency<>{0.2},
+        mosaiq::ReducedTemperature<>{0.01},
+        mosaiq::ReducedChemicalPotential<>{1.0},
     };
 
-    sophus::SincQuadrature<> quad;
+    mosaiq::SincQuadrature<> quad;
     const double result = quad.evaluate_gv_real_lindhard(args);
 
     assert_finite("GV Re chi^L (low tau)", result);
@@ -68,17 +68,17 @@ void test_gv_real_lindhard_low_temperature()
 
 void test_integrate_matches_evaluate()
 {
-    sophus::GvLindhardSincArgs<> args{
-        sophus::WaveVector<>{1.2},
-        sophus::Frequency<>{0.7},
-        sophus::ReducedTemperature<>{0.08},
-        sophus::ReducedChemicalPotential<>{0.9},
+    mosaiq::GvLindhardSincArgs<> args{
+        mosaiq::WaveVector<>{1.2},
+        mosaiq::Frequency<>{0.7},
+        mosaiq::ReducedTemperature<>{0.08},
+        mosaiq::ReducedChemicalPotential<>{0.9},
     };
 
-    sophus::SincQuadrature<> quad;
+    mosaiq::SincQuadrature<> quad;
     const double h = quad.params().step();
     const double integrated =
-        quad.integrate(sophus::make_gv_lindhard_integrand<double>(), args) * h / (-args.q.raw());
+        quad.integrate(mosaiq::make_gv_lindhard_integrand<double>(), args) * h / (-args.q.raw());
     const double evaluated = quad.evaluate_gv_real_lindhard(args);
 
     assert_finite("integrate pipeline", integrated);

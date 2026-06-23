@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-namespace sophus::detail {
+namespace mosaiq::detail {
 
 [[nodiscard]] double bohm_gross_frequency_impl(double q_bar,
                                                double tau,
@@ -21,9 +21,9 @@ namespace sophus::detail {
     return std::sqrt(std::max(omega_sq, 0.0));
 }
 
-}  // namespace sophus::detail
+}  // namespace mosaiq::detail
 
-namespace sophus {
+namespace mosaiq {
 
 template<ScalarPhysical T>
 T PlasmonPoleExtractor::bohm_gross_frequency(WaveVector<T> q,
@@ -44,4 +44,4 @@ template double PlasmonPoleExtractor::bohm_gross_frequency<double>(
     double,
     double) noexcept;
 
-}  // namespace sophus
+}  // namespace mosaiq

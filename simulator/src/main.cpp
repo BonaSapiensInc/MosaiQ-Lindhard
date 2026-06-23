@@ -16,7 +16,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 /// Proton mass in electron-mass units (legacy two-component hydrogenic plasma).
 inline constexpr double ion_mass_ratio = 1836.15267343;
@@ -270,13 +270,13 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    structure_factor_output << "# SOPHUS-Lindhard CLI — multi-component RPA structure factors\n";
+    structure_factor_output << "# MosaiQ-Lindhard CLI — multi-component RPA structure factors\n";
     write_run_header(structure_factor_output, rs, T_kelvin, electron, ion);
     structure_factor_output << "# omega column: electron reduced units [E_F/e/hbar]\n";
     structure_factor_output << "# S_ei uses tau_e (electron thermal reference)\n";
     structure_factor_output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
 
-    dispersion_output << "# SOPHUS-Lindhard CLI — plasmon dispersion Re[epsilon]=0 trajectory\n";
+    dispersion_output << "# MosaiQ-Lindhard CLI — plasmon dispersion Re[epsilon]=0 trajectory\n";
     write_run_header(dispersion_output, rs, T_kelvin, electron, ion);
     dispersion_output << "# omega_p column: electron reduced units [E_F/e/hbar]\n";
     dispersion_output << "# landau_damping = Im[epsilon(q, omega_p)] at the extracted pole\n";

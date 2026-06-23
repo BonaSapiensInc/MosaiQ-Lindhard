@@ -2,7 +2,7 @@
 
 #include "core/Concepts.hpp"
 
-namespace sophus {
+namespace mosaiq {
 
 /// F_{1/2}(η) and F_{-1/2}(η) orders used in chemical-potential inversion.
 enum class FermiDiracOrder {
@@ -27,4 +27,4 @@ template<ScalarPhysical T = double>
 template<ScalarPhysical T = double>
 [[nodiscard]] T fermi_dirac_integral(FermiDiracOrder order, FermiDiracEta<T> eta);
 
-}  // namespace sophus
+}  // namespace mosaiq

@@ -4,7 +4,7 @@
 
 #include <complex>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Bare two-component interaction potentials v_st(q) at fixed (q, ω).
 template<ScalarPhysical T = double>
@@ -55,4 +55,4 @@ template<ScalarPhysical T = double>
                                                        LindhardResult<T> chi_i,
                                                        BarePotentials<T> potentials);
 
-}  // namespace sophus
+}  // namespace mosaiq

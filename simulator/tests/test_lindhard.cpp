@@ -9,7 +9,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 WaveVector<> reference_q{1.0};
 Frequency<> reference_omega{0.5};

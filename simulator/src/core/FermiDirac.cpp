@@ -8,7 +8,7 @@
 #include <numeric>
 #include <ranges>
 
-namespace sophus {
+namespace mosaiq {
 
 namespace {
 
@@ -127,4 +127,4 @@ T fermi_dirac_integral(FermiDiracOrder order_kind, FermiDiracEta<T> eta_arg)
 
 template double fermi_dirac_integral<double>(FermiDiracOrder, FermiDiracEta<double>);
 
-}  // namespace sophus
+}  // namespace mosaiq

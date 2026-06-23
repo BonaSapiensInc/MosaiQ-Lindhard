@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Parameters for the modified sinc rule (Davis–Rabinowitz Eq. 3.4.6.21; legacy N=256, h = sqrt(7 pi / N)).
 template<ScalarPhysical T = double>
@@ -90,4 +90,4 @@ template<ScalarPhysical T>
 template<ScalarPhysical T>
 [[nodiscard]] GvLindhardIntegrand<T> make_gv_lindhard_integrand();
 
-}  // namespace sophus
+}  // namespace mosaiq

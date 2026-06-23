@@ -9,7 +9,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 void assert_finite_complex(const char* label, const std::complex<double>& value)
 {

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Legacy code passed bare `double` for q, ω, τ — compile-time guard against that class of bug.
 template<typename T>
@@ -81,4 +81,4 @@ constexpr detail::StrongScalar<TagA, T> operator-(
     detail::StrongScalar<TagA, T>,
     detail::StrongScalar<TagB, T>) = delete;
 
-}  // namespace sophus
+}  // namespace mosaiq

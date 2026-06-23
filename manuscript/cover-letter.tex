@@ -36,9 +36,9 @@ These failures are not numerical accidents; they reflect an ensemble inconsisten
 
 \textbf{Main results.}
 The manuscript maps the calculation into a strictly constrained physical space: $\Im\chi^L$ is evaluated in closed form within the grand-canonical ensemble, and $\Re\chi^L$ is obtained \emph{exclusively} through the Kramers--Kr\"onig transform of that causal dissipative part, bypassing divergent Matsubara pole summations via a strictly causal real-axis formulation.
-The Hilbert transform is implemented with a modified sinc-quadrature rule whose theoretical truncation error bound is $\mathcal{O}(10^{-259})$ under the parameter choice reported in the manuscript---anchoring the evaluation well below double-precision limits while preserving causality down to machine precision.
+The Hilbert transform is implemented with a modified sinc-quadrature rule governed by an exponential error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ that evaluates to $\sim 10^{-259}$ under the parameter choice reported in the manuscript---anchoring the evaluation well below double-precision limits while preserving causality down to machine precision.
 
-We validate the SOPHUS-Lindhard implementation through deterministic extraction of electron plasmon dispersion and Landau damping, automated verification of four macroscopic dynamic structure factor sum rules within machine precision, and a highly degenerate limit test that isolates the ensemble inconsistency of legacy contour-based presentations.
+We validate the MosaiQ-Lindhard implementation through deterministic extraction of electron plasmon dispersion and Landau damping, automated verification of four macroscopic dynamic structure factor sum rules within machine precision, and a highly degenerate limit test that isolates the ensemble inconsistency of legacy contour-based presentations.
 The same pinned pipeline extends to the full two-component RPA susceptibility tensor and to $S_{ee}$, $S_{ii}$, and $S_{ei}$ without ad hoc regularization or parameter tuning.
 
 \textbf{Appropriateness for \textit{Physical Review E}.}

@@ -43,6 +43,6 @@ cmake-build-*/
 *.exe
 compile_commands.json
 
-# Simulator CLI output (regenerate via sophus_simulator)
+# Simulator CLI output (regenerate via mosaiq_simulator)
 output/*.dat
 output/*.png

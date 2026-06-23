@@ -15,7 +15,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 inline constexpr double ion_mass_ratio = 1836.15267343;
 inline constexpr double coulomb_softening = 0.01;
@@ -418,7 +418,7 @@ void test_dynamic_structure_factor_sum_rules()
         rhs_compressibility,
         tolerance_compressibility);
 
-    std::cout << "=== SOPHUS sum-rule validation (Eq. dynamic-structure-factor-sum-rules) ===\n";
+    std::cout << "=== MosaiQ-Lindhard sum-rule validation (Eq. dynamic-structure-factor-sum-rules) ===\n";
     std::cout << "r_s = " << rs << "  T_K = " << T_kelvin << '\n';
     std::cout << "q_bar: f-sum=" << q_bar_f_sum << "  perfect=" << q_bar_perfect_screening
               << "  compressibility=" << q_bar_compressibility << '\n';

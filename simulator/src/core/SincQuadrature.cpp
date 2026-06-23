@@ -6,7 +6,7 @@
 #include <numeric>
 #include <ranges>
 
-namespace sophus {
+namespace mosaiq {
 
 template<ScalarPhysical T>
 T asinh_sinc_abscissa(T kh) noexcept
@@ -117,4 +117,4 @@ template GvLindhardIntegrand<double> make_gv_lindhard_integrand<double>();
 
 template class SincQuadrature<double>;
 
-}  // namespace sophus
+}  // namespace mosaiq

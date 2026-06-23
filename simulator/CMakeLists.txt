@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(SOPHUS_Lindhard
+project(MosaiQ_Lindhard
     VERSION 0.1.0
     DESCRIPTION "C++20 deterministic physics sandbox for finite-temperature Lindhard / RPA"
     LANGUAGES CXX
@@ -33,26 +33,26 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 endif()
 
-# --- sophus library (headers + Phase 1 core implementation) ---
-add_library(sophus STATIC
+# --- mosaiq library (headers + Phase 1 core implementation) ---
+add_library(mosaiq STATIC
     src/core/SincQuadrature.cpp
     src/core/FermiDirac.cpp
     src/engine/Lindhard.cpp
     src/engine/RPA.cpp
     src/engine/PlasmonPoleExtractor.cpp
 )
-add_library(sophus::sophus ALIAS sophus)
+add_library(mosaiq::mosaiq ALIAS mosaiq)
 
-target_include_directories(sophus PUBLIC
+target_include_directories(mosaiq PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:include>
 )
 
-target_compile_features(sophus PUBLIC cxx_std_20)
+target_compile_features(mosaiq PUBLIC cxx_std_20)
 
-add_executable(sophus_simulator src/main.cpp)
+add_executable(mosaiq_simulator src/main.cpp)
 
-target_link_libraries(sophus_simulator PRIVATE sophus::sophus)
+target_link_libraries(mosaiq_simulator PRIVATE mosaiq::mosaiq)
 
 # --- future unit tests (CTest) ---
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")

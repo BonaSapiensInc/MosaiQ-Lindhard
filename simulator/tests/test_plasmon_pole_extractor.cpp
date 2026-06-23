@@ -9,7 +9,7 @@
 
 namespace {
 
-using namespace sophus;
+using namespace mosaiq;
 
 inline constexpr double ion_mass_ratio = 1836.15267343;
 inline constexpr double coulomb_softening = 0.01;

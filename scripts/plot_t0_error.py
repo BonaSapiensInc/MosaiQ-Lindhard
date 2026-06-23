@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publication-quality T=0 Lindhard limit validation figure (PRE style)."""
+"""Publication-quality T=0 Lindhard limit validation figure from MosaiQ-Lindhard output (PRE style)."""
 
 from __future__ import annotations
 

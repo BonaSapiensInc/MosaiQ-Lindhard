@@ -1,6 +1,6 @@
 #include "engine/RPA.hpp"
 
-namespace sophus {
+namespace mosaiq {
 
 namespace {
 
@@ -84,4 +84,4 @@ template RpaResult<double> evaluate_rpa_susceptibility<double>(LindhardResult<do
                                                                LindhardResult<double>,
                                                                BarePotentials<double>);
 
-}  // namespace sophus
+}  // namespace mosaiq

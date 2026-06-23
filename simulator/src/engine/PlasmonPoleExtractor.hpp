@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <optional>
 
-namespace sophus {
+namespace mosaiq {
 
 /// Real-part dielectric objective Re[ε(q, ω)] for bracketed root finding at fixed q.
 template<typename F>
@@ -76,7 +76,7 @@ struct PlasmonPolePolicy {
     PlasmonBracketPolicy<T> bracket{};
 };
 
-/// Stateless, deterministic plasmon-pole engine (SOPHUS Phase 6).
+/// Stateless, deterministic plasmon-pole engine (MosaiQ-Lindhard Phase 6).
 struct PlasmonPoleExtractor final {
     PlasmonPoleExtractor() = delete;
 
@@ -242,4 +242,4 @@ std::optional<PlasmonState<T>> PlasmonPoleExtractor::extract(
     };
 }
 
-}  // namespace sophus
+}  // namespace mosaiq

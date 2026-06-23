@@ -2,7 +2,7 @@
 
 #include "core/Concepts.hpp"
 
-namespace sophus {
+namespace mosaiq {
 
 /// Grand-canonical imaginary part — Giuliani & Vignale Eq. (4.45) / manuscript Eq. (38).
 template<ScalarPhysical T = double>
@@ -25,4 +25,4 @@ template<ScalarPhysical T = double>
                                                   ReducedTemperature<T> tau,
                                                   ReducedChemicalPotential<T> gamma);
 
-}  // namespace sophus
+}  // namespace mosaiq

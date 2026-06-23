@@ -37,7 +37,7 @@
 \date{\today}
 
 \begin{abstract}
-We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, resolving analytic inconsistencies that have persisted in contour-integration methods. We demonstrate that conventional approaches---which rely on converting the real part of the susceptibility into infinite residue sums over Matsubara-like poles---violate the prerequisite conditions of Jordan's Lemma and suffer from divergent series tails. Furthermore, hybrid methods that combine grand-canonical dissipation with canonical contour sums introduce an ensemble inconsistency, breaking exact causality and resulting in $\mathcal{O}(1)$ real-part errors that manifest prominently as a persistent offset from the exact analytical solutions in the highly degenerate $T \to 0$ limit. To restore rigorous thermodynamic and analytic consistency, we map the evaluation into a strictly constrained physical space: the imaginary part is derived in closed form within the grand-canonical ensemble, and the real part is exclusively obtained via the Kramers--Kr\"onig relation. By employing a modified sinc-quadrature rule, we achieve a theoretical truncation error bound of $\mathcal{O}(10^{-259})$. We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating the precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
+We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, resolving analytic inconsistencies that have persisted in contour-integration methods. We demonstrate that conventional approaches---which rely on converting the real part of the susceptibility into infinite residue sums over Matsubara-like poles---violate the prerequisite conditions of Jordan's Lemma and suffer from divergent series tails. Furthermore, hybrid methods that combine grand-canonical dissipation with canonical contour sums introduce an ensemble inconsistency, breaking exact causality and resulting in $\mathcal{O}(1)$ real-part errors that manifest prominently as a persistent offset from the exact analytical solutions in the highly degenerate $T \to 0$ limit. To restore rigorous thermodynamic and analytic consistency, we map the evaluation into a strictly constrained physical space: the imaginary part is derived in closed form within the grand-canonical ensemble, and the real part is exclusively obtained via the Kramers--Kr\"onig relation. By employing a modified sinc-quadrature rule with a theoretical error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$---where $N$ is the truncation limit of the quadrature sum, $d$ is the half-width of the analytic strip in the complex plane, and $\alpha$ is a convergence scaling parameter---we achieve a truncation error exponentially suppressed below $\sim 10^{-259}$. We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating the precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
 \end{abstract}
 %\pacs{52.25.Mq, 52.27.Cm, 05.30.Fk, 71.45.Gm}
 \keywords{Plasma physics; Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations}
@@ -886,13 +886,14 @@ by using a sinc-quadrature rule~\cite{Stanger1976} via the formulation appeared 
 A_1 \sqrt{N} e^{- \sqrt{\pi d \alpha N}} ,
 \label{sinc-quadrature-Cauchy-principal-value-integral}
 \end{equation}
-where $A_1$ is a certain constant depending on $d$ and $\alpha$.
+where $A_1$ is a constant depending on the half-width $d$ of the analytic strip in the complex plane and a convergence scaling parameter $\alpha$.
 The trapezoidal integration step $h$ is determined by the relation
 \begin{equation*}
-h = \sqrt{\frac{\pi d}{\alpha N}} .
+h = \sqrt{\frac{\pi d}{\alpha N}} ,
 \end{equation*}
+where $N$ is the truncation limit of the summation.
 Here we choose $N = 16384$ with $d/\alpha = 7$ as the convergence parameter with $A_1 = 1$ and $\alpha = 1$;
-the choice ensures a theoretical truncation error bound of $\mathcal{O}(10^{-259})$, which securely anchors the evaluation well below double-precision machine limits and eliminates numerical instabilities from the poles of $f\left( x \right)$.
+the choice suppresses the theoretical truncation error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ to $\sim 10^{-259}$, which securely anchors the evaluation well below double-precision machine limits and eliminates numerical instabilities from the poles of $f\left( x \right)$.
 
 \section{Chemical potential at finite-temperature}
 \label{sec:chemical-potential}
@@ -1605,7 +1606,7 @@ based on the importance to the corresponding physics.
 \label{sec:results}
 
 To demonstrate that the deterministic pipeline developed in this work survives contact with extreme many-body conditions,
-we executed the SOPHUS-Lindhard C++20 sandbox on a partially degenerate two-component Fermion plasma
+we executed the MosaiQ-Lindhard C++20 sandbox on a partially degenerate two-component Fermion plasma
 in the parameter regime characteristic of a brown-dwarf core:
 Wigner--Seitz radius $r_s = 1.0$ and temperature $T = 10{,}000\,\mathrm{K}$.
 The engine inverts the chemical potential for electrons and ions ($m_i/m_e \approx 1836$),
@@ -1649,7 +1650,7 @@ This correlated low-frequency footprint cannot emerge from decoupled one-compone
 and confirms that the two-component RPA tensor Eq.~(\ref{dielectric-function}) captures
 genuine interspecies dynamics rather than a superposition of isolated subsystems.
 
-Furthermore, the extreme dynamic range of these spectral manifolds---as rendered in the logarithmic contour isolines and matching three-dimensional surfaces of Figs.~\ref{fig:S_ee}--\ref{fig:S_ei_3d}---serves as a visual testament to the numerical exactness of the SOPHUS-Lindhard pipeline. Legacy evaluations relying on truncated Matsubara series or finite-difference limits typically pollute the deep-vacuum regions of the $(\bar{q}, \bar{\omega})$ plane with spurious numerical ringing or diverging artifacts. In contrast, the pristine topological gradients and absolute zero-noise floors observed here confirm that the sinc-quadrature Hilbert transform completely suppresses non-causal leakage, preserving the precise algebraic boundaries of the collective and single-particle continuous spectra.
+Furthermore, the extreme dynamic range of these spectral manifolds---as rendered in the logarithmic contour isolines and matching three-dimensional surfaces of Figs.~\ref{fig:S_ee}--\ref{fig:S_ei_3d}---serves as a visual testament to the numerical exactness of the MosaiQ-Lindhard pipeline. Legacy evaluations relying on truncated Matsubara series or finite-difference limits typically pollute the deep-vacuum regions of the $(\bar{q}, \bar{\omega})$ plane with spurious numerical ringing or diverging artifacts. In contrast, the pristine topological gradients and absolute zero-noise floors observed here confirm that the sinc-quadrature Hilbert transform completely suppresses non-causal leakage, preserving the precise algebraic boundaries of the collective and single-particle continuous spectra.
 
 \subsection{Deterministic plasmon pole extraction}
 \label{sec:plasmon-pole-extraction}
@@ -1668,7 +1669,7 @@ Derivative-based root finders---including Newton--Raphson and secant schemes tha
 numerical differentiation of $\Re \varepsilon$---were deliberately excluded from this step.
 Such methods would differentiate a real part whose accuracy is pinned by the sinc-quadrature
 evaluation of Eq.~(\ref{sinc-quadrature-Cauchy-principal-value-integral})
-at a theoretical truncation error bound of $\mathcal{O}(10^{-259})$, thereby injecting spurious numerical noise
+at a theoretical truncation error bounded by $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ which evaluates to $\sim 10^{-259}$, thereby injecting spurious numerical noise
 into an otherwise strictly constrained physical space.
 Instead, the engine employs a pure, stateless Brent method on the bracketed interval,
 which evaluates $\Re \varepsilon$ only through point values supplied by the Lindhard--RPA pipeline.
@@ -1692,7 +1693,7 @@ failed brackets are reported explicitly when no root is found on the grid.
 The dynamic structure factor sum rules of Eq.~(\ref{dynamic-structure-factor-sum-rules})
 provide integrated constraints on the spectral weight of $S_{ee}(\bar{q}, \bar{\omega})$
 that are independent of the details of any single frequency sample.
-We subjected the SOPHUS-Lindhard engine to an automated validation of all four relations
+We subjected the MosaiQ-Lindhard engine to an automated validation of all four relations
 ---the $f$-sum rule Eq.~(\ref{f-sum-rule}),
 the perfect screening rule Eq.~(\ref{perfect-screening-sum-rule}),
 the conductivity rule Eq.~(\ref{conductivity-sum-rule}),
@@ -1743,7 +1744,7 @@ with macroscopic limits preserved by construction rather than by post hoc calibr
 \subsection{The highly degenerate limit and ensemble inconsistency}
 \label{sec:t0-limit-validation}
 
-A complementary stress test of the SOPHUS-Lindhard pipeline is the absolute zero-temperature limit
+A complementary stress test of the MosaiQ-Lindhard pipeline is the absolute zero-temperature limit
 $\tau \rightarrow 0$, where the Fermi--Dirac occupation approaches a step function
 and conventional quadrature routes are notoriously vulnerable to Gibbs ringing
 and loss of spectral smoothness.
@@ -1756,7 +1757,7 @@ and the sinc-quadrature Hilbert transform continues to supply a real part at eve
 Most significantly, the dissipative component converges to the analytic $\tau \rightarrow 0$ limit
 obtained from the grand-canonical formulation Eq.~(\ref{imaginary-Lindhard}),
 with maximum deviation $|\Delta \Im \chi^L| < 5 \times 10^{-4}$ across the scanned band.
-This demonstrates that the SOPHUS route remains stable when the thermal broadening of the
+This demonstrates that the MosaiQ-Lindhard route remains stable when the thermal broadening of the
 Fermi--Dirac distribution is narrowed to near step-function form,
 precisely the regime in which naive integration of sharply localized spectral weight typically fails.
 
@@ -1765,11 +1766,7 @@ When the Kramers--Kr\"onig derived $\Re \chi^L$ from the same run is compared ag
 the canonical $T = 0$ Lindhard analytic solution summarized in Appendix~\ref{sec:Lindhard-function},
 a persistent $\mathcal{O}(1)$ offset remains even as $\tau$ is reduced further
 and the imaginary part has already converged to its $\tau \rightarrow 0$ limit.
-Figure~\ref{fig:t0-limit-validation} displays this behavior at $\bar{q} = 1$:
-the engine output (markers) tracks a well-defined, repeatable trajectory,
-while the Appendix~\ref{sec:Lindhard-function} reference (solid curves) occupies a distinct manifold in the complex plane.
-The bottom panel shows that the absolute errors in $\Re \chi^L$ remain at the $\mathcal{O}(1)$ level,
-whereas the imaginary errors are confined to the truncation floor of the sinc evaluation.
+Figures~\ref{fig:t0-re-2d} and \ref{fig:t0-im-2d} visualize the exact analytic topology of this $T=0$ reference over the $(\bar{q}, \bar{\omega})$ plane, where the logarithmic singularity in the real part forms a sharp topological ridge. When the numerical extraction is compared along the $\bar{q}=1$ slice [Fig.~\ref{fig:t0-1d-slice}], the engine output (markers) tracks a well-defined, repeatable trajectory, while the Appendix~\ref{sec:Lindhard-function} reference (solid curves) occupies a distinct manifold. As shown in the error analysis of Fig.~\ref{fig:t0-1d-slice}, the absolute errors in $\Re \chi^L$ remain at the $\mathcal{O}(1)$ level, whereas the imaginary errors are confined to the truncation floor of the sinc evaluation.
 
 This offset must not be interpreted as a defect of the numerical engine.
 It is the operational signature of the ensemble inconsistency diagnosed in Sec.~\ref{sec:finite-temperature-Lindhard}:
@@ -1777,7 +1774,7 @@ legacy $T = 0$ analytical formulas assemble $\Re \chi$ and $\Im \chi$ from therm
 ---canonical contour sums or Giuliani--Vignale zero-temperature limits for the real part,
 grand-canonical dissipative kernels for the imaginary part---
 that are not jointly constrained by a single Kramers--Kr\"onig relation.
-The SOPHUS engine, by contrast, evaluates $\Re \chi^L$ exclusively as the Hilbert transform
+The MosaiQ-Lindhard engine, by contrast, evaluates $\Re \chi^L$ exclusively as the Hilbert transform
 of the grand-canonical $\Im \chi^L$ of Eq.~(\ref{imaginary-Lindhard}),
 so the pair $(\Re \chi^L, \Im \chi^L)$ inherits one causality constraint by construction.
 The legacy Appendix~\ref{sec:Lindhard-function} $T = 0$ solution cannot be smoothly connected
@@ -1807,7 +1804,7 @@ because they break the causality constraint enforced by the Hilbert transform.
 The consistent formulation evaluates the real part via the Hilbert transform
 Eq.~(\ref{real-Lindhard-Kramers-Kronig}),
 with sinc-quadrature Eq.~(\ref{sinc-quadrature-Cauchy-principal-value-integral})
-at a theoretical truncation error bound of $\mathcal{O}(10^{-259})$, completely bypassing the infinite Matsubara pole barrier by shifting the integration domain into a strictly constrained physical space in which
+governed by the error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ that drops below $\sim 10^{-259}$, completely bypassing the infinite Matsubara pole barrier by shifting the integration domain into a strictly constrained physical space in which
 $\Re\chi^L$ is uniquely determined by the dissipative content of $\Im\chi^L$,
 resolving the analytic inconsistency
 in the contour integration exposed in Appendix~\ref{sec:Gouedard-Deutsch}.
@@ -1830,14 +1827,14 @@ without the arbitrary parameter tuning required by Matsubara-based codes;
 this constitutes a resolution, within the RPA Lindhard class,
 of the analytic inconsistencies in contour integration that have persisted for seventy years
 since the introduction of the Matsubara frequency representation.
-We therefore conclude that the SOPHUS-Lindhard framework provides an absolute deterministic sandbox
+We therefore conclude that the MosaiQ-Lindhard framework provides an absolute deterministic sandbox
 capable of revealing the dynamical properties of relativistic and nonrelativistic many-body plasmas
 without the distortions introduced by probabilistic shortcuts, illegal Fubini interchanges,
 or ensemble-mixed response functions.
 It is the reference against which legacy codes---and the textbooks that justified them---must now be judged.
 
 \section*{Data and Code Availability}
-The deterministic C++20 engine (SOPHUS-Lindhard) and the associated Python visualization scripts used to generate the results in this study are open-source and publicly available. To facilitate independent verification of the macroscopic sum rules, the deterministic plasmon dispersion extraction, and the mathematical breakdown of the legacy contour-integration method at the highly degenerate $T \to 0$ limit, readers are strongly encouraged to clone the repository and reproduce the findings. The complete source code, test suites, and build instructions can be accessed at: \url{https://github.com/YOUR_GITHUB_USERNAME/SOPHUS-Lindhard}.
+The deterministic C++20 engine (MosaiQ-Lindhard) and the associated Python visualization scripts used to generate the results in this study are open-source and publicly available. To facilitate independent verification of the macroscopic sum rules, the deterministic plasmon dispersion extraction, and the mathematical breakdown of the legacy contour-integration method at the highly degenerate $T \to 0$ limit, readers are strongly encouraged to clone the repository and reproduce the findings. The complete source code, test suites, and build instructions can be accessed at: \url{https://github.com/YOUR_GITHUB_USERNAME/MosaiQ-Lindhard}.
 
 \appendix
 
@@ -2445,7 +2442,6 @@ One of the central claims of this work is that the finite-temperature formulatio
 In the limit \(\tau \to 0\), the Fermi--Dirac distribution becomes the Heaviside step function \(n(\kappa) \to \Theta(1 - \kappa)\). Legacy approaches routinely attempt to substitute this step function back into the contour integration. However, \(\Theta(1-\kappa)\) is a distribution that is strictly non-analytic (non-holomorphic) across the complex \(\kappa\)-plane. By definition, it violates the fundamental prerequisite of Cauchy's residue theorem, which requires the integrand to be analytic everywhere within the closed contour except at isolated singularities. Therefore, extending the \(T=0\) step-function Lindhard integral into the complex plane is a mathematically illegal operation from the very beginning.
 
 Instead, evaluating the causality-constrained imaginary part strictly on the real axis yields the standard piecewise form~\cite{Lindhard1954}:
-
 \begin{equation}
 \frac{\Im \chi^L(\bar{q}, \bar{\omega}, 0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{\pi}{4 \bar{q}}
 \begin{cases}
@@ -2454,28 +2450,20 @@ Instead, evaluating the causality-constrained imaginary part strictly on the rea
 \bar{\omega} , & \xi_-^2 \le 1 \quad \mathrm{and} \quad \xi_+^2 \le 1 
 \end{cases}
 \end{equation}
-
 Applying the Kramers--Kr\"onig relation directly to this causal dissipative part,
-
 \begin{equation}
 \Re \chi^L(\bar{q}, \bar{\omega}, 0) = \frac{1}{\pi} \mathcal{P} \int_{-\infty}^{\infty} 
 \frac{\Im \chi^L(\bar{q}, \bar{\omega}', 0)}{\bar{\omega}' - \bar{\omega}} \, d\bar{\omega}'.
 \end{equation}
-
 By substituting the piecewise imaginary part into the Kramers--Kr\"onig relation, the principal-value integral naturally splits into strictly finite domains bounded by \(\bar{\omega}'\) where \(\xi_{\pm}^2(\bar{\omega}') = 1\). The integration requires no complex contour closures, but merely the evaluation of elementary rational functions on the real axis:
-
 \begin{equation}
 \Re \chi^L(\bar{q}, \bar{\omega}, 0) = \frac{1}{\pi} \left[ \int_{\Delta_1} \frac{\frac{\pi}{4\bar{q}} \bar{\omega}'}{\bar{\omega}' - \bar{\omega}} d\bar{\omega}' + \int_{\Delta_2} \frac{\frac{\pi}{4\bar{q}} (1 - \xi_-^2(\bar{\omega}'))}{\bar{\omega}' - \bar{\omega}} d\bar{\omega}' \right] ,
 \end{equation}
-
 where the intervals \(\Delta_1\) and \(\Delta_2\) correspond to the piecewise supports defined in Eq.~(D1). Through straightforward partial fraction decomposition, the singularities at \(\bar{\omega}' = \bar{\omega}\) yield the exact logarithmic terms without any ad-hoc cancellations:
-
 \begin{equation}
 \int \frac{d\bar{\omega}'}{\bar{\omega}' - \bar{\omega}} \rightarrow \ln|\bar{\omega}' - \bar{\omega}| ,
 \end{equation}
-
 which, upon evaluating the boundaries of \(\Delta_1\) and \(\Delta_2\), algebraically reorganizes into the standard real-part expression:
-
 \begin{equation}
 \frac{\Re \chi^L(\bar{q}, \bar{\omega}, 0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{1}{2\bar{q}} \left[ \bar{q} 
 + \frac{1}{2} \left( 1 - \xi_-^2(\bar{\omega}) \right) \ln\left\vert \frac{\xi_-(\bar{\omega}) - 1}{\xi_-(\bar{\omega}) + 1} \right\vert
@@ -3153,7 +3141,7 @@ Eqs.~(\ref{real-Lindhard-Kramers-Kronig}) and (\ref{sinc-quadrature-Cauchy-princ
 bypasses the unstable Matsubara pole summation entirely.
 By evaluating the Hilbert transform of the convergent imaginary part within the
 strictly constrained physical space defined by exact causality,
-the real part is obtained with a theoretical truncation error bound of $\mathcal{O}(10^{-259})$
+the real part is obtained with the error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ suppressed to $\sim 10^{-259}$
 under the parameter choice of Sec.~\ref{sec:finite-temperature-Lindhard}.
 
 \begin{thebibliography}{99}
@@ -3275,7 +3263,7 @@ see also the discussion of Jordan's Lemma in Ref.~\cite{BrownChurchill2009}.
 
 \clearpage
 \begin{table}[p]
-\caption{Numerical validation of macroscopic dynamic structure factor sum rules evaluated by the SOPHUS-Lindhard engine at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$. Relative errors denote the absolute difference between the numerically integrated spectral moment and the analytical right-hand side, normalized by the analytical value. The extreme precision confirms that exact causality is preserved in the real-axis integration.}
+\caption{Numerical validation of macroscopic dynamic structure factor sum rules evaluated by the MosaiQ-Lindhard engine at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$. Relative errors denote the absolute difference between the numerically integrated spectral moment and the analytical right-hand side, normalized by the analytical value. The extreme precision confirms that exact causality is preserved in the real-axis integration.}
 \label{tab:sum-rules}
 \begin{ruledtabular}
 \begin{tabular}{lccc}
@@ -3499,7 +3487,7 @@ with the integrand~Eq.(\ref{new-Fermi-Dirac-integrand}).}
   \label{fig:S_ei_3d}
 \end{subfigure}
 
-\caption{Dynamic structure factors from the SOPHUS-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
+\caption{Dynamic structure factors from the MosaiQ-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
 Panels~\textbf{(a)}--\textbf{(f)} display the electron--electron, ion--ion, and electron--ion channels, with each row pairing a contour map (left) and the matching three-dimensional surface (right) on the same $(\bar{q}, \bar{\omega})$ grid.
 Each contour map maps $|S_{st}|$ on a base-10 logarithmic scale from $S_{\min}=\max(S_{>0},10^{-12})$ to $S_{\max}$ (the channel maximum on the grid).
 The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and the black isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$; the companion surface panels share the same limits and colormap.}
@@ -3520,18 +3508,32 @@ Roots were deterministically extracted via Brent's method on the causality-const
 \end{figure}
 
 \clearpage
-\begin{figure}[htbp]
+\begin{figure}[p]
 \centering
-\includegraphics[width=0.72\textwidth]{../output/t0_limit_validation.pdf}
-\caption{Highly degenerate limit validation at $\bar{q} = 1.0$, $\gamma = 1$, and $\tau = 10^{-4}$
-($T \approx 11\,\mathrm{K}$ in electron Fermi units).
-\textbf{Top:} exact $T = 0$ Lindhard susceptibility from Appendix~\ref{sec:Lindhard-function} (solid curves)
-and SOPHUS engine evaluation (markers) for $\Re \tilde{\chi}$ and $\Im \tilde{\chi}$
-in units of $\hbar D(\epsilon_\mathrm{F})$.
-\textbf{Bottom:} absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale,
-showing that $\Im \chi^L$ converges to the $\tau \rightarrow 0$ limit of Eq.~(\ref{imaginary-Lindhard})
-while $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset from the Appendix~\ref{sec:Lindhard-function} reference,
-consistent with the ensemble inconsistency of Sec.~\ref{sec:finite-temperature-Lindhard}.}
+\begin{subfigure}[b]{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../output/t0_analytic_re_contour.png}
+  \caption{Analytic $\Re \chi^L_{T=0}$ (Eq.~D5).}
+  \label{fig:t0-re-2d}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../output/t0_analytic_im_contour.png}
+  \caption{Analytic $|\Im \chi^L_{T=0}|$ (Eq.~D1).}
+  \label{fig:t0-im-2d}
+\end{subfigure}
+
+\vspace{1.5em}
+
+\begin{subfigure}[b]{0.75\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../output/t0_limit_validation.pdf}
+  \caption{1D slice validation at $\bar{q} = 1.0$ and error analysis.}
+  \label{fig:t0-1d-slice}
+\end{subfigure}
+
+\caption{Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The exact $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via Kramers--Kr\"onig relation in Appendix~\ref{sec:Lindhard-function}. The white dashed line marks the $\bar{q} = 1.0$ trajectory. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the exact analytic reference (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of legacy contour methods discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.}
 \label{fig:t0-limit-validation}
 \end{figure}
 
