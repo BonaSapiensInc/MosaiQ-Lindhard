@@ -7,8 +7,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib import cm
-from matplotlib.colors import SymLogNorm
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LogNorm, Normalize
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_ROOT / "output" / "output_structure_factor.dat"
@@ -19,6 +21,23 @@ PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ii", 5, r"$S_{ii}(q, \omega)$ — ion-ion (ion-acoustic)"),
     ("S_ei", 7, r"$S_{ei}(q, \omega)$ — electron-ion cross"),
 )
+
+
+def configure_seaborn() -> None:
+    sns.set_theme(
+        style="ticks",
+        context="paper",
+        font_scale=1.05,
+        rc={
+            "font.family": "serif",
+            "axes.titlesize": 12,
+            "axes.labelsize": 12,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 11,
+            "figure.dpi": 100,
+            "savefig.dpi": 300,
+        },
+    )
 
 
 def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -33,19 +52,20 @@ def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarr
     return q_grid, w_grid, value_grid
 
 
-def choose_norm(grid: np.ndarray) -> SymLogNorm | None:
+def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
     finite = grid[np.isfinite(grid)]
     if finite.size == 0:
         return None
 
-    abs_max = float(np.max(np.abs(finite)))
+    magnitude = np.abs(finite)
+    abs_max = float(np.max(magnitude))
     if abs_max == 0.0:
         return None
 
-    positive = finite[finite > 0.0]
+    positive = magnitude[magnitude > 0.0]
     min_pos = float(np.min(positive)) if positive.size else abs_max * 1.0e-6
-    linthresh = max(min_pos, abs_max * 1.0e-4, 1.0e-12)
-    return SymLogNorm(linthresh=linthresh, linscale=1.0, vmin=-abs_max, vmax=abs_max)
+    vmin = max(min_pos, abs_max * 1.0e-6, 1.0e-12)
+    return LogNorm(vmin=vmin, vmax=abs_max)
 
 
 def render_component(
@@ -56,53 +76,74 @@ def render_component(
     title: str,
     output_path: Path,
 ) -> None:
-    norm = choose_norm(grid)
-    plot_grid = np.ma.masked_invalid(grid)
+    plot_grid = np.ma.masked_invalid(np.abs(grid))
+    norm = choose_log_norm(plot_grid.filled(np.nan))
+    if norm is not None:
+        plot_grid = np.ma.masked_less_equal(plot_grid, 0.0)
 
-    plt.rcParams.update({"font.size": 12, "font.family": "serif"})
-    fig = plt.figure(figsize=(12, 10))
+    cmap = cm.rainbow
+    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
+    scalar_map.set_array([])
+
+    fig = plt.figure(figsize=(12, 10), layout="constrained")
 
     ax1 = fig.add_subplot(211)
-    contour_kwargs: dict = {"levels": 150, "cmap": cm.magma}
+    ax1.contourf(
+        q_grid,
+        w_grid,
+        plot_grid,
+        levels=150,
+        cmap=cmap,
+        norm=color_norm,
+    )
     if norm is not None:
-        contour_kwargs["norm"] = norm
-    contour = ax1.contourf(q_grid, w_grid, plot_grid, **contour_kwargs)
-    cbar1 = fig.colorbar(contour, ax=ax1)
-    cbar1.set_label(label)
+        ax1.contour(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=25,
+            norm=color_norm,
+            colors="black",
+            linewidths=0.8,
+            alpha=0.8,
+        )
+    sns.despine(ax=ax1)
     ax1.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax1.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax1.set_title(f"{title} — Contour Map", fontweight="bold")
 
     ax2 = fig.add_subplot(212, projection="3d")
-    z_plot = np.nan_to_num(plot_grid, nan=0.0)
-    if norm is not None:
-        z_plot = np.clip(z_plot, norm.vmin, norm.vmax)
-    surface = ax2.plot_surface(
+    z_surface = plot_grid.astype(float)
+    ax2.plot_surface(
         q_grid,
         w_grid,
-        z_plot,
-        cmap=cm.magma,
-        norm=norm,
-        edgecolor="none",
+        z_surface,
+        cmap=cmap,
+        norm=color_norm,
+        shade=False,
+        edgecolor="#333333",
+        linewidth=0.2,
         antialiased=True,
-        alpha=0.92,
+        alpha=1.0,
     )
-    cbar2 = fig.colorbar(surface, ax=ax2, pad=0.1)
-    cbar2.set_label(label)
     ax2.set_xlabel(r"$q \ [k_F]$", labelpad=10)
     ax2.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
     ax2.set_zlabel(label, labelpad=10)
     ax2.set_title(f"{title} — 3D Surface", fontweight="bold")
     ax2.view_init(elev=35, azim=-120)
 
-    plt.tight_layout()
+    fig.colorbar(scalar_map, ax=[ax1, ax2], fraction=0.025, pad=0.04, label=label)
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved {output_path}")
 
 
 def main() -> None:
+    configure_seaborn()
+
     if not DATA_FILE.is_file():
         raise SystemExit(f"Error: data file not found: {DATA_FILE}")
 

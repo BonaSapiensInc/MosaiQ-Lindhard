@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -78,7 +79,7 @@ def plot_dispersion(
     omega_p: np.ndarray,
     landau: np.ndarray,
     bohm_gross: np.ndarray,
-) -> plt.Figure:
+) -> Figure:
     configure_matplotlib()
 
     fig, (ax_top, ax_bottom) = plt.subplots(

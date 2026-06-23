@@ -1,11 +1,72 @@
 {
     "cSpell.words": [
+        "azim",
+        "cbar",
+        "cmap",
+        "colorbar",
+        "contourf",
+        "domega",
+        "edgecolor",
+        "edgecolors",
+        "facecolors",
+        "finfo",
+        "fonttype",
+        "fontweight",
+        "frameon",
+        "gridspec",
+        "hspace",
         "hypernetted",
-        "onig"
+        "imag",
+        "Kronig",
+        "Krönig",
+        "labelpad",
+        "Lindhard",
+        "loadtxt",
+        "Matsubara",
+        "nodiscard",
+        "onig",
+        "plasmon",
+        "sharex",
+        "Sinc",
+        "SOPHUS",
+        "titlesize",
+        "vmax",
+        "vmin",
+        "Wextra",
+        "xtick",
+        "ylabels",
+        "yscale",
+        "ytick",
+        "zlabel",
+        "zorder"
+    ],
+    "cSpell.enabledLanguageIds": [
+        "markdown",
+        "plaintext",
+        "scminput"
     ],
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.autocomplete": "disabled",
     "clangd.arguments": [
-        "--header-insertion=never"
-    ]
+        "--header-insertion=never",
+        "--compile-commands-dir=${workspaceFolder}/simulator/build"
+    ],
+    "clangd.fallbackFlags": [
+        "-std=c++20",
+        "-I${workspaceFolder}/simulator/src"
+    ],
+    "cmake.sourceDirectory": "${workspaceFolder}/simulator",
+    "cmake.buildDirectory": "${workspaceFolder}/simulator/build",
+    "latex-workshop.latex.rootFile": "manuscript/two-fermi.tex",
+    "latex-workshop.linting.chktex.enabled": false,
+    "latex-workshop.linting.lacheck.enabled": false,
+    "latex-workshop.message.badbox.show": "none",
+    "latex-workshop.message.biberlog.show": false,
+    "latex-workshop.message.bibtexlog.show": false,
+    "latex-workshop.message.latexlog.show": false,
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true
 }

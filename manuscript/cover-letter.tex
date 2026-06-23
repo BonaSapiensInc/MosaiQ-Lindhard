@@ -1,0 +1,66 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{hyperref}
+
+\begin{document}
+\noindent
+\textbf{In Gee Kim}\\
+Bona Sapiens, Inc.\\
+Seoul 07332, Republic of Korea\\
+\href{mailto:kim.ingee@bonasapiens.com}{kim.ingee@bonasapiens.com}
+
+\vspace{1em}
+\noindent\today
+
+\vspace{1em}
+\noindent
+The Editors\\
+\textit{Physical Review E}
+
+\vspace{1em}
+\noindent
+\textbf{Re: Submission of manuscript ``Linear response representation of two-fermion plasmas''}
+
+\vspace{0.5em}
+Dear Editor,
+
+We submit the accompanying manuscript for consideration as a Regular Article in \textit{Physical Review E}.
+The paper develops a causality-constrained, deterministic framework for finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions in homogeneous, isotropic electron--ion plasmas.
+
+\textbf{Context and significance.}
+Accurate evaluation of $\varepsilon(q,\omega)$ and the dynamic structure factors $S_{st}(q,\omega)$ under partial degeneracy is central to plasma spectroscopy, screening theory, and the interpretation of collective modes such as plasmons and Landau damping.
+For decades, finite-temperature Lindhard response has been approached through contour integration and Matsubara-like pole summations.
+We show that widely used hybrid routes---in which the imaginary part is obtained in a grand-canonical prescription while the real part is assembled from canonical contour sums or mismatched analytic continuations---violate the Kramers--Kr\"onig relation and produce $\mathcal{O}(1)$ errors in $\Re\chi^L$ that persist in the highly degenerate $T \to 0$ limit.
+These failures are not numerical accidents; they reflect an ensemble inconsistency that breaks exact causality.
+
+\textbf{Main results.}
+The manuscript maps the calculation into a strictly constrained physical space: $\Im\chi^L$ is evaluated in closed form within the grand-canonical ensemble, and $\Re\chi^L$ is obtained \emph{exclusively} through the Kramers--Kr\"onig transform of that causal dissipative part, bypassing divergent Matsubara pole summations via a strictly causal real-axis formulation.
+The Hilbert transform is implemented with a modified sinc-quadrature rule whose theoretical truncation error bound is $\mathcal{O}(10^{-259})$ under the parameter choice reported in the manuscript---anchoring the evaluation well below double-precision limits while preserving causality down to machine precision.
+
+We validate the SOPHUS-Lindhard implementation through deterministic extraction of electron plasmon dispersion and Landau damping, automated verification of four macroscopic dynamic structure factor sum rules within machine precision, and a highly degenerate limit test that isolates the ensemble inconsistency of legacy contour-based presentations.
+The same pinned pipeline extends to the full two-component RPA susceptibility tensor and to $S_{ee}$, $S_{ii}$, and $S_{ei}$ without ad hoc regularization or parameter tuning.
+
+\textbf{Appropriateness for \textit{Physical Review E}.}
+The work addresses causality, spectral representation, and thermodynamic consistency in partially degenerate Coulomb plasmas---a core subject area of \textit{Physical Review E}.
+We believe the combination of analytic diagnosis, deterministic numerics, and macroscopic sum-rule validation will interest readers working on plasma dielectric functions, RPA-based screening, and finite-temperature Fermi systems.
+
+\textbf{Submission history.}
+This manuscript has not been published previously and is not under consideration elsewhere.
+It is not part of a joint submission.
+
+\textbf{PhySH concepts (suggested).}
+Plasma physics (primary); Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations.
+
+We have no recommended or excluded referees at this time.
+Please contact me at \href{mailto:kim.ingee@bonasapiens.com}{kim.ingee@bonasapiens.com} regarding this submission.
+
+\vspace{1em}
+\noindent
+Sincerely,
+
+\vspace{1.5em}
+\noindent
+In Gee Kim
+
+\end{document}

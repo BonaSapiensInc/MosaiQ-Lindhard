@@ -1,0 +1,4 @@
+# Plotting scripts in scripts/ (plot_Sqw.py, plot_plasmon_dispersion.py, plot_t0_error.py)
+matplotlib>=3.8
+numpy>=1.26
+seaborn>=0.13

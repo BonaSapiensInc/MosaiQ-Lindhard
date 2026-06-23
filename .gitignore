@@ -5,6 +5,7 @@
 
 # Editor / IDE (local only)
 .cursor/
+.venv/
 *.swp
 *~
 

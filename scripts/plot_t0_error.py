@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -74,7 +75,7 @@ def configure_matplotlib() -> None:
     )
 
 
-def plot_t0_validation(data: dict[str, np.ndarray], q_label: str) -> plt.Figure:
+def plot_t0_validation(data: dict[str, np.ndarray], q_label: str) -> Figure:
     configure_matplotlib()
 
     omega = data["omega"]
