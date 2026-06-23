@@ -68,6 +68,24 @@ def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
     return LogNorm(vmin=vmin, vmax=abs_max)
 
 
+def frame_contour_axis(ax: plt.Axes) -> None:
+    """Closed rectangular frame for the 2D contour panel."""
+    ax.set_frame_on(True)
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_linewidth(0.9)
+    ax.tick_params(top=True, right=True, which="both")
+
+
+def log_contour_levels(norm: LogNorm, n_filled: int, n_lines: int) -> tuple[np.ndarray, np.ndarray]:
+    """Log-spaced levels so contour density is uniform across decades of magnitude."""
+    vmin = float(norm.vmin)
+    vmax = float(norm.vmax)
+    filled = np.geomspace(vmin, vmax, n_filled)
+    lines = np.geomspace(vmin, vmax, n_lines)
+    return filled, lines
+
+
 def render_component(
     q_grid: np.ndarray,
     w_grid: np.ndarray,
@@ -89,26 +107,46 @@ def render_component(
     fig = plt.figure(figsize=(12, 10), layout="constrained")
 
     ax1 = fig.add_subplot(211)
-    ax1.contourf(
-        q_grid,
-        w_grid,
-        plot_grid,
-        levels=150,
-        cmap=cmap,
-        norm=color_norm,
-    )
-    if norm is not None:
+    if isinstance(color_norm, LogNorm):
+        fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
+        ax1.contourf(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=fill_levels,
+            cmap=cmap,
+            norm=color_norm,
+        )
         ax1.contour(
             q_grid,
             w_grid,
             plot_grid,
-            levels=25,
+            levels=line_levels,
             norm=color_norm,
             colors="black",
-            linewidths=0.8,
-            alpha=0.8,
+            linewidths=0.45,
+            alpha=0.75,
         )
-    sns.despine(ax=ax1)
+    else:
+        ax1.contourf(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=150,
+            cmap=cmap,
+            norm=color_norm,
+        )
+        ax1.contour(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=60,
+            norm=color_norm,
+            colors="black",
+            linewidths=0.45,
+            alpha=0.75,
+        )
+    frame_contour_axis(ax1)
     ax1.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax1.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax1.set_title(f"{title} — Contour Map", fontweight="bold")
