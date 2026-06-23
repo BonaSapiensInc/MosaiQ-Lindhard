@@ -263,7 +263,7 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
         output << '\n';
         output << "# Gamma = " << std::fixed << std::setprecision(6) << gamma
                << ", T = " << T_kelvin << " K, r_s = " << rs << '\n';
-        output << "# columns: q_bar S_ee(q) S_ii(q)\n";
+        output << "# columns: q_bar S_ee(q) S_ii(q) S_ei(q)\n";
 
         std::cerr << "Integrating static structure factors for Gamma = " << gamma
                   << " (T = " << T_kelvin << " K)...\n";
@@ -278,13 +278,14 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
                 static_omega_max,
                 static_omega_step);
 
-            if (!std::isfinite(static_sq.S_ee) || !std::isfinite(static_sq.S_ii)) {
+            if (!std::isfinite(static_sq.S_ee) || !std::isfinite(static_sq.S_ii) ||
+                !std::isfinite(static_sq.S_ei)) {
                 continue;
             }
 
             output << std::fixed << std::setprecision(6) << q << ' '
                    << std::scientific << std::setprecision(12) << static_sq.S_ee << ' '
-                   << static_sq.S_ii << '\n';
+                   << static_sq.S_ii << ' ' << static_sq.S_ei << '\n';
             ++rows_written;
         }
 

@@ -178,23 +178,27 @@ StaticStructureFactor integrate_static_structure_factor(double q,
     std::vector<double> omega_grid;
     std::vector<double> s_ee;
     std::vector<double> s_ii;
+    std::vector<double> s_ei;
 
     for (double omega_e = omega_min; omega_e <= omega_max + 0.5 * omega_step;
          omega_e += omega_step) {
         const DynamicStructureFactorSample sample =
             evaluate_dynamic_sample(q, omega_e, plasma);
 
-        if (!std::isfinite(sample.S_ee) || !std::isfinite(sample.S_ii)) {
+        if (!std::isfinite(sample.S_ee) || !std::isfinite(sample.S_ii) ||
+            !std::isfinite(sample.S_ei)) {
             continue;
         }
 
         omega_grid.push_back(omega_e);
         s_ee.push_back(sample.S_ee);
         s_ii.push_back(sample.S_ii * (plasma.electron.E_F / plasma.ion.E_F));
+        s_ei.push_back(sample.S_ei);
     }
 
     if (omega_grid.size() < 2) {
         return StaticStructureFactor{
+            std::numeric_limits<double>::quiet_NaN(),
             std::numeric_limits<double>::quiet_NaN(),
             std::numeric_limits<double>::quiet_NaN(),
         };
@@ -203,6 +207,7 @@ StaticStructureFactor integrate_static_structure_factor(double q,
     return StaticStructureFactor{
         trapezoidal_integrate(omega_grid, s_ee),
         trapezoidal_integrate(omega_grid, s_ii),
+        trapezoidal_integrate(omega_grid, s_ei),
     };
 }
 

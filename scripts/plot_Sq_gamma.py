@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render Static Structure Factors S(q) for various Gamma values (PRE style)."""
+"""Render Static Structure Factors S(q) per channel with Gamma sweeps (PRE style)."""
 
 from __future__ import annotations
 
@@ -13,11 +13,7 @@ import seaborn as sns
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_ROOT / "output" / "output_Sq_gamma.dat"
-OUTPUT_PDF = PROJECT_ROOT / "output" / "Sq_gamma_sweep.pdf"
-OUTPUT_PNG = PROJECT_ROOT / "output" / "Sq_gamma_sweep.png"
-
-COLOR_EE = "#1f3b73"
-COLOR_II = "#8b1e1e"
+OUTPUT_DIR = PROJECT_ROOT / "output"
 
 
 def configure_seaborn() -> None:
@@ -27,25 +23,25 @@ def configure_seaborn() -> None:
         font_scale=1.1,
         rc={
             "font.family": "serif",
-            "axes.titlesize": 12,
+            "axes.titlesize": 13,
             "axes.labelsize": 12,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 11,
             "legend.fontsize": 10,
             "axes.linewidth": 0.8,
             "grid.alpha": 0.3,
             "savefig.dpi": 300,
+            "savefig.bbox": "tight",
         },
     )
 
 
 def parse_gamma_data(path: Path) -> dict[float, dict[str, np.ndarray]]:
-    """Parse the output_Sq_gamma.dat file containing blocks of Gamma sweeps."""
     if not path.is_file():
         raise SystemExit(f"Error: data file not found: {path}")
 
     data_by_gamma: dict[float, dict[str, list[float]]] = defaultdict(
-        lambda: {"q": [], "S_ee": [], "S_ii": []}
+        lambda: {"q": [], "S_ee": [], "S_ii": [], "S_ei": []}
     )
     current_gamma: float | None = None
 
@@ -65,65 +61,90 @@ def parse_gamma_data(path: Path) -> dict[float, dict[str, np.ndarray]]:
 
             if current_gamma is not None:
                 parts = line.split()
-                if len(parts) >= 3:
+                if len(parts) >= 4:
                     data_by_gamma[current_gamma]["q"].append(float(parts[0]))
                     data_by_gamma[current_gamma]["S_ee"].append(float(parts[1]))
                     data_by_gamma[current_gamma]["S_ii"].append(float(parts[2]))
+                    data_by_gamma[current_gamma]["S_ei"].append(float(parts[3]))
 
     return {
         gamma: {
             "q": np.array(block["q"]),
             "S_ee": np.array(block["S_ee"]),
             "S_ii": np.array(block["S_ii"]),
+            "S_ei": np.array(block["S_ei"]),
         }
         for gamma, block in data_by_gamma.items()
     }
 
 
-def render_plot(data: dict[float, dict[str, np.ndarray]]) -> None:
-    configure_seaborn()
+def render_channel_plot(
+    data: dict[float, dict[str, np.ndarray]],
+    channel: str,
+    title: str,
+    filename: str,
+) -> None:
+    fig, ax = plt.subplots(figsize=(5, 4))
 
     gammas = sorted(data.keys())
-    if len(gammas) != 4:
-        print(f"Warning: Expected 4 Gamma values for a 2x2 grid, found {len(gammas)}")
-
-    fig, axes = plt.subplots(2, 2, figsize=(8, 6), sharex=True, sharey=True)
-    axes_flat = axes.flatten()
+    colors = sns.color_palette("flare", n_colors=len(gammas))
 
     for idx, gamma in enumerate(gammas):
-        if idx >= 4:
-            break
-        ax = axes_flat[idx]
         q = data[gamma]["q"]
-        s_ee = data[gamma]["S_ee"]
-        s_ii = data[gamma]["S_ii"]
+        s_val = data[gamma][channel]
+        ax.plot(
+            q,
+            s_val,
+            color=colors[idx],
+            linewidth=2.0,
+            label=rf"$\Gamma = {gamma:g}$",
+        )
 
-        ax.plot(q, s_ee, color=COLOR_EE, linewidth=2.0, label=r"$S_{ee}(q)$")
-        ax.plot(q, s_ii, color=COLOR_II, linewidth=2.0, label=r"$S_{ii}(q)$")
+    ax.set_title(title, fontweight="bold")
+    ax.set_xlim(0, float(np.max(data[gammas[0]]["q"])))
 
-        ax.set_title(rf"$\Gamma = {gamma:g}$", fontweight="bold")
-        ymax = max(float(np.max(s_ee)), float(np.max(s_ii)), 0.1)
-        ax.set_ylim(0.0, ymax * 1.1)
-        ax.set_xlim(0, float(np.max(q)))
+    if channel != "S_ei":
+        ax.set_ylim(bottom=0.0)
 
-        if idx in (2, 3):
-            ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_F$")
-        if idx in (0, 2):
-            ax.set_ylabel(r"Static Structure Factor $S(\bar{q})$")
-        if idx == 0:
-            ax.legend(loc="upper left", frameon=True, edgecolor="0.7")
+    ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_F$")
+    ax.set_ylabel(r"Static Structure Factor $S(\bar{q})$")
+    ax.legend(loc="upper left", frameon=True, edgecolor="0.7")
 
-    plt.tight_layout()
-    OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUTPUT_PDF)
-    fig.savefig(OUTPUT_PNG)
+    output_path = OUTPUT_DIR / filename
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path)
+    fig.savefig(output_path.with_suffix(".png"))
     plt.close(fig)
-    print(f"Saved {OUTPUT_PDF} and {OUTPUT_PNG}")
+    print(f"Saved {output_path}")
 
 
 def main() -> None:
+    configure_seaborn()
     data = parse_gamma_data(DATA_FILE)
-    render_plot(data)
+
+    if not data:
+        raise SystemExit(
+            "Error: No data parsed. Ensure C++ engine is updated and ran --gamma-sweep."
+        )
+
+    render_channel_plot(
+        data,
+        "S_ee",
+        r"$S_{ee}(\bar{q})$ — Electron-Electron",
+        "Sq_gamma_ee.pdf",
+    )
+    render_channel_plot(
+        data,
+        "S_ii",
+        r"$S_{ii}(\bar{q})$ — Ion-Ion",
+        "Sq_gamma_ii.pdf",
+    )
+    render_channel_plot(
+        data,
+        "S_ei",
+        r"$S_{ei}(\bar{q})$ — Electron-Ion Cross",
+        "Sq_gamma_ei.pdf",
+    )
 
 
 if __name__ == "__main__":

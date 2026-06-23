@@ -52,6 +52,7 @@ struct DynamicStructureFactorSample {
 struct StaticStructureFactor {
     double S_ee{};
     double S_ii{};
+    double S_ei{};
 };
 
 [[nodiscard]] double number_density_from_rs(double rs) noexcept;
