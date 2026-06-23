@@ -1,4 +1,5 @@
 #include "core/Concepts.hpp"
+#include "core/TrapezoidalIntegration.hpp"
 #include "engine/Lindhard.hpp"
 #include "engine/RPA.hpp"
 #include "physics/ChemicalPotential.hpp"
@@ -198,20 +199,6 @@ struct ChannelContext {
         structure_factor_physical(s_cli, ctx.plasma.density_of_states, ctx.plasma.n),
         std::norm(epsilon),
     };
-}
-
-[[nodiscard]] double trapezoidal_integrate(const std::vector<double>& x,
-                                           const std::vector<double>& y) noexcept
-{
-    assert(x.size() == y.size());
-    assert(x.size() >= 2);
-
-    double integral = 0.0;
-    for (std::size_t i = 1; i < x.size(); ++i) {
-        const double dx = x[i] - x[i - 1];
-        integral += 0.5 * (y[i] + y[i - 1]) * dx;
-    }
-    return integral;
 }
 
 struct SumRuleCheck {

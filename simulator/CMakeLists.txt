@@ -40,6 +40,7 @@ add_library(mosaiq STATIC
     src/engine/Lindhard.cpp
     src/engine/RPA.cpp
     src/engine/PlasmonPoleExtractor.cpp
+    src/engine/StructureFactor.cpp
 )
 add_library(mosaiq::mosaiq ALIAS mosaiq)
 
