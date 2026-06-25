@@ -3,15 +3,17 @@
 
 from __future__ import annotations
 
+import sys
 import warnings
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = PROJECT_ROOT / "output"
+from plot_common import apply_pdf_rcparams, save_figure
 
 
 def calc_t0_lindhard(q_grid: np.ndarray, w_grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -58,7 +60,7 @@ def render_contour(
     filename: str,
     cmap: cm.Colormap = cm.rainbow,
 ) -> None:
-    plt.rcParams.update({"font.size": 12, "font.family": "serif"})
+    apply_pdf_rcparams({"font.size": 12, "font.family": "serif"})
     fig, ax = plt.subplots(figsize=(8, 6))
 
     levels = np.linspace(np.min(z_grid), np.max(z_grid), 150)
@@ -93,11 +95,9 @@ def render_contour(
     )
 
     plt.tight_layout()
-    output_path = OUTPUT_DIR / filename
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    saved_path = save_figure(fig, filename)
     plt.close(fig)
-    print(f"Saved {output_path}")
+    print(f"Saved {saved_path}")
 
 
 def main() -> None:
@@ -113,7 +113,7 @@ def main() -> None:
         re_chi,
         title=r"Analytic $T=0$ Lindhard: Real Part",
         label=r"$\Re\tilde{\chi}_{T=0}$ [$D(\epsilon_F)$ units]",
-        filename="t0_analytic_re_contour.pdf",
+        filename="t0_analytic_re_contour",
     )
     render_contour(
         q_grid,
@@ -121,7 +121,7 @@ def main() -> None:
         -im_chi,
         title=r"Analytic $T=0$ Lindhard: Imaginary Part (Dissipation)",
         label=r"$|\Im\tilde{\chi}_{T=0}|$ [$D(\epsilon_F)$ units]",
-        filename="t0_analytic_im_contour.pdf",
+        filename="t0_analytic_im_contour",
     )
 
 

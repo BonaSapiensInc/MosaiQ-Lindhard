@@ -1,5 +1,6 @@
 #include "engine/Lindhard.hpp"
 
+#include "core/SincQuadrature.hpp"
 #include "physics/Constants.hpp"
 
 #include <cmath>
@@ -35,16 +36,6 @@ template<ScalarPhysical T>
 }
 
 template<ScalarPhysical T>
-[[nodiscard]] T cauchy_principal_weight(T xi, T kh, T pi_over_h) noexcept
-{
-    const T argument = pi_over_h * (xi - kh);
-    if (argument == T{0}) {
-        return T{0};
-    }
-    return (T{1} - std::cos(argument)) / argument;
-}
-
-template<ScalarPhysical T>
 [[nodiscard]] T accumulate_cauchy_principal_value(T xi,
                                                    ReducedChemicalPotential<T> gamma,
                                                    ReducedTemperature<T> tau,
@@ -61,7 +52,7 @@ template<ScalarPhysical T>
         [&](long k) {
             const T kh = static_cast<T>(k) * h;
             const T f_kh = fermi_log_kernel(kh, gamma, tau);
-            return f_kh * cauchy_principal_weight(xi, kh, pi_over_h);
+            return f_kh * cauchy_principal_value_kernel(xi - kh, pi_over_h);
         });
 }
 

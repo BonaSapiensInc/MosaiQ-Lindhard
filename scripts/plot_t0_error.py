@@ -3,15 +3,19 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = PROJECT_ROOT / "output" / "output_t0_limit.dat"
-OUTPUT_PDF = PROJECT_ROOT / "output" / "t0_limit_validation.pdf"
+from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
+
+DATA_FILE = OUTPUT_DIR / "output_t0_limit.dat"
+OUTPUT_FIG = output_path("t0_limit_validation")
 
 COLOR_RE = "#1f3b73"
 COLOR_IM = "#8b1e1e"
@@ -54,7 +58,7 @@ def parse_metadata(path: Path) -> dict[str, str]:
 
 
 def configure_matplotlib() -> None:
-    plt.rcParams.update(
+    apply_pdf_rcparams(
         {
             "font.family": "serif",
             "font.size": 11,
@@ -66,10 +70,6 @@ def configure_matplotlib() -> None:
             "axes.linewidth": 0.8,
             "grid.alpha": 0.25,
             "grid.linewidth": 0.5,
-            "savefig.dpi": 300,
-            "savefig.bbox": "tight",
-            "pdf.fonttype": 42,
-            "ps.fonttype": 42,
         }
     )
 
@@ -176,8 +176,7 @@ def main() -> None:
     finite_re_errors = data["error_re"][np.isfinite(data["error_re"])]
     finite_im_errors = data["error_im"][np.isfinite(data["error_im"])]
 
-    OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUTPUT_PDF)
+    saved_path = save_figure(fig, OUTPUT_FIG.stem)
     plt.close(fig)
 
     print(f"Loaded {data['omega'].size} omega points at q_bar = {q_values[0]:g}.")
@@ -186,7 +185,7 @@ def main() -> None:
     else:
         print("max |Delta Re| = n/a (no finite reference points)")
     print(f"max |Delta Im| = {np.max(finite_im_errors):.3e}")
-    print(f"Saved {OUTPUT_PDF}")
+    print(f"Saved {saved_path}")
 
 
 if __name__ == "__main__":

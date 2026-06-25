@@ -90,4 +90,17 @@ template<ScalarPhysical T>
 template<ScalarPhysical T>
 [[nodiscard]] GvLindhardIntegrand<T> make_gv_lindhard_integrand();
 
+/// Cauchy principal-value kernel [1 - cos(π Δ/h)] / (π Δ/h) with L'Hôpital regularization at grid nodes.
+template<ScalarPhysical T>
+[[nodiscard]] T cauchy_principal_value_kernel(T diff, T pi_over_h) noexcept
+{
+    constexpr T resonance_tolerance = T{1.0e-13};
+    if (std::abs(diff) <= resonance_tolerance) {
+        // lim_{Δ→0} [1 - cos(cΔ)] / (cΔ) = 0 (L'Hôpital); avoids IEEE 754 0/0 → NaN traps.
+        return T{0};
+    }
+    const T argument = pi_over_h * diff;
+    return (T{1} - std::cos(argument)) / argument;
+}
+
 }  // namespace mosaiq

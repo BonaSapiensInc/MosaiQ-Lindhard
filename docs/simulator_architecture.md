@@ -136,6 +136,10 @@ Infinite series are expressed as lazy views with explicit truncation policies (`
 
 **Acceptance criterion (Phase 1):** sinc quadrature of a benchmark integrand matches reference to ≤ 10⁻²⁵⁹ relative error at documented `(N, h)` — matching the error class quoted in Section IV.
 
+#### Sinc Quadrature Singularity Handling (L'Hôpital Regularization)
+
+To compute the real part of the Lindhard function, the engine employs a Sinc quadrature rule for the Cauchy Principal Value integral. At extremely high momenta ($q \ge 15.0$), kinematic variables like $\xi_-$ frequently align perfectly with the integration grid nodes (e.g., $s=0.0$). This alignment triggers a $0/0$ grid resonance trap in the integration kernel. To prevent IEEE 754 `NaN` propagation, the engine explicitly applies L'Hôpital's rule: $\lim_{\Delta \to 0} [1 - \cos(c\Delta)] / (c\Delta) = 0.0$. This architectural choice completely avoids technical debt such as arbitrary grid-offsetting, ensuring absolute determinism and numerical safety across all temperature and momentum scales.
+
 ### 4.2 `physics/`
 
 | Module | Responsibility |

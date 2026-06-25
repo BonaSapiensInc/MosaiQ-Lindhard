@@ -4,16 +4,19 @@
 from __future__ import annotations
 
 import re
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = PROJECT_ROOT / "output" / "output_Sq_gamma.dat"
-OUTPUT_DIR = PROJECT_ROOT / "output"
+from plot_common import OUTPUT_DIR, PDF_RCPARAMS, save_figure
+
+DATA_FILE = OUTPUT_DIR / "output_Sq_gamma.dat"
 
 
 def configure_seaborn() -> None:
@@ -30,8 +33,7 @@ def configure_seaborn() -> None:
             "legend.fontsize": 10,
             "axes.linewidth": 0.8,
             "grid.alpha": 0.3,
-            "savefig.dpi": 300,
-            "savefig.bbox": "tight",
+            **PDF_RCPARAMS,
         },
     )
 
@@ -113,11 +115,9 @@ def render_channel_plot(
     ax.set_ylabel(r"Static Structure Factor $S(\bar{q})$")
     ax.legend(loc="upper left", frameon=True, edgecolor="0.7")
 
-    output_path = OUTPUT_DIR / filename
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path)
+    output_path_saved = save_figure(fig, filename)
     plt.close(fig)
-    print(f"Saved {output_path}")
+    print(f"Saved {output_path_saved}")
 
 
 def main() -> None:
@@ -133,19 +133,19 @@ def main() -> None:
         data,
         "S_ee",
         r"$S_{ee}(\bar{q})$ — Electron-Electron",
-        "Sq_gamma_ee.pdf",
+        "Sq_gamma_ee",
     )
     render_channel_plot(
         data,
         "S_ii",
         r"$S_{ii}(\bar{q})$ — Ion-Ion",
-        "Sq_gamma_ii.pdf",
+        "Sq_gamma_ii",
     )
     render_channel_plot(
         data,
         "S_ei",
         r"$S_{ei}(\bar{q})$ — Electron-Ion Cross",
-        "Sq_gamma_ei.pdf",
+        "Sq_gamma_ei",
     )
 
 

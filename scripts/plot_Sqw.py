@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,9 +15,9 @@ from matplotlib import cm
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LogNorm, Normalize
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = PROJECT_ROOT / "output" / "output_structure_factor.dat"
-OUTPUT_DIR = PROJECT_ROOT / "output"
+from plot_common import OUTPUT_DIR, PDF_RCPARAMS, output_path, save_figure
+
+DATA_FILE = OUTPUT_DIR / "output_structure_factor.dat"
 
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
@@ -35,7 +38,7 @@ def configure_seaborn() -> None:
             "xtick.labelsize": 11,
             "ytick.labelsize": 11,
             "figure.dpi": 100,
-            "savefig.dpi": 300,
+            **PDF_RCPARAMS,
         },
     )
 
@@ -140,10 +143,9 @@ def render_contour(
     ax.set_title(f"{title} — Contour Map", fontweight="bold")
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, bbox_inches="tight")
+    output_path_saved = save_figure(fig, output_path.stem)
     plt.close(fig)
-    print(f"Saved {output_path}")
+    print(f"Saved {output_path_saved}")
 
 
 def render_surface(
@@ -181,10 +183,9 @@ def render_surface(
     ax.view_init(elev=35, azim=-120)
     fig.colorbar(scalar_map, ax=ax, fraction=0.04, pad=0.08, label=label)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, bbox_inches="tight")
+    output_path_saved = save_figure(fig, output_path.stem)
     plt.close(fig)
-    print(f"Saved {output_path}")
+    print(f"Saved {output_path_saved}")
 
 
 def render_channel(
@@ -204,7 +205,7 @@ def render_channel(
         color_norm,
         label,
         title,
-        OUTPUT_DIR / f"{stem}_contour.pdf",
+        output_path(f"{stem}_contour"),
     )
     render_surface(
         q_grid,
@@ -213,7 +214,7 @@ def render_channel(
         color_norm,
         label,
         title,
-        OUTPUT_DIR / f"{stem}_3d.pdf",
+        output_path(f"{stem}_3d"),
     )
 
 

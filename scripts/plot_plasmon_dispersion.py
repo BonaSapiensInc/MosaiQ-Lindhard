@@ -3,15 +3,19 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = PROJECT_ROOT / "output" / "output_plasmon_dispersion.dat"
-OUTPUT_PDF = PROJECT_ROOT / "output" / "plasmon_dispersion.pdf"
+from plot_common import OUTPUT_DIR, PDF_RCPARAMS, apply_pdf_rcparams, output_path, save_figure
+
+DATA_FILE = OUTPUT_DIR / "output_plasmon_dispersion.dat"
+OUTPUT_FIG = output_path("plasmon_dispersion")
 
 COLOR_OMEGA_P = "#1f3b73"  # indigo
 COLOR_BOHM_GROSS = "#4d4d4d"
@@ -53,7 +57,7 @@ def finite_segments(q: np.ndarray, y: np.ndarray) -> list[tuple[np.ndarray, np.n
 
 
 def configure_matplotlib() -> None:
-    plt.rcParams.update(
+    apply_pdf_rcparams(
         {
             "font.family": "serif",
             "font.size": 11,
@@ -65,10 +69,6 @@ def configure_matplotlib() -> None:
             "axes.linewidth": 0.8,
             "grid.alpha": 0.25,
             "grid.linewidth": 0.5,
-            "savefig.dpi": 300,
-            "savefig.bbox": "tight",
-            "pdf.fonttype": 42,
-            "ps.fonttype": 42,
         }
     )
 
@@ -147,13 +147,12 @@ def main() -> None:
     q, omega_p, landau, bohm_gross = load_dispersion(DATA_FILE)
     fig = plot_dispersion(q, omega_p, landau, bohm_gross)
 
-    OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUTPUT_PDF)
+    saved_path = save_figure(fig, OUTPUT_FIG.stem)
     plt.close(fig)
 
     n_roots = int(np.sum(np.isfinite(omega_p)))
     print(f"Loaded {q.size} q points ({n_roots} finite plasmon roots).")
-    print(f"Saved {OUTPUT_PDF}")
+    print(f"Saved {saved_path}")
 
 
 if __name__ == "__main__":

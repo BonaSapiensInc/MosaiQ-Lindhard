@@ -86,10 +86,22 @@ void test_integrate_matches_evaluate()
     assert(std::abs(integrated - evaluated) < 1.0e-12);
 }
 
+void test_cauchy_principal_value_kernel_lhopital()
+{
+    constexpr double pi_over_h = 42.0;
+    const double at_resonance = mosaiq::cauchy_principal_value_kernel(0.0, pi_over_h);
+    const double near_resonance = mosaiq::cauchy_principal_value_kernel(1.0e-14, pi_over_h);
+
+    assert(at_resonance == 0.0);
+    assert(near_resonance == 0.0);
+    assert(std::isfinite(mosaiq::cauchy_principal_value_kernel(0.25, pi_over_h)));
+}
+
 }  // namespace
 
 int main()
 {
+    test_cauchy_principal_value_kernel_lhopital();
     test_sample_pipeline();
     test_gv_real_lindhard_finite_domain();
     test_gv_real_lindhard_low_temperature();

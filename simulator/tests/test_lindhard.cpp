@@ -34,12 +34,12 @@ double reference_legacy_kk_real(double q, double omega, double tau, double gamma
         const double f_kh = std::log(1.0 + std::exp(arg4exp));
 
         const double delta_n = xi_n - kh;
-        if (delta_n != 0.0) {
+        if (std::abs(delta_n) > 1.0e-13) {
             cpv_n += f_kh * ((1.0 - std::cos(pi_over_h * delta_n)) / (pi_over_h * delta_n));
         }
 
         const double delta_p = xi_p - kh;
-        if (delta_p != 0.0) {
+        if (std::abs(delta_p) > 1.0e-13) {
             cpv_p += f_kh * ((1.0 - std::cos(pi_over_h * delta_p)) / (pi_over_h * delta_p));
         }
     }
