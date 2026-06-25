@@ -14,7 +14,7 @@ namespace mosaiq {
 inline constexpr double ion_mass_ratio = 1836.15267343;
 
 inline constexpr double default_q_min = 0.1;
-inline constexpr double default_q_max = 15.0;
+inline constexpr double default_q_max = 25.0;
 inline constexpr double default_q_step = 0.05;
 
 inline constexpr double default_omega_min = 0.01;
