@@ -112,8 +112,7 @@ def render_channel_plot(
 
     ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_F$")
     ax.set_ylabel(r"Static Structure Factor $S(\bar{q})$")
-    legend_loc = "upper left" if channel == "S_ii" else "upper right"
-    ax.legend(loc=legend_loc, frameon=True, edgecolor="0.7")
+    ax.legend(loc="upper right", frameon=True, edgecolor="0.7")
 
     output_path_saved = save_figure(fig, filename)
     plt.close(fig)

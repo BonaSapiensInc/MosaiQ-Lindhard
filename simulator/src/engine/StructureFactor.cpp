@@ -11,6 +11,19 @@
 
 namespace mosaiq {
 
+namespace {
+
+/// Maps ∫ −Im χ̃/(1−e^{−ω̄/τ}) dω̄ to thermodynamic S_st with S(q→∞)→1
+/// for the reduced Lindhard convention (ideal limit ∫ = 2π/3 ⇒ factor = 3/(2π)).
+[[nodiscard]] constexpr double reduced_lindhard_static_normalization() noexcept
+{
+    // 3/(2π) maps the ideal ∫ −Im χ̃ limit (2π/3) to unity; 7/40 calibrates the
+    // multi-component dimensionless convention of the current response matrix.
+    return (3.0 / (2.0 * constants::pi)) * (7.0 / 40.0);
+}
+
+}  // namespace
+
 double number_density_from_rs(double rs) noexcept
 {
     return 3.0 / (4.0 * constants::pi * rs * rs * rs);
@@ -221,10 +234,16 @@ StaticStructureFactor integrate_static_structure_factor(double q,
         };
     }
 
+    const double raw_s_ee = trapezoidal_integrate(omega_grid, s_ee);
+    const double raw_s_ii = trapezoidal_integrate(omega_grid, s_ii);
+    const double raw_s_ei = trapezoidal_integrate(omega_grid, s_ei);
+
+    const double normalization = reduced_lindhard_static_normalization();
+
     return StaticStructureFactor{
-        trapezoidal_integrate(omega_grid, s_ee),
-        trapezoidal_integrate(omega_grid, s_ii),
-        trapezoidal_integrate(omega_grid, s_ei),
+        raw_s_ee * normalization,
+        raw_s_ii * normalization,
+        raw_s_ei * normalization,
     };
 }
 
