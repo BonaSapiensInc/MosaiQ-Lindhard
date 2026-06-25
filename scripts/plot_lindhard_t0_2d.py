@@ -113,7 +113,7 @@ def main() -> None:
         re_chi,
         title=r"Analytic $T=0$ Lindhard: Real Part",
         label=r"$\Re\tilde{\chi}_{T=0}$ [$D(\epsilon_F)$ units]",
-        filename="t0_analytic_re_contour.png",
+        filename="t0_analytic_re_contour.pdf",
     )
     render_contour(
         q_grid,
@@ -121,7 +121,7 @@ def main() -> None:
         -im_chi,
         title=r"Analytic $T=0$ Lindhard: Imaginary Part (Dissipation)",
         label=r"$|\Im\tilde{\chi}_{T=0}|$ [$D(\epsilon_F)$ units]",
-        filename="t0_analytic_im_contour.png",
+        filename="t0_analytic_im_contour.pdf",
     )
 
 

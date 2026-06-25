@@ -12,7 +12,6 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_ROOT / "output" / "output_t0_limit.dat"
 OUTPUT_PDF = PROJECT_ROOT / "output" / "t0_limit_validation.pdf"
-OUTPUT_PNG = PROJECT_ROOT / "output" / "t0_limit_validation.png"
 
 COLOR_RE = "#1f3b73"
 COLOR_IM = "#8b1e1e"
@@ -179,7 +178,6 @@ def main() -> None:
 
     OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT_PDF)
-    fig.savefig(OUTPUT_PNG)
     plt.close(fig)
 
     print(f"Loaded {data['omega'].size} omega points at q_bar = {q_values[0]:g}.")
@@ -189,7 +187,6 @@ def main() -> None:
         print("max |Delta Re| = n/a (no finite reference points)")
     print(f"max |Delta Im| = {np.max(finite_im_errors):.3e}")
     print(f"Saved {OUTPUT_PDF}")
-    print(f"Saved {OUTPUT_PNG}")
 
 
 if __name__ == "__main__":

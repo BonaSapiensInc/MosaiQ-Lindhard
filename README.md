@@ -40,10 +40,34 @@ ctest --test-dir simulator/build --output-on-failure
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+
+# Dynamic structure factor panels (requires output/output_structure_factor.dat)
 python3 scripts/plot_Sqw.py
+
+# Static S(q) gamma sweep (requires simulator run below)
+./scripts/regenerate_sq_gamma.sh 1 10,50,100,150
+
 python3 scripts/plot_plasmon_dispersion.py
 python3 scripts/plot_t0_error.py
+python3 scripts/plot_lindhard_t0_2d.py
 ```
+
+Run the gamma sweep from the repository root (writes `output/output_Sq_gamma.dat`):
+
+```bash
+./simulator/build/mosaiq_simulator --gamma-sweep 1 10,50,100,150
+python3 scripts/plot_Sq_gamma.py
+```
+
+### Compile the manuscript
+
+From `manuscript/`, after all `output/*.pdf` figures exist:
+
+```bash
+cd manuscript && pdflatex two-fermi.tex && pdflatex two-fermi.tex
+```
+
+If `pdflatex` reports missing `S_*_contour.pdf` or `S_*_3d.pdf`, run `python3 scripts/plot_Sqw.py` first.
 
 ## Data availability
 

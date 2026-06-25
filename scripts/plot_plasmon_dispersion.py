@@ -12,7 +12,6 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = PROJECT_ROOT / "output" / "output_plasmon_dispersion.dat"
 OUTPUT_PDF = PROJECT_ROOT / "output" / "plasmon_dispersion.pdf"
-OUTPUT_PNG = PROJECT_ROOT / "output" / "plasmon_dispersion.png"
 
 COLOR_OMEGA_P = "#1f3b73"  # indigo
 COLOR_BOHM_GROSS = "#4d4d4d"
@@ -150,13 +149,11 @@ def main() -> None:
 
     OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT_PDF)
-    fig.savefig(OUTPUT_PNG)
     plt.close(fig)
 
     n_roots = int(np.sum(np.isfinite(omega_p)))
     print(f"Loaded {q.size} q points ({n_roots} finite plasmon roots).")
     print(f"Saved {OUTPUT_PDF}")
-    print(f"Saved {OUTPUT_PNG}")
 
 
 if __name__ == "__main__":

@@ -204,7 +204,7 @@ def render_channel(
         color_norm,
         label,
         title,
-        OUTPUT_DIR / f"{stem}_contour.png",
+        OUTPUT_DIR / f"{stem}_contour.pdf",
     )
     render_surface(
         q_grid,
@@ -213,7 +213,7 @@ def render_channel(
         color_norm,
         label,
         title,
-        OUTPUT_DIR / f"{stem}_3d.png",
+        OUTPUT_DIR / f"{stem}_3d.pdf",
     )
 
 

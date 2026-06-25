@@ -180,7 +180,14 @@ StaticStructureFactor integrate_static_structure_factor(double q,
     std::vector<double> s_ii;
     std::vector<double> s_ei;
 
-    for (double omega_e = omega_min; omega_e <= omega_max + 0.5 * omega_step;
+    // Calculate the dynamic upper bound based on physical kinematics: omega_max = q^2 + 2q * sqrt(gamma + 36 * tau)
+    // We ensure it does not fall below the baseline static omega_max for small q.
+    const double dynamic_limit =
+        (q * q) + 2.0 * q * std::sqrt(std::max(0.0, plasma.electron.gamma.raw()) +
+                                      36.0 * plasma.electron.tau.raw());
+    const double actual_omega_max = std::max(omega_max, dynamic_limit);
+
+    for (double omega_e = omega_min; omega_e <= actual_omega_max + 0.5 * omega_step;
          omega_e += omega_step) {
         const DynamicStructureFactorSample sample =
             evaluate_dynamic_sample(q, omega_e, plasma);

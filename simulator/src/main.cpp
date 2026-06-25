@@ -247,7 +247,7 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
 
     output << "# MosaiQ-Lindhard CLI — static structure factor gamma sweep\n";
     output << "# S(q) = integral S(q, omega) d omega_bar over ["
-           << static_omega_min << ", " << static_omega_max << "] step "
+           << static_omega_min << ", Dynamic Bound] step "
            << static_omega_step << '\n';
     output << std::scientific << std::setprecision(12);
 
