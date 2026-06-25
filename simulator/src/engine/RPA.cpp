@@ -71,6 +71,19 @@ RpaResult<T> evaluate_rpa_susceptibility(LindhardResult<T> chi_e,
     return evaluate_rpa_susceptibility(as_complex(chi_e), as_complex(chi_i), potentials);
 }
 
+template<ScalarPhysical T>
+RpaResult<T> evaluate_rpa_susceptibility(LindhardResult<T> chi_e,
+                                         LindhardResult<T> chi_i,
+                                         BarePotentials<T> potentials,
+                                         T electron_density_of_states,
+                                         T ion_density_of_states)
+{
+    return evaluate_rpa_susceptibility(
+        susceptibility_in_natural_units(chi_e, electron_density_of_states),
+        susceptibility_in_natural_units(chi_i, ion_density_of_states),
+        potentials);
+}
+
 template std::complex<double> evaluate_dielectric<double>(std::complex<double>,
                                                         std::complex<double>,
                                                         BarePotentials<double>);
@@ -83,5 +96,10 @@ template RpaResult<double> evaluate_rpa_susceptibility<double>(std::complex<doub
 template RpaResult<double> evaluate_rpa_susceptibility<double>(LindhardResult<double>,
                                                                LindhardResult<double>,
                                                                BarePotentials<double>);
+template RpaResult<double> evaluate_rpa_susceptibility<double>(LindhardResult<double>,
+                                                               LindhardResult<double>,
+                                                               BarePotentials<double>,
+                                                               double,
+                                                               double);
 
 }  // namespace mosaiq

@@ -1,5 +1,6 @@
 #include "core/Concepts.hpp"
 #include "core/TrapezoidalIntegration.hpp"
+#include "engine/StructureFactor.hpp"
 #include "engine/Lindhard.hpp"
 #include "engine/RPA.hpp"
 #include "physics/ChemicalPotential.hpp"
@@ -130,7 +131,7 @@ struct PlasmaState {
         return 1.0;
     }
     if (exponent < -700.0) {
-        return -std::exp(exponent);
+        return 1.0;
     }
     return 1.0 - std::exp(exponent);
 }
@@ -176,6 +177,8 @@ struct ChannelContext {
 {
     const double omega_i = omega_bar * ctx.plasma.E_F_e / ctx.plasma.E_F_i;
 
+    const double q_i = q_bar;  // equal n_s ⇒ k_F,e = k_F,i in this hydrogenic model
+
     const LindhardResult<> chi_e = evaluate_lindhard(
         WaveVector<>{q_bar},
         Frequency<>{omega_bar},
@@ -183,7 +186,7 @@ struct ChannelContext {
         ctx.plasma.gamma_e);
 
     const LindhardResult<> chi_i = evaluate_lindhard(
-        WaveVector<>{q_bar},
+        WaveVector<>{q_i},
         Frequency<>{omega_i},
         ctx.plasma.tau_i,
         ctx.plasma.gamma_i);
@@ -328,6 +331,14 @@ void test_lindhard_f_sum_moment(const PlasmaState& plasma)
               << " (constant across q̄ at r_s = " << rs << ")\n\n";
 }
 
+void test_bose_einstein_high_frequency_limit()
+{
+    constexpr double tau = 0.05;
+    assert(std::abs(bose_einstein_factor(200.0, tau) - 1.0) < 1.0e-12);
+    assert(std::abs(bose_einstein_factor(1.0e4, tau) - 1.0) < 1.0e-12);
+    std::cout << "Bose–Einstein denominator reaches unity for omega_bar >> tau.\n";
+}
+
 void test_dynamic_structure_factor_sum_rules()
 {
     PlasmaState plasma{};
@@ -438,6 +449,7 @@ void test_dynamic_structure_factor_sum_rules()
 
 int main()
 {
+    test_bose_einstein_high_frequency_limit();
     test_dynamic_structure_factor_sum_rules();
     return 0;
 }

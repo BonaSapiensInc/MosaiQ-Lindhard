@@ -1,5 +1,4 @@
 #include "core/Concepts.hpp"
-#include "engine/Lindhard.hpp"
 #include "engine/PlasmonPoleExtractor.hpp"
 #include "engine/RPA.hpp"
 #include "engine/StructureFactor.hpp"
@@ -169,26 +168,11 @@ int run_standard_mode(double rs, double T_kelvin)
     std::size_t rows_written = 0;
     for (double q = default_q_min; q <= default_q_max + 0.5 * default_q_step;
          q += default_q_step) {
-        const BarePotentials<> potentials = coulomb_potentials_rational(q);
-
         for (double omega_e = default_omega_min;
              omega_e <= default_omega_max + 0.5 * default_omega_step;
              omega_e += default_omega_step) {
             const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
-
-            const LindhardResult<> chi_e = evaluate_lindhard(
-                WaveVector<>{q},
-                Frequency<>{omega_e},
-                plasma.electron.tau,
-                plasma.electron.gamma);
-
-            const LindhardResult<> chi_i = evaluate_lindhard(
-                WaveVector<>{q},
-                Frequency<>{omega_i},
-                plasma.ion.tau,
-                plasma.ion.gamma);
-
-            const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
+            const RpaResult<> rpa = evaluate_rpa_response(q, omega_e, plasma);
 
             const double S_ee =
                 dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw());

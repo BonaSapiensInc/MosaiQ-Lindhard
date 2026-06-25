@@ -1,11 +1,9 @@
 CompileFlags:
   Add:
     - -std=c++20
+    - -Isimulator/src
   CompilationDatabase: simulator/build
 
----
-If:
-  PathMatch: simulator/(src|tests)/.*
-CompileFlags:
-  Add:
-    - -Isimulator/src
+Diagnostics:
+  Suppress:
+    - pragma-once-outside-header

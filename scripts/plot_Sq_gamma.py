@@ -105,11 +105,10 @@ def render_channel_plot(
     ax.set_title(title, fontweight="bold")
     ax.set_xlim(0, float(np.max(data[gammas[0]]["q"])))
 
-    if channel == "S_ee":
-        ax.axhline(1.0, color="0.35", linestyle="--", linewidth=1.0, label=r"$S(\bar{q}\!\to\!\infty)=1$")
+    if channel in ("S_ee", "S_ii"):
+        ax.axhline(1.0, color="0.35", linestyle="--", linewidth=1.0)
 
-    if channel != "S_ei":
-        ax.set_ylim(bottom=0.0)
+    ax.set_ylim(bottom=0.0)
 
     ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_F$")
     ax.set_ylabel(r"Static Structure Factor $S(\bar{q})$")

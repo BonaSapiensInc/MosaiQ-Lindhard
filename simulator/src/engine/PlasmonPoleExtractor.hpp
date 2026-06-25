@@ -185,6 +185,10 @@ std::complex<T> PlasmonPoleExtractor::evaluate_epsilon(PlasmonPoleInputs<T> inpu
     const T scale = inputs.electron.fermi_energy / inputs.ion.fermi_energy;
     const T omega_i_raw = omega_e_raw * scale;
 
+    const T k_f_e = std::sqrt(T{2} * inputs.electron.mass * inputs.electron.fermi_energy);
+    const T k_f_i = std::sqrt(T{2} * inputs.ion.mass * inputs.ion.fermi_energy);
+    const T q_i_raw = inputs.q.raw() * (k_f_e / k_f_i);
+
     const LindhardResult<T> chi_e = evaluate_lindhard(
         inputs.q,
         omega_e,
@@ -192,7 +196,7 @@ std::complex<T> PlasmonPoleExtractor::evaluate_epsilon(PlasmonPoleInputs<T> inpu
         inputs.electron.gamma);
 
     const LindhardResult<T> chi_i = evaluate_lindhard(
-        inputs.q,
+        WaveVector<T>{q_i_raw},
         Frequency<T>{omega_i_raw},
         inputs.ion.tau,
         inputs.ion.gamma);

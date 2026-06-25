@@ -33,6 +33,21 @@ template<ScalarPhysical T>
     return {chi.real(), chi.imag()};
 }
 
+/// D(ε_F) = 3n / (2 E_F) — manuscript Eq. (dos-at-Fermi-energy); ℏ = 1.
+[[nodiscard]] constexpr double density_of_states_at_fermi(double n, double E_F) noexcept
+{
+    return 1.5 * n / E_F;
+}
+
+/// Legacy complexLindhard convention: χ_nat = D(E_F) × χ̃_reduced.
+template<ScalarPhysical T>
+[[nodiscard]] constexpr std::complex<T> susceptibility_in_natural_units(
+    LindhardResult<T> chi_reduced,
+    T density_of_states) noexcept
+{
+    return as_complex(chi_reduced) * density_of_states;
+}
+
 /// Two-component dielectric function ε(q, ω) — manuscript Eq. (dielectric-function) / legacy `get_dielectric`.
 template<ScalarPhysical T = double>
 [[nodiscard]] std::complex<T> evaluate_dielectric(std::complex<T> chi_e,
@@ -54,5 +69,13 @@ template<ScalarPhysical T = double>
 [[nodiscard]] RpaResult<T> evaluate_rpa_susceptibility(LindhardResult<T> chi_e,
                                                        LindhardResult<T> chi_i,
                                                        BarePotentials<T> potentials);
+
+/// Assemble RPA from reduced Lindhard outputs after per-species DOS restoration.
+template<ScalarPhysical T = double>
+[[nodiscard]] RpaResult<T> evaluate_rpa_susceptibility(LindhardResult<T> chi_e,
+                                                       LindhardResult<T> chi_i,
+                                                       BarePotentials<T> potentials,
+                                                       T electron_density_of_states,
+                                                       T ion_density_of_states);
 
 }  // namespace mosaiq

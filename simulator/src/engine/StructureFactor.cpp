@@ -55,7 +55,8 @@ double bose_einstein_factor(double omega_bar, double tau) noexcept
         return 1.0;
     }
     if (exponent < -700.0) {
-        return -std::exp(exponent);
+        // ω̄ ≫ τ: 1 − e^{−ω̄/τ} → 1 (Bose denominator in fluctuation–dissipation).
+        return 1.0;
     }
     return 1.0 - std::exp(exponent);
 }
@@ -144,7 +145,23 @@ DynamicStructureFactorSample evaluate_dynamic_sample(double q,
                                                      double omega_e,
                                                      const PlasmaContext& plasma) noexcept
 {
+    const RpaResult<> rpa = evaluate_rpa_response(q, omega_e, plasma);
     const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
+
+    return DynamicStructureFactorSample{
+        omega_e,
+        dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw()),
+        dynamic_structure_factor(rpa.chi_ii, omega_i, plasma.ion.tau.raw()),
+        dynamic_structure_factor(rpa.chi_ei, omega_e, plasma.electron.tau.raw()),
+    };
+}
+
+RpaResult<> evaluate_rpa_response(double q,
+                                  double omega_e,
+                                  const PlasmaContext& plasma) noexcept
+{
+    const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
+    const double q_i = q * (plasma.electron.k_f / plasma.ion.k_f);
     const BarePotentials<> potentials = coulomb_potentials_rational(q);
 
     const LindhardResult<> chi_e = evaluate_lindhard(
@@ -154,19 +171,12 @@ DynamicStructureFactorSample evaluate_dynamic_sample(double q,
         plasma.electron.gamma);
 
     const LindhardResult<> chi_i = evaluate_lindhard(
-        WaveVector<>{q},
+        WaveVector<>{q_i},
         Frequency<>{omega_i},
         plasma.ion.tau,
         plasma.ion.gamma);
 
-    const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
-
-    return DynamicStructureFactorSample{
-        omega_e,
-        dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw()),
-        dynamic_structure_factor(rpa.chi_ii, omega_i, plasma.ion.tau.raw()),
-        dynamic_structure_factor(rpa.chi_ei, omega_e, plasma.electron.tau.raw()),
-    };
+    return evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
 }
 
 StaticStructureFactor integrate_static_structure_factor(double q,

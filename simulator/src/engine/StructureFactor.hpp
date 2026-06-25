@@ -80,6 +80,11 @@ struct StaticStructureFactor {
     double omega_e,
     const PlasmaContext& plasma) noexcept;
 
+/// Lindhard → DOS-restored RPA at electron phase-space coordinates (q̄_e, ω̄_e).
+[[nodiscard]] RpaResult<> evaluate_rpa_response(double q,
+                                                double omega_e,
+                                                const PlasmaContext& plasma) noexcept;
+
 [[nodiscard]] StaticStructureFactor integrate_static_structure_factor(
     double q,
     const PlasmaContext& plasma,
