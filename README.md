@@ -89,7 +89,7 @@ cmake --build simulator/build --target mosaiq_simulator
 # Figures 3 & 4 (bare Lindhard + RPA structure factors; writes output/*.dat then PDFs)
 ./scripts/regenerate_figures_3_4.sh 1 10000 2 10000
 
-# Figure 7 — thermal anatomy (runs T = 11, 1000, 10000 K if tagged .dat files absent)
+# Figure 7 — thermal anatomy at r_s = 1.0 (T = 70, 1000, 10000 K; panel (b) cold rung = 70 K)
 python3 scripts/plot_thermal_anatomy.py
 
 # Or plot only, if .dat files already exist locally:

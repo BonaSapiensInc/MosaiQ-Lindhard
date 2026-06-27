@@ -110,14 +110,21 @@ def build_contour_grid(
     w_max: float,
     n_omega: int = 400,
     w_min: float | None = None,
+    n_q: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Interpolate samples onto a rectangular mesh (Figure 4 background fallback)."""
     q_col = data[:, 0]
     w_col = data[:, 1]
     v_col = data[:, value_col]
 
-    q_points = np.unique(q_col[(q_col >= q_min - 1.0e-9) & (q_col <= q_max + 1.0e-9)])
-    if q_points.size == 0:
+    in_q = (q_col >= q_min - 1.0e-9) & (q_col <= q_max + 1.0e-9)
+    if n_q is not None:
+        q_points = np.linspace(q_min, q_max, n_q)
+        source_q = np.unique(q_col[in_q])
+    else:
+        q_points = np.unique(q_col[in_q])
+        source_q = q_points
+    if q_points.size == 0 or source_q.size == 0:
         raise ValueError(f"No q samples in [{q_min}, {q_max}]")
 
     in_range = (
@@ -138,7 +145,10 @@ def build_contour_grid(
 
     value_grid = np.full((n_omega, q_points.size), np.nan)
     for j, q in enumerate(q_points):
-        sel = np.isclose(q_col, q, rtol=0.0, atol=1.0e-9) & (w_col <= w_max + 1.0e-9)
+        q_lookup = q
+        if n_q is not None:
+            q_lookup = float(source_q[np.argmin(np.abs(source_q - q))])
+        sel = np.isclose(q_col, q_lookup, rtol=0.0, atol=1.0e-9) & (w_col <= w_max + 1.0e-9)
         if w_min is not None:
             sel &= w_col >= w_min - 1.0e-9
         if not np.any(sel):
@@ -228,6 +238,77 @@ def interpolate_to_display_mesh(
     return q_display, w_display, along_w
 
 
+def fill_display_boundary(grid: np.ndarray) -> np.ndarray:
+    """Extend nearest valid samples across every row/column gap (plasmon backgrounds)."""
+    out = np.array(grid, dtype=float, copy=True)
+    for i in range(out.shape[0]):
+        row = out[i]
+        finite = np.isfinite(row)
+        if not np.any(finite):
+            continue
+        j_first = int(np.argmax(finite))
+        j_last = len(row) - 1 - int(np.argmax(finite[::-1]))
+        row[:j_first] = row[j_first]
+        row[j_last + 1 :] = row[j_last]
+
+    for j in range(out.shape[1]):
+        col = out[:, j]
+        finite = np.isfinite(col)
+        if not np.any(finite):
+            continue
+        i_first = int(np.argmax(finite))
+        i_last = len(col) - 1 - int(np.argmax(finite[::-1]))
+        col[:i_first] = col[i_first]
+        col[i_last + 1 :] = col[i_last]
+    return out
+
+
+def fill_display_border(grid: np.ndarray) -> np.ndarray:
+    """Extend nearest interior samples into the outermost display rows/columns only."""
+    out = np.array(grid, dtype=float, copy=True)
+    nrows, ncols = out.shape
+    if nrows < 3 or ncols < 3:
+        return out
+
+    def nearest_valid_row(start: int, step: int) -> int | None:
+        index = start
+        while 0 <= index < nrows:
+            if np.any(np.isfinite(out[index])):
+                return index
+            index += step
+        return None
+
+    def nearest_valid_col(start: int, step: int) -> int | None:
+        index = start
+        while 0 <= index < ncols:
+            if np.any(np.isfinite(out[:, index])):
+                return index
+            index += step
+        return None
+
+    top = nearest_valid_row(1, 1)
+    if top is not None:
+        missing = ~np.isfinite(out[0])
+        out[0, missing] = out[top, missing]
+
+    bottom = nearest_valid_row(nrows - 2, -1)
+    if bottom is not None:
+        missing = ~np.isfinite(out[-1])
+        out[-1, missing] = out[bottom, missing]
+
+    left = nearest_valid_col(1, 1)
+    if left is not None:
+        missing = ~np.isfinite(out[:, 0])
+        out[missing, 0] = out[missing, left]
+
+    right = nearest_valid_col(ncols - 2, -1)
+    if right is not None:
+        missing = ~np.isfinite(out[:, -1])
+        out[missing, -1] = out[missing, right]
+
+    return out
+
+
 def format_contour_display_axes(
     ax: plt.Axes,
     q_lo: float,
@@ -238,6 +319,7 @@ def format_contour_display_axes(
     """Pin axis limits and major ticks to clean values like t0_analytic panels."""
     ax.set_xlim(q_lo, q_hi)
     ax.set_ylim(w_lo, w_hi)
+    ax.margins(x=0, y=0)
     if q_hi <= 4.0 + 1.0e-9:
         ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 1))
     else:
