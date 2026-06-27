@@ -35,6 +35,9 @@ MICRO_Q_MAX = 4.0
 MACRO_Q_MIN = 0.1
 MACRO_Q_MAX = 50.0
 
+FOCUSED_OMEGA_YMAX = 10.0
+MACRO_OMEGA_YMAX = MACRO_Q_MAX * MACRO_Q_MAX
+
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
     ("S_ii", 5, r"$S_{ii}(q, \omega)$ — ion-ion (ion-acoustic)"),
@@ -59,16 +62,56 @@ def configure_seaborn() -> None:
     )
 
 
-def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    q_1d = data[:, 0]
-    w_1d = data[:, 1]
-    values = data[:, value_col]
+def build_contour_grid(
+    data: np.ndarray,
+    value_col: int,
+    q_min: float,
+    q_max: float,
+    w_max: float,
+    n_omega: int = 400,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Interpolate adaptive (q, omega) samples onto a rectangular mesh for contour plotting."""
+    q_col = data[:, 0]
+    w_col = data[:, 1]
+    v_col = data[:, value_col]
 
-    q_unique = np.unique(q_1d)
-    w_unique = np.unique(w_1d)
-    q_grid, w_grid = np.meshgrid(q_unique, w_unique)
-    value_grid = values.reshape(len(q_unique), len(w_unique)).T
+    q_points = np.unique(q_col[(q_col >= q_min - 1.0e-9) & (q_col <= q_max + 1.0e-9)])
+    if q_points.size == 0:
+        raise ValueError(f"No q samples in [{q_min}, {q_max}]")
+
+    in_range = (
+        (q_col >= q_min - 1.0e-9)
+        & (q_col <= q_max + 1.0e-9)
+        & (w_col <= w_max + 1.0e-9)
+    )
+    positive_w = w_col[in_range & (w_col > 0.0)]
+    w_min = float(np.min(positive_w)) if positive_w.size else 1.0e-2
+    w_min = max(w_min, 1.0e-2)
+    w_axis = np.geomspace(w_min, w_max, n_omega)
+
+    value_grid = np.full((n_omega, q_points.size), np.nan)
+    for j, q in enumerate(q_points):
+        sel = np.isclose(q_col, q, rtol=0.0, atol=1.0e-9) & (w_col <= w_max + 1.0e-9)
+        if not np.any(sel):
+            continue
+        w_slice = w_col[sel]
+        v_slice = v_col[sel]
+        order = np.argsort(w_slice)
+        w_slice = w_slice[order]
+        v_slice = v_slice[order]
+        value_grid[:, j] = np.interp(
+            w_axis, w_slice, v_slice, left=np.nan, right=np.nan
+        )
+
+    q_grid, w_grid = np.meshgrid(q_points, w_axis)
     return q_grid, w_grid, value_grid
+
+
+def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build a contour mesh over the full adaptive dataset (used by Figure 4 background)."""
+    q_max = float(np.max(data[:, 0]))
+    w_max = float(np.max(data[:, 1]))
+    return build_contour_grid(data, value_col, MICRO_Q_MIN, q_max, w_max, n_omega=400)
 
 
 def subset_gridded(
@@ -140,6 +183,7 @@ def render_contour(
     label: str,
     title: str,
     output_path: Path,
+    omega_ymax: float,
 ) -> None:
     cmap = cm.rainbow
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
@@ -175,6 +219,7 @@ def render_contour(
     frame_contour_axis(ax)
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
+    ax.set_ylim(0.0, omega_ymax)
     ax.set_title(title, fontweight="bold")
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
@@ -184,19 +229,18 @@ def render_contour(
 
 
 def render_channel(
-    q_grid: np.ndarray,
-    w_grid: np.ndarray,
-    grid: np.ndarray,
+    data: np.ndarray,
+    value_col: int,
     stem: str,
     label: str,
     title: str,
 ) -> None:
-    micro_q, micro_w, micro_grid = subset_gridded(
-        q_grid, w_grid, grid, MICRO_Q_MIN, MICRO_Q_MAX
+    micro_q, micro_w, micro_grid = build_contour_grid(
+        data, value_col, MICRO_Q_MIN, MICRO_Q_MAX, w_max=FOCUSED_OMEGA_YMAX, n_omega=200
     )
-    macro_w_max = MACRO_Q_MAX * MACRO_Q_MAX
-    macro_q, macro_w, macro_grid = subset_gridded(
-        q_grid, w_grid, grid, MACRO_Q_MIN, MACRO_Q_MAX, w_max=macro_w_max
+    macro_w_max = MACRO_OMEGA_YMAX
+    macro_q, macro_w, macro_grid = build_contour_grid(
+        data, value_col, MACRO_Q_MIN, MACRO_Q_MAX, w_max=macro_w_max, n_omega=400
     )
 
     micro_plot, micro_norm = prepare_plot_grid(micro_grid)
@@ -217,6 +261,7 @@ def render_channel(
         label,
         f"{title} — Focused Contour ($\\bar{{q}} \\leq {MICRO_Q_MAX:.1f}$)",
         output_path(f"{stem}_contour"),
+        FOCUSED_OMEGA_YMAX,
     )
     render_contour(
         macro_q,
@@ -226,6 +271,7 @@ def render_channel(
         label,
         f"{title} — Extended Contour ($\\bar{{q}} \\leq {MACRO_Q_MAX:.1f}$)",
         output_path(f"{stem}_wide_contour"),
+        MACRO_OMEGA_YMAX,
     )
 
 
@@ -242,11 +288,9 @@ def main() -> None:
         )
 
     for stem, col, title in PLOT_SPECS:
-        q_grid, w_grid, value_grid = load_gridded(data, col)
         render_channel(
-            q_grid,
-            w_grid,
-            value_grid,
+            data,
+            col,
             stem,
             label=title.split("—")[0].strip(),
             title=title,

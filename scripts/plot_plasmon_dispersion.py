@@ -28,13 +28,15 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
-from plot_Sqw import load_gridded, log_contour_levels, prepare_plot_grid
+from plot_Sqw import build_contour_grid, log_contour_levels, prepare_plot_grid
 
 DISPERSION_FILE = OUTPUT_DIR / "output_plasmon_dispersion.dat"
 STRUCTURE_FACTOR_FILE = OUTPUT_DIR / "output_structure_factor.dat"
 OUTPUT_FIG = output_path("plasmon_dispersion")
 
 S_EE_COLUMN = 3
+
+PANEL_A_OMEGA_YMAX = 10.0
 
 COLOR_OMEGA_P = "#111111"
 COLOR_BOHM_GROSS = "#ffffff"
@@ -116,7 +118,11 @@ def bare_imaginary_lindhard_along_roots(
     return np.abs(bare)
 
 
-def load_s_ee_background(path: Path) -> tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize] | None:
+def load_s_ee_background(
+    path: Path,
+    q: np.ndarray,
+    omega_p: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize, float, float] | None:
     if not path.is_file():
         return None
 
@@ -124,10 +130,20 @@ def load_s_ee_background(path: Path) -> tuple[np.ndarray, np.ndarray, np.ma.Mask
     if data.ndim != 2 or data.shape[1] <= S_EE_COLUMN:
         return None
 
-    q_grid, w_grid, value_grid = load_gridded(data, S_EE_COLUMN)
+    active = np.isfinite(omega_p) & (q > 0.0)
+    if np.any(active):
+        q_bg_max = min(float(np.max(q[active]) * 1.20), float(np.max(data[:, 0])))
+        w_bg_max = PANEL_A_OMEGA_YMAX
+    else:
+        q_bg_max = min(4.0, float(np.max(data[:, 0])))
+        w_bg_max = PANEL_A_OMEGA_YMAX
+
+    q_grid, w_grid, value_grid = build_contour_grid(
+        data, S_EE_COLUMN, 0.1, q_bg_max, w_bg_max, n_omega=250
+    )
     plot_grid, norm = prepare_plot_grid(value_grid)
     color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
-    return q_grid, w_grid, plot_grid, color_norm
+    return q_grid, w_grid, plot_grid, color_norm, q_bg_max, w_bg_max
 
 
 def finite_segments(q: np.ndarray, y: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
@@ -213,7 +229,7 @@ def plot_dispersion(
     omega_p: np.ndarray,
     landau: np.ndarray,
     bohm_gross: np.ndarray,
-    background: tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize] | None,
+    background: tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize, float, float] | None,
     bare_spe: np.ndarray,
 ) -> Figure:
     configure_matplotlib()
@@ -226,10 +242,13 @@ def plot_dispersion(
         gridspec_kw={"height_ratios": [1.45, 1.0], "hspace": 0.08},
     )
 
+    q_view_max = float(np.max(q[np.isfinite(omega_p)])) * 1.12 if np.any(np.isfinite(omega_p)) else 4.0
+
     if background is not None:
-        q_grid, w_grid, plot_grid, color_norm = background
+        q_grid, w_grid, plot_grid, color_norm, q_bg_max, w_bg_max = background
         render_s_ee_background(ax_top, q_grid, w_grid, plot_grid, color_norm)
         ax_top.set_facecolor("0.15")
+        q_view_max = max(q_view_max, q_bg_max)
 
     for q_seg, y_seg in finite_segments(q, bohm_gross):
         (line,) = ax_top.plot(
@@ -255,6 +274,8 @@ def plot_dispersion(
         )
 
     ax_top.set_ylabel(r"$\bar{\omega}_p$ [$E_\mathrm{F}/\hbar$]")
+    ax_top.set_ylim(0.0, PANEL_A_OMEGA_YMAX)
+    ax_top.set_xlim(0.0, q_view_max)
     ax_top.grid(False)
 
     legend_handles = [
@@ -330,6 +351,7 @@ def plot_dispersion(
     ax_bottom.tick_params(axis="y", colors=COLOR_LANDAU)
     ax_bottom.spines["left"].set_color(COLOR_LANDAU)
     ax_bottom.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_\mathrm{F}$")
+    ax_bottom.set_xlim(0.0, q_view_max)
     ax_bottom.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.35)
 
     bottom_handles = [
@@ -392,7 +414,7 @@ def plot_dispersion(
 
 def main() -> None:
     q, omega_p, landau, bohm_gross = load_dispersion(DISPERSION_FILE)
-    background = load_s_ee_background(STRUCTURE_FACTOR_FILE)
+    background = load_s_ee_background(STRUCTURE_FACTOR_FILE, q, omega_p)
 
     params_path = DISPERSION_FILE if DISPERSION_FILE.is_file() else STRUCTURE_FACTOR_FILE
     gamma_e, tau_e = parse_electron_reduced_params(params_path)

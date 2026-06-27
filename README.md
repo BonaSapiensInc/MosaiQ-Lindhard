@@ -72,14 +72,17 @@ ctest --test-dir simulator/build --output-on-failure
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Dynamic structure factor panels (requires output/output_structure_factor.dat)
+# Figures 3 & 4 (full q=50 mesh; ~1 min per r_s run)
+./scripts/regenerate_figures_3_4.sh 1 10000 2 10000
+
+# Or plot only, if .dat files already exist:
 python3 scripts/plot_Sqw.py
+python3 scripts/plot_plasmon_dispersion.py
 
 # Static S(q) gamma sweep
 ./scripts/regenerate_sq_gamma.sh 1 10,50,100,150
 python3 scripts/plot_Sq_gamma.py
 
-python3 scripts/plot_plasmon_dispersion.py
 python3 scripts/plot_t0_error.py
 python3 scripts/plot_lindhard_t0_2d.py
 ```
