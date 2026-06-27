@@ -131,7 +131,7 @@ def render_contour(
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax.set_title(f"{title} — Contour Map", fontweight="bold")
-    ax.axvline(x=1.0, color="white", linestyle="--", linewidth=1.5, alpha=0.9)
+    ax.axvline(x=1.0, color="black", linestyle="--", linewidth=1.5, alpha=0.9)
     format_contour_display_axes(
         ax,
         ELECTRON_DISPLAY_BOUNDS[0],

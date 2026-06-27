@@ -1677,6 +1677,12 @@ $M_k = M_{\min}\left(M_{\max}/M_{\min}\right)^{k/N}$,
 so that successive contours are separated by equal increments in $\log_{10} M$
 rather than in linear spectral weight; the sparse $|S_{ei}|$ and $|\chi_{ei}^L|$ panels employ a bolder cross-channel isoline profile to keep the interspecies footprint legible.
 
+Comparing the finite-temperature bare manifolds of Fig.~\ref{fig:bare-lindhard} against the exact analytical $T=0$ limit of Fig.~\ref{fig:t0-limit-validation} reveals a profound physical contrast.
+The structural blurring and expanded spectral weight outside the $T=0$ step-boundaries in Fig.~\ref{fig:bare-lindhard} are driven exclusively by thermodynamic Fermi-surface smearing, rather than multi-particle interaction or grid-induced numerical artifacts.
+To quantitatively isolate these mechanisms, we map the evolution of the bare response under a thermal sharpening ladder in Fig.~\ref{fig:thermal-anatomy}.
+As the temperature scales down ($T \rightarrow 11\,\mathrm{K}$), the single-particle continuum boundaries continuously sharpen onto the analytic $T=0$ topology with no mesh-dependent discontinuity.
+Furthermore, because Fig.~\ref{fig:bare-lindhard} is evaluated prior to RPA screening, a direct contrast with the sharp plasmon ridges in Fig.~\ref{fig:structure-factors} confirms that the diffuse background is entirely a non-interacting statistical trait, while the sharp collective resonances are strictly interaction-driven.
+
 Three features stand out.
 First, $S_{ee}(\bar{q}, \bar{\omega})$ [Fig.~\ref{fig:S_ee}] exhibits a sharp plasmon peak in the high-frequency, high-momentum sector.
 The ridge rises smoothly without the aliasing artifacts or runaway divergence that plague
@@ -1813,7 +1819,8 @@ When the Kramers--Kr\"onig derived $\Re \chi^L$ from the same run is compared ag
 the standard $T = 0$ Lindhard real part assembled via the contour routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978},
 a persistent $\mathcal{O}(1)$ offset remains even as $\tau$ is reduced further
 and the imaginary part has already converged to its $\tau \rightarrow 0$ limit.
-Figures~\ref{fig:t0-re-2d} and \ref{fig:t0-im-2d} visualize the causality-pinned $T=0$ topology derived in Appendix~\ref{sec:Lindhard-function} over the $(\bar{q}, \bar{\omega})$ plane, where the logarithmic singularity in the real part forms a sharp topological ridge. When the numerical extraction is compared along the $\bar{q}=1$ slice [Fig.~\ref{fig:t0-1d-slice}], the engine output (markers) tracks a well-defined, repeatable trajectory, while the contour-based textbook reference (solid curves) occupies a distinct manifold. As shown in the error analysis of Fig.~\ref{fig:t0-1d-slice}, the absolute errors in $\Re \chi^L$ remain at the $\mathcal{O}(1)$ level, whereas the imaginary errors are confined to the truncation floor of the sinc evaluation.
+Figures~\ref{fig:t0-re-2d} and \ref{fig:t0-im-2d} visualize the causality-pinned $T=0$ topology derived in Appendix~\ref{sec:Lindhard-function} over the $(\bar{q}, \bar{\omega})$ plane, where the logarithmic singularity in the real part forms a sharp topological ridge; a black dashed vertical guide at $\bar{q}=1.0$ marks the slice extracted in Fig.~\ref{fig:t0-1d-slice}.
+When the numerical extraction is compared along that slice, the engine output (markers) tracks a well-defined, repeatable trajectory, while the contour-based textbook reference (solid curves) occupies a distinct manifold. As shown in the error analysis of Fig.~\ref{fig:t0-1d-slice}, the absolute errors in $\Re \chi^L$ remain at the $\mathcal{O}(1)$ level, whereas the imaginary errors are confined to the truncation floor of the sinc evaluation.
 
 This $\mathcal{O}(1)$ offset must not be interpreted as a numerical artifact or a defect of the MosaiQ-Lindhard engine. Rather, it is the inescapable, operational signature of the thermodynamic inconsistency diagnosed in Sec.~\ref{sec:finite-temperature-Lindhard}: the standard $T = 0$ analytical formulas assembled in textbook contour routes~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} combine $\Re \chi$ and $\Im \chi$ from thermodynamically distinct prescriptions---canonical contour sums or zero-temperature limits for the real part, and grand-canonical dissipative kernels for the imaginary part---that are not jointly constrained by a single Kramers--Kr\"onig relation.
 The MosaiQ-Lindhard engine, by contrast, evaluates $\Re \chi^L$ exclusively as the Hilbert transform
@@ -3434,9 +3441,14 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     \textbf{(b)} The exact multi-component Landau damping rate $\Im[\varepsilon(\bar{q}, \bar{\omega}_p)]$ (solid curve) plotted against the non-interacting single-particle excitation (SPE) continuum baseline, illustrating the sudden dissipation onset at the kinematic boundary.
     Roots were deterministically extracted via Brent's method~\cite{Brent1973} on the causality-constrained $\Re[\varepsilon]$ manifold.
 
-    \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. The white dashed line marks the $\bar{q} = 1.0$ trajectory. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of the standard Matsubara/contour formulations discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
+    \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. A black dashed vertical guide marks the $\bar{q} = 1.0$ slice used in panel~\textbf{(c)}. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of the standard Matsubara/contour formulations discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
 
-    \item \textbf{FIG. 7.} Static structure factors \textbf{(a)} $S_{ee}(\bar{q})$, \textbf{(b)} $S_{ii}(\bar{q})$, and \textbf{(c)} $S_{ei}(\bar{q})$ obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$. The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: panel \textbf{(a)} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while panels \textbf{(b)}--\textbf{(c)} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
+    \item \textbf{FIG. 7.} The anatomy of thermal blurring for the electron susceptibility $\chi_e^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$.
+    Panels~\textbf{(a)}--\textbf{(b)} exhibit the thermal sharpening ladder for $|\Im\chi_e^L|$ at intermediate ($T=1{,}000\,\mathrm{K}$) and highly degenerate ($T=11\,\mathrm{K}$) temperatures, showing smooth topological convergence to the exact $T=0$ limit.
+    Panel~\textbf{(c)} displays a high-resolution 1D cross-section at $\bar{q}=1.0$ overlaying $T=11\,\mathrm{K}$, $1{,}000\,\mathrm{K}$, and $10{,}000\,\mathrm{K}$ against the strict $T=0$ step boundaries to isolate textbook Fermi-step broadening.
+    Panel~\textbf{(d)} maps the bare-vs-RPA interaction contrast ratio, demonstrating that diffuse weight is restricted to the bare baseline.
+
+    \item \textbf{FIG. 8.} Static structure factors \textbf{(a)} $S_{ee}(\bar{q})$, \textbf{(b)} $S_{ii}(\bar{q})$, and \textbf{(c)} $S_{ei}(\bar{q})$ obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$. The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: panel \textbf{(a)} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while panels \textbf{(b)}--\textbf{(c)} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
 \end{itemize}
 
 \clearpage
@@ -3622,8 +3634,18 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \panelpagefigure{../output/t0_analytic_im_contour.pdf}{Fig.~6(b)}{fig:t0-im-2d}
 \panelpagefigure{../output/t0_limit_validation.pdf}{Fig.~6(c)}{fig:t0-1d-slice}
 
-\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{Fig.~7(a)}{fig:Sq-gamma-ee}
-\panelpagefigure{../output/Sq_gamma_ii.pdf}{Fig.~7(b)}{fig:Sq-gamma-ii}
-\panelpagefigure{../output/Sq_gamma_ei.pdf}{Fig.~7(c)}{fig:Sq-gamma-ei}
+\clearpage
+\begin{figure}[p]
+\centering
+\vfill
+\includegraphics[width=\textwidth]{../output/thermal_anatomy.pdf}
+\vfill
+\figurepaneltag{Fig.~7}
+\registerfigurelabels{fig:thermal-anatomy}
+\end{figure}
+
+\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{Fig.~8(a)}{fig:Sq-gamma-ee}
+\panelpagefigure{../output/Sq_gamma_ii.pdf}{Fig.~8(b)}{fig:Sq-gamma-ii}
+\panelpagefigure{../output/Sq_gamma_ei.pdf}{Fig.~8(c)}{fig:Sq-gamma-ei}
 
 \end{document}
