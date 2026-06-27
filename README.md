@@ -54,6 +54,14 @@ cmake -S simulator -B simulator/build -DCMAKE_BUILD_TYPE=Release
 cmake --build simulator/build
 ```
 
+**Editor / clangd:** After the first CMake configure, optionally link the compilation database at the repo root so clangd picks up per-file build flags for `.cpp` sources:
+
+```bash
+ln -sf simulator/build/compile_commands.json compile_commands.json
+```
+
+Headers under `simulator/src/` resolve includes via committed `compile_flags.txt` files even before CMake is run; the symlink is only needed for full `.cpp` IntelliSense (warnings, defines).
+
 Run the CLI from the repository root:
 
 ```bash
