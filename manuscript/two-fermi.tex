@@ -1648,11 +1648,17 @@ The engine inverts the chemical potential for electrons and ions ($m_i/m_e \appr
 evaluates the finite-temperature Lindhard functions via the Kramers-Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
 assembles the two-component RPA susceptibilities Eqs.~(\ref{rpa-responses}),
 and extracts the dynamic structure factors through the fluctuation--dissipation relation Eq.~(\ref{fluctuation-dissipation})
-on a dense $(\bar{q}, \bar{\omega})$ mesh with $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units:
-panels~\textbf{(a)} and~\textbf{(c)} use the low-momentum sector $\bar{q} \in [0.1, 4.0]$, while panel~\textbf{(b)} extends $S_{ii}$ to the macroscopic horizon $\bar{q} = 50.0$.
+on a dense $(\bar{q}, \bar{\omega})$ mesh with $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units.
 
-Figs.~\ref{fig:S_ee}--\ref{fig:S_ei} summarize the three diagonal and cross-channel structure factors
-$S_{ee}$, $S_{ii}$, and $S_{ei}$ obtained from this run, each rendered as a separate logarithmic contour map on the causal evaluation pipeline above.
+Before analyzing the collective excitations born from Coulomb screening, it is instructive to establish the non-interacting baseline.
+Figure~\ref{fig:bare-lindhard} displays the six fundamental components of the bare, un-screened Lindhard response functions $\chi_{st}^L(\bar{q}, \bar{\omega})$ across the electron, ion, and cross-species channels.
+Rendered using a unified high-contrast logarithmic color scale, these panels uncover the raw kinematic terrain of the two-fermion plasma.
+Crucially, due to the extreme mass asymmetry ($m_i/m_e \gg 1$), the ion response manifolds in Figs.~\ref{fig:bare-lindhard}(c) and (d) are scaled out to the $\bar{q} = 50.0$ horizon.
+This coordinate alignment successfully restores the kinematic symmetry, allowing a direct visual comparison of the single-particle continuum boundaries and causality-driven profiles against their electron counterparts.
+
+Figure~\ref{fig:structure-factors} subsequently illustrates how the collective random-phase approximation (RPA) dynamics reshape this bare lake into sharp, localized collective modes ($S_{ee}$, $S_{ii}$, $S_{ei}$)
+obtained from the same run, each rendered as a separate logarithmic contour map on the causal evaluation pipeline above.
+Panels~\textbf{(a)} and~\textbf{(c)} use the low-momentum sector $\bar{q} \in [0.1, 4.0]$, while panel~\textbf{(b)} extends $S_{ii}$ to the macroscopic horizon $\bar{q} = 50.0$.
 No Matsubara pole summation, no Euler--Maclaurin hybrid, and no ensemble-mixed analytic shortcut enters the pipeline;
 every panel is generated from the same pinned Hilbert-transform evaluation of the real Lindhard part
 and the closed-form imaginary part Eq.~(\ref{imaginary-Lindhard}).
@@ -3405,21 +3411,25 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     and the contour of integral of the Fermi-Dirac integrals~(\ref{transformed-Fermi-Dirac-integrals})
     with the integrand~Eq.(\ref{new-Fermi-Dirac-integrand}).
 
-    \item \textbf{FIG. 3.} Dynamic structure factors from the MosaiQ-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
+    \item \textbf{FIG. 3.} The non-interacting base manifolds of the finite-temperature Lindhard response functions $\chi_{st}^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
+    Panels \textbf{(a)}--\textbf{(b)} show the real and imaginary parts for the electron channel, panels \textbf{(c)}--\textbf{(d)} for the ion channel (kinematically scaled to $\bar{q} \le 50.0$), and panels \textbf{(e)}--\textbf{(f)} for the cross-species channel.
+    The unified color coding mapping the response magnitudes demonstrates absolute numerical continuity and smooth causality-constrained profiles entirely free from legacy grid artifacts.
+
+    \item \textbf{FIG. 4.} Dynamic structure factors from the MosaiQ-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
     Panels~\textbf{(a)}, \textbf{(b)}, and~\textbf{(c)} show $S_{ee}$, $S_{ii}$, and $S_{ei}$, respectively, as logarithmic contour maps of $|S_{st}(\bar{q}, \bar{\omega})|$ on the causal $(\bar{q}, \bar{\omega})$ mesh ($\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units).
     Panels~\textbf{(a)} and~\textbf{(c)} cover $\bar{q} \in [0.1, 4.0]$; panel~\textbf{(b)} extends the ion--ion channel to $\bar{q} = 50.0$.
     Each panel maps $|S_{st}|$ on a base-10 logarithmic scale from $S_{\min}=\max(S_{>0},10^{-12})$ to $S_{\max}$ (the channel maximum on the displayed mesh).
     The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and the white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$.
 
-    \item \textbf{FIG. 4.} Extracted electron plasmon dispersion trajectory and corresponding Landau damping for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
+    \item \textbf{FIG. 5.} Extracted electron plasmon dispersion trajectory and corresponding Landau damping for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
     \textbf{(a)} The extracted dispersion trajectory (solid curve) and the classical Bohm--Gross limit~\cite{Bohm-Gross1949} (dashed curve) superimposed directly on top of a 2D background contour map of the canonical spectral response $S_{ee}(\bar{q}, \bar{\omega})$ (filled color field in the legend).
     The rainbow background encodes $|S_{ee}|$ on a base-10 logarithmic scale; the solid black curve is the extracted plasmon branch $\bar{\omega}_p(\bar{q})$, and the dashed curve is the Bohm--Gross long-wavelength anchor.
     \textbf{(b)} The exact multi-component Landau damping rate $\Im[\varepsilon(\bar{q}, \bar{\omega}_p)]$ (solid curve) plotted against the non-interacting single-particle excitation (SPE) continuum baseline, illustrating the sudden dissipation onset at the kinematic boundary.
     Roots were deterministically extracted via Brent's method~\cite{Brent1973} on the causality-constrained $\Re[\varepsilon]$ manifold.
 
-    \item \textbf{FIG. 5.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:structure-factors}. The white dashed line marks the $\bar{q} = 1.0$ trajectory. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of the standard Matsubara/contour formulations discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
+    \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. The white dashed line marks the $\bar{q} = 1.0$ trajectory. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of the standard Matsubara/contour formulations discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
 
-    \item \textbf{FIG. 6.} Static structure factors \textbf{(a)} $S_{ee}(\bar{q})$, \textbf{(b)} $S_{ii}(\bar{q})$, and \textbf{(c)} $S_{ei}(\bar{q})$ obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$. The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: panel \textbf{(a)} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while panels \textbf{(b)}--\textbf{(c)} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
+    \item \textbf{FIG. 7.} Static structure factors \textbf{(a)} $S_{ee}(\bar{q})$, \textbf{(b)} $S_{ii}(\bar{q})$, and \textbf{(c)} $S_{ei}(\bar{q})$ obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$. The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: panel \textbf{(a)} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while panels \textbf{(b)}--\textbf{(c)} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
 \end{itemize}
 
 \clearpage
@@ -3580,9 +3590,16 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \registerfigurelabels{Fermi-Dirac-contour-integral}
 \end{figure}
 
-\panelpagefigure[fig:structure-factors]{../output/S_ee_contour.pdf}{Fig.~3(a)}{fig:S_ee}
-\panelpagefigure{../output/S_ii_contour.pdf}{Fig.~3(b)}{fig:S_ii}
-\panelpagefigure{../output/S_ei_contour.pdf}{Fig.~3(c)}{fig:S_ei}
+\panelpagefigure[fig:bare-lindhard]{../output/chi_e_re.pdf}{Fig.~3(a)}{fig:chi_e_re}
+\panelpagefigure{../output/chi_e_im.pdf}{Fig.~3(b)}{fig:chi_e_im}
+\panelpagefigure{../output/chi_i_re.pdf}{Fig.~3(c)}{fig:chi_i_re}
+\panelpagefigure{../output/chi_i_im.pdf}{Fig.~3(d)}{fig:chi_i_im}
+\panelpagefigure{../output/chi_ei_re.pdf}{Fig.~3(e)}{fig:chi_ei_re}
+\panelpagefigure{../output/chi_ei_im.pdf}{Fig.~3(f)}{fig:chi_ei_im}
+
+\panelpagefigure[fig:structure-factors]{../output/S_ee_contour.pdf}{Fig.~4(a)}{fig:S_ee}
+\panelpagefigure{../output/S_ii_contour.pdf}{Fig.~4(b)}{fig:S_ii}
+\panelpagefigure{../output/S_ei_contour.pdf}{Fig.~4(c)}{fig:S_ei}
 
 \clearpage
 \begin{figure}[p]
@@ -3590,16 +3607,16 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \vfill
 \includegraphics[width=\textwidth]{../output/plasmon_dispersion.pdf}
 \vfill
-\figurepaneltag{Fig.~4}
+\figurepaneltag{Fig.~5}
 \registerfigurelabels{fig:plasmon-dispersion}
 \end{figure}
 
-\panelpagefigure[fig:t0-limit-validation]{../output/t0_analytic_re_contour.pdf}{Fig.~5(a)}{fig:t0-re-2d}
-\panelpagefigure{../output/t0_analytic_im_contour.pdf}{Fig.~5(b)}{fig:t0-im-2d}
-\panelpagefigure{../output/t0_limit_validation.pdf}{Fig.~5(c)}{fig:t0-1d-slice}
+\panelpagefigure[fig:t0-limit-validation]{../output/t0_analytic_re_contour.pdf}{Fig.~6(a)}{fig:t0-re-2d}
+\panelpagefigure{../output/t0_analytic_im_contour.pdf}{Fig.~6(b)}{fig:t0-im-2d}
+\panelpagefigure{../output/t0_limit_validation.pdf}{Fig.~6(c)}{fig:t0-1d-slice}
 
-\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{Fig.~6(a)}{fig:Sq-gamma-ee}
-\panelpagefigure{../output/Sq_gamma_ii.pdf}{Fig.~6(b)}{fig:Sq-gamma-ii}
-\panelpagefigure{../output/Sq_gamma_ei.pdf}{Fig.~6(c)}{fig:Sq-gamma-ei}
+\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{Fig.~7(a)}{fig:Sq-gamma-ee}
+\panelpagefigure{../output/Sq_gamma_ii.pdf}{Fig.~7(b)}{fig:Sq-gamma-ii}
+\panelpagefigure{../output/Sq_gamma_ei.pdf}{Fig.~7(c)}{fig:Sq-gamma-ei}
 
 \end{document}

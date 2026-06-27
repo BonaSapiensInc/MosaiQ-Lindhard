@@ -9,6 +9,7 @@
  * ========================================================================== */
 
 #include "core/Concepts.hpp"
+#include "engine/Lindhard.hpp"
 #include "engine/PlasmonPoleExtractor.hpp"
 #include "engine/RPA.hpp"
 #include "engine/StructureFactor.hpp"
@@ -29,6 +30,7 @@ using namespace mosaiq;
 
 inline constexpr const char* output_directory = "output";
 inline constexpr const char* structure_factor_filename = "output_structure_factor.dat";
+inline constexpr const char* lindhard_base_filename = "output_lindhard_base.dat";
 inline constexpr const char* dispersion_filename = "output_plasmon_dispersion.dat";
 inline constexpr const char* static_sq_gamma_filename = "output_Sq_gamma.dat";
 
@@ -116,6 +118,63 @@ void write_run_header(std::ostream& out,
     return roots_found;
 }
 
+[[nodiscard]] std::size_t export_bare_lindhard_grid(std::ostream& out,
+                                                    const PlasmaContext& plasma)
+{
+    out << "# MosaiQ-Lindhard CLI — bare Lindhard response manifolds (no RPA screening)\n";
+    out << "# omega column: electron reduced units [E_F/e/hbar]\n";
+    out << "# chi_i evaluated at ion phase-space (q_i, omega_i); axes use electron (q, omega_e)\n";
+    out << "# chi_ei = chi_e * v_ei * chi_i (bare bilinear coupling, Eq. response-ei numerator)\n";
+    out << "# columns: q omega_e Re_chi_e Im_chi_e Re_chi_i Im_chi_i Re_chi_ei Im_chi_ei\n";
+    out << std::scientific << std::setprecision(12);
+
+    const double q_scale = plasma.electron.k_f / plasma.ion.k_f;
+    const double omega_scale = plasma.electron.E_F / plasma.ion.E_F;
+
+    std::size_t rows_written = 0;
+    for (double q = default_q_min; q <= dynamic_sq_q_max + 0.5 * default_q_step;
+         q += default_q_step) {
+        const BarePotentials<> potentials = coulomb_potentials_rational(q);
+        const double q_i = q * q_scale;
+
+        for (double omega_e = default_omega_min;
+             omega_e <= default_omega_max + 0.5 * default_omega_step;
+             omega_e += default_omega_step) {
+            const double omega_i = omega_e * omega_scale;
+
+            const LindhardResult<> chi_e = evaluate_lindhard(
+                WaveVector<>{q},
+                Frequency<>{omega_e},
+                plasma.electron.tau,
+                plasma.electron.gamma);
+
+            const LindhardResult<> chi_i = evaluate_lindhard(
+                WaveVector<>{q_i},
+                Frequency<>{omega_i},
+                plasma.ion.tau,
+                plasma.ion.gamma);
+
+            const std::complex<double> chi_e_c{chi_e.real(), chi_e.imag()};
+            const std::complex<double> chi_i_c{chi_i.real(), chi_i.imag()};
+            const std::complex<double> chi_ei = chi_e_c * potentials.v_ei * chi_i_c;
+
+            if (!std::isfinite(chi_e.real()) || !std::isfinite(chi_e.imag()) ||
+                !std::isfinite(chi_i.real()) || !std::isfinite(chi_i.imag()) ||
+                !std::isfinite(chi_ei.real()) || !std::isfinite(chi_ei.imag())) {
+                continue;
+            }
+
+            out << q << ' ' << omega_e << ' '
+                << chi_e.real() << ' ' << chi_e.imag() << ' '
+                << chi_i.real() << ' ' << chi_i.imag() << ' '
+                << chi_ei.real() << ' ' << chi_ei.imag() << '\n';
+            ++rows_written;
+        }
+    }
+
+    return rows_written;
+}
+
 int run_standard_mode(double rs, double T_kelvin)
 {
     PlasmaContext plasma{};
@@ -134,6 +193,7 @@ int run_standard_mode(double rs, double T_kelvin)
     }
 
     const std::filesystem::path structure_factor_path = output_dir / structure_factor_filename;
+    const std::filesystem::path lindhard_base_path = output_dir / lindhard_base_filename;
     const std::filesystem::path dispersion_path = output_dir / dispersion_filename;
 
     std::ofstream structure_factor_output(structure_factor_path);
@@ -148,8 +208,15 @@ int run_standard_mode(double rs, double T_kelvin)
         return EXIT_FAILURE;
     }
 
+    std::ofstream lindhard_base_output(lindhard_base_path);
+    if (!lindhard_base_output) {
+        std::cerr << "Error: cannot open " << lindhard_base_path << " for writing.\n";
+        return EXIT_FAILURE;
+    }
+
     structure_factor_output << "# MosaiQ-Lindhard CLI — multi-component RPA structure factors\n";
     write_run_header(structure_factor_output, rs, T_kelvin, plasma);
+    write_run_header(lindhard_base_output, rs, T_kelvin, plasma);
     structure_factor_output << "# omega column: electron reduced units [E_F/e/hbar]\n";
     structure_factor_output << "# S_ei uses tau_e (electron thermal reference)\n";
     structure_factor_output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
@@ -174,6 +241,14 @@ int run_standard_mode(double rs, double T_kelvin)
     const std::size_t dispersion_roots =
         sweep_plasmon_dispersion(dispersion_output, rs, plasma);
     std::cerr << "  Plasmon roots found: " << dispersion_roots << " / " << total_q << '\n';
+
+    std::cerr << "Exporting bare Lindhard manifolds over " << dynamic_sq_q_nodes
+              << " x " << total_omega << " (q, omega) grid...\n";
+    const std::size_t lindhard_rows = export_bare_lindhard_grid(lindhard_base_output, plasma);
+    if (lindhard_rows == 0) {
+        std::cerr << "Error: no finite bare Lindhard grid points were written.\n";
+        return EXIT_FAILURE;
+    }
 
     std::cerr << "Scanning dynamic structure factors over " << dynamic_sq_q_nodes
               << " x " << total_omega << " (q, omega) grid...\n";
@@ -215,6 +290,7 @@ int run_standard_mode(double rs, double T_kelvin)
         std::cerr << "Warning: no plasmon roots were extracted on the q grid.\n";
     }
 
+    std::cout << "Wrote " << lindhard_rows << " rows to " << lindhard_base_path << '\n';
     std::cout << "Wrote " << rows_written << " rows to " << structure_factor_path << '\n';
     std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
               << dispersion_roots << " roots)\n";
