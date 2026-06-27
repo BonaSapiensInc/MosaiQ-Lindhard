@@ -29,20 +29,32 @@ import numpy as np
 
 from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
 from plot_Sqw import (
+    CONTOUR_ISOLINE_ALPHA,
+    CONTOUR_ISOLINE_LINEWIDTH,
     build_contour_grid,
+    draw_contour_isolines,
     filter_contour_line_levels,
+    frame_contour_axis,
+    interpolate_to_display_mesh,
     log_contour_levels,
     prepare_plot_grid,
     rainbow_log_cmap,
 )
 
-DISPERSION_FILE = OUTPUT_DIR / "output_plasmon_dispersion.dat"
-STRUCTURE_FACTOR_FILE = OUTPUT_DIR / "output_structure_factor.dat"
+# Manuscript Figure 5 parameters (must match between dispersion and structure-factor exports).
+MANUSCRIPT_FIG5_RS = 2.0
+MANUSCRIPT_FIG5_T_KELVIN = 10_000.0
+
 OUTPUT_FIG = output_path("plasmon_dispersion")
 
 S_EE_COLUMN = 3
 
-PANEL_A_OMEGA_YMAX = 10.0
+PANEL_A_OMEGA_YMAX = 6.0
+PANEL_A_Q_SNAP = 0.5
+PANEL_A_OMEGA_SNAP = 0.5
+
+RS_HEADER = re.compile(r"r_s\s*=\s*([^\s]+)")
+T_HEADER = re.compile(r"T_K\s*=\s*([^\s]+)")
 
 COLOR_OMEGA_P = "#111111"
 COLOR_BOHM_GROSS = "#ffffff"
@@ -89,6 +101,120 @@ def load_dispersion(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.
     return q, omega_p, landau, bohm_gross
 
 
+def parse_run_metadata(path: Path) -> tuple[float | None, float | None]:
+    rs_value: float | None = None
+    t_value: float | None = None
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.startswith("#"):
+                break
+            rs_match = RS_HEADER.search(line)
+            if rs_match:
+                rs_value = float(rs_match.group(1))
+            t_match = T_HEADER.search(line)
+            if t_match:
+                t_value = float(t_match.group(1))
+    return rs_value, t_value
+
+
+def rs_filename_tag(rs: float) -> str:
+    return str(int(rs)) if abs(rs - round(rs)) < 1.0e-9 else str(rs).replace(".", "p")
+
+
+def resolve_fig5_data_paths(
+    rs: float = MANUSCRIPT_FIG5_RS,
+    t_kelvin: float = MANUSCRIPT_FIG5_T_KELVIN,
+) -> tuple[Path, Path]:
+    """Require dispersion and structure-factor exports from the same simulator run."""
+    candidates: list[tuple[Path, Path]] = [
+        (
+            OUTPUT_DIR / f"output_plasmon_dispersion_rs{rs_filename_tag(rs)}.dat",
+            OUTPUT_DIR / f"output_structure_factor_rs{rs_filename_tag(rs)}.dat",
+        ),
+        (
+            OUTPUT_DIR / "output_plasmon_dispersion.dat",
+            OUTPUT_DIR / "output_structure_factor.dat",
+        ),
+    ]
+
+    for dispersion_path, structure_factor_path in candidates:
+        if not dispersion_path.is_file() or not structure_factor_path.is_file():
+            continue
+        disp_rs, disp_t = parse_run_metadata(dispersion_path)
+        sf_rs, sf_t = parse_run_metadata(structure_factor_path)
+        if disp_rs is None or sf_rs is None:
+            continue
+        if abs(disp_rs - sf_rs) > 1.0e-6:
+            continue
+        if abs(disp_rs - rs) > 1.0e-6:
+            continue
+        if disp_t is not None and sf_t is not None and abs(disp_t - sf_t) > 1.0e-3:
+            continue
+        if disp_t is not None and abs(disp_t - t_kelvin) > 1.0e-3:
+            continue
+        return dispersion_path, structure_factor_path
+
+    raise SystemExit(
+        "Error: matched Figure 5 data not found.\n"
+        f"  Expected r_s={rs}, T={t_kelvin} K in both:\n"
+        "    output/output_plasmon_dispersion.dat\n"
+        "    output/output_structure_factor.dat\n"
+        "  Regenerate with:\n"
+        f"    ./simulator/build/mosaiq_simulator {rs} {t_kelvin}\n"
+        f"    cp output/output_plasmon_dispersion.dat output/output_plasmon_dispersion_rs{rs_filename_tag(rs)}.dat\n"
+        f"    cp output/output_structure_factor.dat output/output_structure_factor_rs{rs_filename_tag(rs)}.dat"
+    )
+
+
+def snap_ceiling(value: float, step: float) -> float:
+    return float(np.ceil(value / step) * step)
+
+
+def compute_panel_a_bounds(
+    q: np.ndarray,
+    omega_p: np.ndarray,
+) -> tuple[float, float, float, float]:
+    """Tight display rectangle snapped to plasmon extent (fills axis edges)."""
+    active = np.isfinite(omega_p) & (q > 0.0)
+    if not np.any(active):
+        return 0.0, 2.0, 0.0, PANEL_A_OMEGA_YMAX
+
+    q_hi = snap_ceiling(float(np.max(q[active])), PANEL_A_Q_SNAP)
+    omega_top = float(np.max(omega_p[active]))
+    w_hi = max(PANEL_A_OMEGA_YMAX, snap_ceiling(omega_top, PANEL_A_OMEGA_SNAP))
+    return 0.0, q_hi, 0.0, w_hi
+
+
+def fill_display_boundary(grid: np.ndarray) -> np.ndarray:
+    """Extend nearest valid samples to the display rectangle edges."""
+    out = np.array(grid, dtype=float, copy=True)
+    for i in range(out.shape[0]):
+        row = out[i]
+        finite = np.isfinite(row)
+        if not np.any(finite):
+            continue
+        j_first = int(np.argmax(finite))
+        j_last = len(row) - 1 - int(np.argmax(finite[::-1]))
+        row[:j_first] = row[j_first]
+        row[j_last + 1 :] = row[j_last]
+
+    for j in range(out.shape[1]):
+        col = out[:, j]
+        finite = np.isfinite(col)
+        if not np.any(finite):
+            continue
+        i_first = int(np.argmax(finite))
+        i_last = len(col) - 1 - int(np.argmax(finite[::-1]))
+        col[:i_first] = col[i_first]
+        col[i_last + 1 :] = col[i_last]
+    return out
+
+
+def max_omega_in_structure_factor(path: Path) -> float:
+    table = np.loadtxt(path, comments="#")
+    return float(np.max(table[:, 1]))
+
+
 def parse_electron_reduced_params(path: Path) -> tuple[float, float]:
     pattern = re.compile(r"gamma_e\s*=\s*([^\s]+)\s+tau_e\s*=\s*([^\s]+)")
     with path.open(encoding="utf-8") as handle:
@@ -126,9 +252,8 @@ def bare_imaginary_lindhard_along_roots(
 
 def load_s_ee_background(
     path: Path,
-    q: np.ndarray,
-    omega_p: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize, float, float] | None:
+    display_bounds: tuple[float, float, float, float],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, LogNorm | Normalize, float, float] | None:
     if not path.is_file():
         return None
 
@@ -136,20 +261,33 @@ def load_s_ee_background(
     if data.ndim != 2 or data.shape[1] <= S_EE_COLUMN:
         return None
 
-    active = np.isfinite(omega_p) & (q > 0.0)
-    if np.any(active):
-        q_bg_max = min(float(np.max(q[active]) * 1.20), float(np.max(data[:, 0])))
-        w_bg_max = PANEL_A_OMEGA_YMAX
-    else:
-        q_bg_max = min(4.0, float(np.max(data[:, 0])))
-        w_bg_max = PANEL_A_OMEGA_YMAX
+    q_lo, q_hi, w_lo, w_hi = display_bounds
+    q_data_max = min(float(np.max(data[:, 0])), q_hi)
+    if q_data_max <= 0.0:
+        return None
 
     q_grid, w_grid, value_grid = build_contour_grid(
-        data, S_EE_COLUMN, 0.1, q_bg_max, w_bg_max, n_omega=250
+        data,
+        S_EE_COLUMN,
+        max(0.1, q_lo if q_lo > 0.0 else 0.1),
+        q_data_max,
+        w_hi,
+        n_omega=400,
+        w_min=max(w_lo, 0.01),
     )
-    plot_grid, norm = prepare_plot_grid(value_grid)
+    q_display, w_display, value_display = interpolate_to_display_mesh(
+        q_grid,
+        w_grid,
+        np.abs(value_grid),
+        q_lo,
+        q_hi,
+        w_lo,
+        w_hi,
+    )
+    value_display = fill_display_boundary(value_display)
+    plot_grid, norm = prepare_plot_grid(value_display)
     color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
-    return q_grid, w_grid, plot_grid, color_norm, q_bg_max, w_bg_max
+    return q_display, w_display, plot_grid, color_norm, q_hi, w_hi
 
 
 def finite_segments(q: np.ndarray, y: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
@@ -197,7 +335,7 @@ def render_s_ee_background(
 ) -> None:
     cmap = rainbow_log_cmap()
     if isinstance(color_norm, LogNorm):
-        fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=48)
+        fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
         line_levels = filter_contour_line_levels(line_levels, color_norm)
         ax.contourf(
             q_grid,
@@ -209,16 +347,15 @@ def render_s_ee_background(
             extend="min",
             zorder=0,
         )
-        ax.contour(
+        draw_contour_isolines(
+            ax,
             q_grid,
             w_grid,
             plot_grid,
-            levels=line_levels,
-            norm=color_norm,
-            colors="white",
-            linewidths=0.35,
-            alpha=0.65,
-            zorder=1,
+            color_norm,
+            line_levels,
+            line_width=CONTOUR_ISOLINE_LINEWIDTH,
+            line_alpha=CONTOUR_ISOLINE_ALPHA,
         )
     else:
         ax.contourf(
@@ -231,14 +368,17 @@ def render_s_ee_background(
             zorder=0,
         )
 
+    frame_contour_axis(ax)
+
 
 def plot_dispersion(
     q: np.ndarray,
     omega_p: np.ndarray,
     landau: np.ndarray,
     bohm_gross: np.ndarray,
-    background: tuple[np.ndarray, np.ndarray, np.ma.MaskedArray, LogNorm | Normalize, float, float] | None,
+    background: tuple[np.ndarray, np.ndarray, np.ndarray, LogNorm | Normalize, float, float] | None,
     bare_spe: np.ndarray,
+    display_bounds: tuple[float, float, float, float],
 ) -> Figure:
     configure_matplotlib()
 
@@ -250,13 +390,14 @@ def plot_dispersion(
         gridspec_kw={"height_ratios": [1.45, 1.0], "hspace": 0.08},
     )
 
-    q_view_max = float(np.max(q[np.isfinite(omega_p)])) * 1.12 if np.any(np.isfinite(omega_p)) else 4.0
+    q_lo, q_hi, w_lo, w_hi = display_bounds
 
     if background is not None:
-        q_grid, w_grid, plot_grid, color_norm, q_bg_max, w_bg_max = background
+        q_grid, w_grid, plot_grid, color_norm, _, _ = background
         render_s_ee_background(ax_top, q_grid, w_grid, plot_grid, color_norm)
-        ax_top.set_facecolor("0.15")
-        q_view_max = max(q_view_max, q_bg_max)
+        ax_top.set_xlim(q_lo, q_hi)
+        ax_top.set_ylim(w_lo, w_hi)
+        ax_top.margins(x=0, y=0)
 
     for q_seg, y_seg in finite_segments(q, bohm_gross):
         (line,) = ax_top.plot(
@@ -282,8 +423,10 @@ def plot_dispersion(
         )
 
     ax_top.set_ylabel(r"$\bar{\omega}_p = \hbar\omega_p/\epsilon_\mathrm{F}$")
-    ax_top.set_ylim(0.0, PANEL_A_OMEGA_YMAX)
-    ax_top.set_xlim(0.0, q_view_max)
+    if background is None:
+        ax_top.set_ylim(w_lo, w_hi)
+        ax_top.set_xlim(q_lo, q_hi)
+        ax_top.margins(x=0, y=0)
     ax_top.grid(False)
 
     legend_handles = [
@@ -359,7 +502,8 @@ def plot_dispersion(
     ax_bottom.tick_params(axis="y", colors=COLOR_LANDAU)
     ax_bottom.spines["left"].set_color(COLOR_LANDAU)
     ax_bottom.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_\mathrm{F}$")
-    ax_bottom.set_xlim(0.0, q_view_max)
+    ax_bottom.set_xlim(q_lo, q_hi)
+    ax_bottom.margins(x=0)
     ax_bottom.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.35)
 
     bottom_handles = [
@@ -421,22 +565,44 @@ def plot_dispersion(
 
 
 def main() -> None:
-    q, omega_p, landau, bohm_gross = load_dispersion(DISPERSION_FILE)
-    background = load_s_ee_background(STRUCTURE_FACTOR_FILE, q, omega_p)
+    dispersion_path, structure_factor_path = resolve_fig5_data_paths()
+    omega_max = max_omega_in_structure_factor(structure_factor_path)
+    if omega_max + 1.0e-6 < PANEL_A_OMEGA_YMAX:
+        raise SystemExit(
+            f"Error: {structure_factor_path} only reaches omega={omega_max:.3f}, "
+            f"but panel (a) requires at least {PANEL_A_OMEGA_YMAX}.\n"
+            "  Rebuild mosaiq_simulator and rerun the Figure 5 export."
+        )
 
-    params_path = DISPERSION_FILE if DISPERSION_FILE.is_file() else STRUCTURE_FACTOR_FILE
+    q, omega_p, landau, bohm_gross = load_dispersion(dispersion_path)
+    display_bounds = compute_panel_a_bounds(q, omega_p)
+    _, _, _, w_hi = display_bounds
+    if omega_max + 1.0e-6 < w_hi:
+        raise SystemExit(
+            f"Error: {structure_factor_path} only reaches omega={omega_max:.3f}, "
+            f"but panel (a) requires {w_hi:.3f}.\n"
+            "  Rebuild mosaiq_simulator and rerun the Figure 5 export."
+        )
+
+    background = load_s_ee_background(structure_factor_path, display_bounds)
+
+    params_path = dispersion_path
     gamma_e, tau_e = parse_electron_reduced_params(params_path)
     bare_spe = bare_imaginary_lindhard_along_roots(q, omega_p, tau_e, gamma_e)
 
-    fig = plot_dispersion(q, omega_p, landau, bohm_gross, background, bare_spe)
+    fig = plot_dispersion(q, omega_p, landau, bohm_gross, background, bare_spe, display_bounds)
 
     saved_path = save_figure(fig, OUTPUT_FIG.stem)
     plt.close(fig)
 
     n_roots = int(np.sum(np.isfinite(omega_p)))
+    disp_rs, disp_t = parse_run_metadata(dispersion_path)
+    print(f"Figure 5 data: r_s={disp_rs}, T={disp_t} K")
+    print(f"  dispersion: {dispersion_path.name}")
+    print(f"  structure factor: {structure_factor_path.name} (omega_max={omega_max:.3f})")
     print(f"Loaded {q.size} q points ({n_roots} finite plasmon roots).")
     if background is None:
-        print(f"Warning: no background map from {STRUCTURE_FACTOR_FILE}; dispersion-only plot saved.")
+        print(f"Warning: no background map from {structure_factor_path}; dispersion-only plot saved.")
     print(f"Saved {saved_path}")
 
 

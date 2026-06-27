@@ -35,6 +35,9 @@ inline constexpr double default_omega_min = 0.01;
 inline constexpr double default_omega_max = 3.0;
 inline constexpr double default_omega_step = 0.02;
 
+/// Dynamic $S_{ee}$ export ceiling for Figure~5 plasmon background ($\bar{\omega} \le 6.5$).
+inline constexpr double structure_factor_export_omega_max = 6.5;
+
 inline constexpr double static_omega_min = 0.01;
 inline constexpr double static_omega_max = 30.0;
 inline constexpr double static_omega_step = 0.002;
