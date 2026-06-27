@@ -1,3 +1,13 @@
+/* ==========================================================================
+ * MOSAIQ-LINDHARD ENGINE
+ * Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+ * * This software is licensed under the MosaiQ-Lindhard Source Code License Agreement.
+ * Free for non-commercial personal and academic research use only.
+ * Commercial, governmental, and public institutional use requires a
+ * separate paid license. See LICENSE file for details.
+ * * Contact: kim.ingee@bonasapiens.com
+ * ========================================================================== */
+
 #include "engine/StructureFactor.hpp"
 
 #include "core/TrapezoidalIntegration.hpp"
@@ -190,6 +200,20 @@ RpaResult<> evaluate_rpa_response(double q,
         plasma.ion.gamma);
 
     return evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
+}
+
+double dynamic_structure_factor_omega_max(double q, const PlasmaContext& plasma) noexcept
+{
+    const double kinematic_limit =
+        (q * q) + 2.0 * q * std::sqrt(std::max(0.0, plasma.electron.gamma.raw()) +
+                                      36.0 * plasma.electron.tau.raw());
+    const double actual_omega_max = std::max(default_omega_max, kinematic_limit);
+    return std::min(dynamic_sq_omega_ceiling, actual_omega_max);
+}
+
+double dynamic_structure_factor_omega_step(double omega_max) noexcept
+{
+    return std::max(default_omega_step, omega_max / dynamic_sq_omega_mesh_target);
 }
 
 StaticStructureFactor integrate_static_structure_factor(double q,

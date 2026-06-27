@@ -16,7 +16,7 @@ fi
 RS="${1:-1}"
 GAMMAS="${2:-10,50,100,150}"
 
-echo "Running gamma sweep: r_s=${RS}, Gamma=${GAMMAS} (q in [0.1, 25.0], step 0.05)..."
+echo "Running gamma sweep: r_s=${RS}, Gamma=${GAMMAS} (q in [0.1, 50.0], step 0.05)..."
 echo "Note: large q and dynamic omega bounds make this slow (often several hours)."
 "$SIM" --gamma-sweep "$RS" "$GAMMAS"
 

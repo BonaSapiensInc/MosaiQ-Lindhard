@@ -1,3 +1,13 @@
+/* ==========================================================================
+ * MOSAIQ-LINDHARD ENGINE
+ * Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+ * * This software is licensed under the MosaiQ-Lindhard Source Code License Agreement.
+ * Free for non-commercial personal and academic research use only.
+ * Commercial, governmental, and public institutional use requires a
+ * separate paid license. See LICENSE file for details.
+ * * Contact: kim.ingee@bonasapiens.com
+ * ========================================================================== */
+
 #pragma once
 
 #include "core/Concepts.hpp"
@@ -14,7 +24,7 @@ namespace mosaiq {
 inline constexpr double ion_mass_ratio = 1836.15267343;
 
 inline constexpr double default_q_min = 0.1;
-inline constexpr double default_q_max = 25.0;
+inline constexpr double default_q_max = 50.0;
 inline constexpr double default_q_step = 0.05;
 
 inline constexpr double default_omega_min = 0.01;
@@ -26,6 +36,12 @@ inline constexpr double static_omega_max = 30.0;
 inline constexpr double static_omega_step = 0.002;
 
 inline constexpr double coulomb_softening = 0.01;
+
+/// Upper ceiling for the dynamic $S(\bar{q},\bar{\omega})$ mesh at $\bar{q}=50$ ($\bar{\omega}\approx\bar{q}^2$).
+inline constexpr double dynamic_sq_omega_ceiling = 2600.0;
+
+/// Target number of $\bar{\omega}$ nodes per $\bar{q}$ on the wide-range dynamic mesh.
+inline constexpr double dynamic_sq_omega_mesh_target = 400.0;
 
 struct PlasmaSpecies {
     double mass{};
@@ -91,5 +107,12 @@ struct StaticStructureFactor {
     double omega_min,
     double omega_max,
     double omega_step) noexcept;
+
+/// Kinematic $\bar{\omega}$ upper bound for the wide-range dynamic structure-factor mesh.
+[[nodiscard]] double dynamic_structure_factor_omega_max(double q,
+                                                          const PlasmaContext& plasma) noexcept;
+
+/// Adaptive $\bar{\omega}$ step keeping the mesh near \c dynamic_sq_omega_mesh_target nodes.
+[[nodiscard]] double dynamic_structure_factor_omega_step(double omega_max) noexcept;
 
 }  // namespace mosaiq

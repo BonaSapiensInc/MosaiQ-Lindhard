@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures from MosaiQ-Lindhard CLI output."""
+
+# ==========================================================================
+# MOSAIQ-LINDHARD ENGINE
+# Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+# * This software is licensed under the MosaiQ-Lindhard Source Code License Agreement.
+# Free for non-commercial personal and academic research use only.
+# Commercial, governmental, and public institutional use requires a
+# separate paid license. See LICENSE file for details.
+# * Contact: kim.ingee@bonasapiens.com
+# ==========================================================================
+
+"""Render S_ee, S_ii, S_ei(q, omega) focused and wide-range contour figures from MosaiQ-Lindhard CLI output."""
 
 from __future__ import annotations
 
@@ -18,6 +29,11 @@ from matplotlib.colors import LogNorm, Normalize
 from plot_common import OUTPUT_DIR, PDF_RCPARAMS, output_path, save_figure
 
 DATA_FILE = OUTPUT_DIR / "output_structure_factor.dat"
+
+MICRO_Q_MIN = 0.1
+MICRO_Q_MAX = 4.0
+MACRO_Q_MIN = 0.1
+MACRO_Q_MAX = 50.0
 
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
@@ -53,6 +69,25 @@ def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarr
     q_grid, w_grid = np.meshgrid(q_unique, w_unique)
     value_grid = values.reshape(len(q_unique), len(w_unique)).T
     return q_grid, w_grid, value_grid
+
+
+def subset_gridded(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    value_grid: np.ndarray,
+    q_min: float,
+    q_max: float,
+    w_max: float | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    q_axis = q_grid[0, :]
+    w_axis = w_grid[:, 0]
+    q_sel = (q_axis >= q_min - 1.0e-9) & (q_axis <= q_max + 1.0e-9)
+    w_sel = np.ones_like(w_axis, dtype=bool)
+    if w_max is not None:
+        w_sel = w_axis <= w_max + 1.0e-9
+
+    idx = np.ix_(w_sel, q_sel)
+    return q_grid[idx], w_grid[idx], value_grid[idx]
 
 
 def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ma.MaskedArray, LogNorm | None]:
@@ -120,7 +155,7 @@ def render_contour(
             plot_grid,
             levels=line_levels,
             norm=color_norm,
-            colors="black",
+            colors="white",
             linewidths=0.45,
             alpha=0.75,
         )
@@ -132,7 +167,7 @@ def render_contour(
             plot_grid,
             levels=60,
             norm=color_norm,
-            colors="black",
+            colors="white",
             linewidths=0.45,
             alpha=0.75,
         )
@@ -140,48 +175,8 @@ def render_contour(
     frame_contour_axis(ax)
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
-    ax.set_title(f"{title} — Contour Map", fontweight="bold")
+    ax.set_title(title, fontweight="bold")
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
-
-    output_path_saved = save_figure(fig, output_path.stem)
-    plt.close(fig)
-    print(f"Saved {output_path_saved}")
-
-
-def render_surface(
-    q_grid: np.ndarray,
-    w_grid: np.ndarray,
-    plot_grid: np.ma.MaskedArray,
-    color_norm: LogNorm | Normalize,
-    label: str,
-    title: str,
-    output_path: Path,
-) -> None:
-    cmap = cm.rainbow
-    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
-    scalar_map.set_array([])
-
-    fig = plt.figure(figsize=(10, 8), layout="constrained")
-    ax = fig.add_subplot(111, projection="3d")
-    z_surface = plot_grid.astype(float)
-    ax.plot_surface(
-        q_grid,
-        w_grid,
-        z_surface,
-        cmap=cmap,
-        norm=color_norm,
-        shade=False,
-        edgecolor="#333333",
-        linewidth=0.2,
-        antialiased=True,
-        alpha=1.0,
-    )
-    ax.set_xlabel(r"$q \ [k_F]$", labelpad=10)
-    ax.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
-    ax.set_zlabel(label, labelpad=10)
-    ax.set_title(f"{title} — 3D Surface", fontweight="bold")
-    ax.view_init(elev=35, azim=-120)
-    fig.colorbar(scalar_map, ax=ax, fraction=0.04, pad=0.08, label=label)
 
     output_path_saved = save_figure(fig, output_path.stem)
     plt.close(fig)
@@ -196,25 +191,41 @@ def render_channel(
     label: str,
     title: str,
 ) -> None:
-    plot_grid, norm = prepare_plot_grid(grid)
-    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+    micro_q, micro_w, micro_grid = subset_gridded(
+        q_grid, w_grid, grid, MICRO_Q_MIN, MICRO_Q_MAX
+    )
+    macro_w_max = MACRO_Q_MAX * MACRO_Q_MAX
+    macro_q, macro_w, macro_grid = subset_gridded(
+        q_grid, w_grid, grid, MACRO_Q_MIN, MACRO_Q_MAX, w_max=macro_w_max
+    )
+
+    micro_plot, micro_norm = prepare_plot_grid(micro_grid)
+    macro_plot, macro_norm = prepare_plot_grid(macro_grid)
+
+    micro_color_norm: LogNorm | Normalize = (
+        micro_norm if micro_norm is not None else Normalize()
+    )
+    macro_color_norm: LogNorm | Normalize = (
+        macro_norm if macro_norm is not None else Normalize()
+    )
+
     render_contour(
-        q_grid,
-        w_grid,
-        plot_grid,
-        color_norm,
+        micro_q,
+        micro_w,
+        micro_plot,
+        micro_color_norm,
         label,
-        title,
+        f"{title} — Focused Contour ($\\bar{{q}} \\leq {MICRO_Q_MAX:.1f}$)",
         output_path(f"{stem}_contour"),
     )
-    render_surface(
-        q_grid,
-        w_grid,
-        plot_grid,
-        color_norm,
+    render_contour(
+        macro_q,
+        macro_w,
+        macro_plot,
+        macro_color_norm,
         label,
-        title,
-        output_path(f"{stem}_3d"),
+        f"{title} — Extended Contour ($\\bar{{q}} \\leq {MACRO_Q_MAX:.1f}$)",
+        output_path(f"{stem}_wide_contour"),
     )
 
 

@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+
+# ==========================================================================
+# MOSAIQ-LINDHARD ENGINE
+# Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+# * This software is licensed under the MosaiQ-Lindhard Source Code License Agreement.
+# Free for non-commercial personal and academic research use only.
+# Commercial, governmental, and public institutional use requires a
+# separate paid license. See LICENSE file for details.
+# * Contact: kim.ingee@bonasapiens.com
+# ==========================================================================
+
 """Render T=0 analytic Lindhard function (Real and Imaginary) 2D contour maps."""
 
 from __future__ import annotations
@@ -72,9 +83,9 @@ def render_contour(
         w_grid,
         z_grid,
         levels=line_levels,
-        colors="black",
-        linewidths=0.8,
-        alpha=0.8,
+        colors="white",
+        linewidths=0.45,
+        alpha=0.75,
     )
 
     cbar = fig.colorbar(contour, ax=ax, pad=0.02)
@@ -85,14 +96,6 @@ def render_contour(
     ax.set_title(title, fontweight="bold")
 
     ax.axvline(x=1.0, color="white", linestyle="--", linewidth=1.5, alpha=0.9)
-    ax.text(
-        1.05,
-        np.max(w_grid) * 0.9,
-        r"$\bar{q}=1$ slice",
-        color="white",
-        fontsize=11,
-        fontweight="bold",
-    )
 
     plt.tight_layout()
     saved_path = save_figure(fig, filename)

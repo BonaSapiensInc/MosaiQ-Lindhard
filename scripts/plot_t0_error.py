@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+
+# ==========================================================================
+# MOSAIQ-LINDHARD ENGINE
+# Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+# * This software is licensed under the MosaiQ-Lindhard Source Code License Agreement.
+# Free for non-commercial personal and academic research use only.
+# Commercial, governmental, and public institutional use requires a
+# separate paid license. See LICENSE file for details.
+# * Contact: kim.ingee@bonasapiens.com
+# ==========================================================================
+
 """Publication-quality T=0 Lindhard limit validation figure from MosaiQ-Lindhard output (PRE style)."""
 
 from __future__ import annotations
