@@ -30,8 +30,10 @@ from plot_Sqw import (
     CONTOUR_ISOLINE_ALPHA,
     CONTOUR_ISOLINE_COLOR,
     CONTOUR_ISOLINE_LINEWIDTH,
+    ELECTRON_DISPLAY_BOUNDS,
     configure_seaborn,
     filter_contour_line_levels,
+    format_contour_display_axes,
     frame_contour_axis,
     log_contour_levels,
     prepare_plot_grid,
@@ -130,6 +132,13 @@ def render_contour(
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax.set_title(f"{title} — Contour Map", fontweight="bold")
     ax.axvline(x=1.0, color="white", linestyle="--", linewidth=1.5, alpha=0.9)
+    format_contour_display_axes(
+        ax,
+        ELECTRON_DISPLAY_BOUNDS[0],
+        ELECTRON_DISPLAY_BOUNDS[1],
+        ELECTRON_DISPLAY_BOUNDS[2],
+        ELECTRON_DISPLAY_BOUNDS[3],
+    )
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
     saved_path = save_figure(fig, filename)
@@ -138,8 +147,9 @@ def render_contour(
 
 
 def main() -> None:
-    q_1d = np.linspace(0.01, 4.0, 400)
-    w_1d = np.linspace(0.01, 3.0, 400)
+    _, q_hi, _, w_hi = ELECTRON_DISPLAY_BOUNDS
+    q_1d = np.linspace(0.01, q_hi, 400)
+    w_1d = np.linspace(0.01, w_hi, 400)
     q_grid, w_grid = np.meshgrid(q_1d, w_1d)
 
     re_chi, im_chi = calc_t0_lindhard(q_grid, w_grid)

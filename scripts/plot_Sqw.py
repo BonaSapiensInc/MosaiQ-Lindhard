@@ -41,8 +41,17 @@ ELECTRON_CHANNEL_Q_MAX = 4.0
 
 # Ion-acoustic contour: macroscopic q extent with Golden Scale omega zoom.
 S_II_CONTOUR_Q_MAX = 50.0
-ION_CHANNEL_OMEGA_MIN = 0.0
 ION_CHANNEL_OMEGA_MAX = 0.20
+ION_CHANNEL_OMEGA_DATA_PAD = 0.02
+
+# Tidy display frames (match t0_analytic contour styling).
+DISPLAY_MESH_POINTS = 400
+ELECTRON_DISPLAY_BOUNDS = (0.0, 4.0, 0.0, 3.0)
+ION_DISPLAY_BOUNDS = (0.0, 50.0, 0.0, ION_CHANNEL_OMEGA_MAX)
+
+# Backward-compatible aliases.
+ION_CHANNEL_OMEGA_DATA_MIN = 0.01
+ION_CHANNEL_OMEGA_MIN = ION_CHANNEL_OMEGA_DATA_MIN
 
 # Log-spaced isoline styling (white on rainbow fill).
 CONTOUR_ISOLINE_COLOR = "white"
@@ -178,6 +187,100 @@ def crop_omega_band(
     """Restrict contour data to the ion-acoustic frequency window."""
     band = w_grid[:, 0] <= omega_max + 1.0e-9
     return q_grid[band, :], w_grid[band, :], grid[band, :]
+
+
+def ion_channel_data_omega_cap() -> float:
+    """Include one simulator step beyond the display ceiling for edge interpolation."""
+    return ION_CHANNEL_OMEGA_MAX + ION_CHANNEL_OMEGA_DATA_PAD
+
+
+def interpolate_to_display_mesh(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
+    q_lo: float,
+    q_hi: float,
+    w_lo: float,
+    w_hi: float,
+    *,
+    n_points: int = DISPLAY_MESH_POINTS,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Resample onto a uniform rectangle so contours fill the axis frame exactly."""
+    q_axis = np.linspace(q_lo, q_hi, n_points)
+    w_axis = np.linspace(w_lo, w_hi, n_points)
+    q_src = q_grid[0, :]
+    w_src = w_grid[:, 0]
+    source = grid.astype(float)
+
+    along_q = np.vstack(
+        [
+            np.interp(q_axis, q_src, source[i, :], left=np.nan, right=np.nan)
+            for i in range(len(w_src))
+        ]
+    )
+    along_w = np.vstack(
+        [
+            np.interp(w_axis, w_src, along_q[:, j], left=np.nan, right=np.nan)
+            for j in range(len(q_axis))
+        ]
+    ).T
+    q_display, w_display = np.meshgrid(q_axis, w_axis)
+    return q_display, w_display, along_w
+
+
+def format_contour_display_axes(
+    ax: plt.Axes,
+    q_lo: float,
+    q_hi: float,
+    w_lo: float,
+    w_hi: float,
+) -> None:
+    """Pin axis limits and major ticks to clean values like t0_analytic panels."""
+    ax.set_xlim(q_lo, q_hi)
+    ax.set_ylim(w_lo, w_hi)
+    if q_hi <= 4.0 + 1.0e-9:
+        ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 1))
+    else:
+        ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 10))
+    if w_hi <= 0.25 + 1.0e-9:
+        ax.set_yticks(np.linspace(w_lo, w_hi, 5))
+    else:
+        ax.set_yticks(np.arange(int(w_lo), int(w_hi) + 1, 1))
+
+
+def prepare_ion_channel_mesh(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Map ion-acoustic data onto the Golden Scale display rectangle."""
+    cropped_q, cropped_w, cropped_grid = crop_omega_band(
+        q_grid, w_grid, grid, ion_channel_data_omega_cap()
+    )
+    return interpolate_to_display_mesh(cropped_q, cropped_w, cropped_grid, *ION_DISPLAY_BOUNDS)
+
+
+def prepare_ion_plot_grid(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
+) -> tuple[np.ndarray, LogNorm | None]:
+    """Color-normalize on the Golden Scale band only, excluding the padding row."""
+    magnitude = np.abs(grid).astype(float)
+    in_band = w_grid <= ION_CHANNEL_OMEGA_MAX + 1.0e-9
+    band_magnitude = np.where(in_band, magnitude, np.nan)
+    positive = band_magnitude[np.isfinite(band_magnitude) & (band_magnitude > 0.0)]
+    norm = choose_log_norm(positive)
+    if norm is None:
+        return np.nan_to_num(magnitude, nan=0.0), None
+
+    vmin = float(norm.vmin)
+    plot_grid = np.where(
+        in_band & np.isfinite(magnitude) & (magnitude > 0.0),
+        np.maximum(magnitude, vmin),
+        np.nan,
+    )
+    return plot_grid, norm
 
 
 def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ndarray, LogNorm | None]:
@@ -352,9 +455,8 @@ def render_contour(
     label: str,
     title: str,
     output_path: Path,
-    q_xmax: float | None = None,
-    omega_ymin: float | None = None,
-    omega_ymax: float | None = None,
+    q_bounds: tuple[float, float] | None = None,
+    w_bounds: tuple[float, float] | None = None,
     contour_linewidth: float | None = None,
     contour_profile: str = "default",
 ) -> None:
@@ -420,14 +522,8 @@ def render_contour(
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax.set_title(f"{title} — Contour Map", fontweight="bold")
-    if q_xmax is not None:
-        ax.set_xlim(0.0, q_xmax)
-    if omega_ymin is not None or omega_ymax is not None:
-        y_lo, y_hi = ax.get_ylim()
-        ax.set_ylim(
-            omega_ymin if omega_ymin is not None else y_lo,
-            omega_ymax if omega_ymax is not None else y_hi,
-        )
+    if q_bounds is not None and w_bounds is not None:
+        format_contour_display_axes(ax, *q_bounds, *w_bounds)
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
     output_path_saved = save_figure(fig, output_path.stem)
@@ -443,43 +539,37 @@ def render_channel(
     label: str,
     title: str,
 ) -> None:
-    plot_grid, norm = prepare_plot_grid(grid)
-    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
-
     cross_profile = "cross" if stem == "S_ei" else "default"
+    magnitude = np.abs(grid)
 
     if stem == "S_ii":
-        q_xmax = min(S_II_CONTOUR_Q_MAX, float(np.max(q_grid)))
-        zoom_q, zoom_w, zoom_grid = crop_omega_band(
-            q_grid, w_grid, grid, ION_CHANNEL_OMEGA_MAX
+        q_display, w_display, value_display = prepare_ion_channel_mesh(
+            q_grid, w_grid, magnitude
         )
-        zoom_plot, zoom_norm = prepare_plot_grid(zoom_grid)
-        zoom_color: LogNorm | Normalize = (
-            zoom_norm if zoom_norm is not None else Normalize()
+        plot_grid, color_norm = prepare_ion_plot_grid(q_display, w_display, value_display)
+        if color_norm is None:
+            raise RuntimeError("No finite positive amplitudes for S_ii contour")
+        q_bounds = ION_DISPLAY_BOUNDS[:2]
+        w_bounds = ION_DISPLAY_BOUNDS[2:]
+    else:
+        q_display, w_display, value_display = interpolate_to_display_mesh(
+            q_grid, w_grid, magnitude, *ELECTRON_DISPLAY_BOUNDS
         )
-        render_contour(
-            zoom_q,
-            zoom_w,
-            zoom_plot,
-            zoom_color,
-            label,
-            title,
-            output_path(f"{stem}_contour"),
-            q_xmax=q_xmax,
-            omega_ymin=ION_CHANNEL_OMEGA_MIN,
-            omega_ymax=ION_CHANNEL_OMEGA_MAX,
-            contour_profile=cross_profile,
-        )
-        return
+        plot_grid, norm = prepare_plot_grid(value_display)
+        color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+        q_bounds = ELECTRON_DISPLAY_BOUNDS[:2]
+        w_bounds = ELECTRON_DISPLAY_BOUNDS[2:]
 
     render_contour(
-        q_grid,
-        w_grid,
+        q_display,
+        w_display,
         plot_grid,
         color_norm,
         label,
         title,
         output_path(f"{stem}_contour"),
+        q_bounds=q_bounds,
+        w_bounds=w_bounds,
         contour_profile=cross_profile,
     )
 
