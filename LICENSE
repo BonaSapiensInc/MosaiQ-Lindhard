@@ -1,0 +1,23 @@
+MOSAIQ-LINDHARD SOURCE CODE LICENSE AGREEMENT
+
+Copyright (c) 2026 Bona Sapiens, Inc. All rights reserved.
+
+1. PERMITTED USE (PERSONAL & ACADEMIC)
+Bona Sapiens, Inc. hereby grants a free, non-exclusive, non-transferable, worldwide license to use, copy, modify, and distribute this software and its documentation, provided that such use is strictly for non-commercial personal utilization or academic research purposes. Any publication resulting from the use of this software must properly cite the corresponding manuscript.
+
+2. RESTRICTIONS ON COMMERCIAL, GOVERNMENTAL, AND PUBLIC USE
+Any use of this software, in whole or in part, including but not limited to running simulations, integrating into existing legacy systems, or utilizing the core C++20 engine, by or for the benefit of the following entities is strictly prohibited under this free license:
+  a) Commercial entities, corporations, firms, or for-profit organizations.
+  b) State, federal, national, or local government agencies and military branches.
+  c) Public entities, state-funded institutions, and national laboratories.
+
+3. COMMERCIAL LICENSING AND FEES
+Any entity falling under the categories defined in Section 2 must obtain a separate, valid written Commercial/Governmental License from Bona Sapiens, Inc. and pay the applicable licensing fees prior to any operational deployment or research use.
+
+4. CONTACT FOR INQUIRIES
+For all commercial, governmental, or public institution licensing inquiries, contract negotiations, and fee schedules, please contact:
+  Bona Sapiens, Inc.
+  Email: kim.ingee@bonasapiens.com
+
+5. DISCLAIMER OF WARRANTY
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
