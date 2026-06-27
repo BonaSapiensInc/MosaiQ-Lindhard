@@ -21,7 +21,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
 from matplotlib import cm
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
@@ -57,8 +56,7 @@ RS_HEADER = re.compile(r"r_s\s*=\s*([^\s]+)")
 T_HEADER = re.compile(r"T_K\s*=\s*([^\s]+)")
 
 COLOR_OMEGA_P = "#111111"
-COLOR_BOHM_GROSS = "#ffffff"
-COLOR_BOHM_GROSS_LEGEND = "#555555"
+COLOR_BOHM_GROSS = "#111111"
 COLOR_LANDAU = "#8b1e1e"
 COLOR_SPE_CHANNEL = "#2f5f8f"
 COLOR_SPE_LINE = "#174a73"
@@ -66,24 +64,15 @@ SPE_FILL_ALPHA = 0.30
 LOG_FLOOR = 1.0e-12
 
 
-def bohm_gross_path_effects() -> list[pe.AbstractPathEffect]:
-    """Dark halo so the white dashed curve reads on rainbow backgrounds and in the legend."""
-    return [
-        pe.Stroke(linewidth=3.6, foreground="#2b2b2b"),
-        pe.Normal(),
-    ]
-
-
 def bohm_gross_legend_handle() -> plt.Line2D:
-    line = plt.Line2D(
+    return plt.Line2D(
         [0],
         [0],
-        color=COLOR_BOHM_GROSS_LEGEND,
+        color=COLOR_BOHM_GROSS,
         linewidth=2.0,
         linestyle="--",
         dashes=(6, 3),
     )
-    return line
 
 
 def load_dispersion(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -400,7 +389,7 @@ def plot_dispersion(
         ax_top.margins(x=0, y=0)
 
     for q_seg, y_seg in finite_segments(q, bohm_gross):
-        (line,) = ax_top.plot(
+        ax_top.plot(
             q_seg,
             y_seg,
             color=COLOR_BOHM_GROSS,
@@ -410,7 +399,6 @@ def plot_dispersion(
             solid_capstyle="round",
             zorder=4,
         )
-        line.set_path_effects(bohm_gross_path_effects())
 
     for q_seg, y_seg in finite_segments(q, omega_p):
         ax_top.plot(
