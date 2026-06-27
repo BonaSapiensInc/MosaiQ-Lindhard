@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -45,6 +46,14 @@ S_II_CONTOUR_Q_MAX = 50.0
 CONTOUR_ISOLINE_COLOR = "white"
 CONTOUR_ISOLINE_LINEWIDTH = 1.35
 CONTOUR_ISOLINE_ALPHA = 0.88
+# Cross-channel panels: sparse signal on a wide log mesh — bold isolines in the active band only.
+CROSS_CHANNEL_ISOLINE_LINEWIDTH = 9.0
+CROSS_CHANNEL_ISOLINE_ALPHA = 1.0
+CROSS_CHANNEL_HALO_COLOR = "#0a0412"
+CROSS_CHANNEL_HALO_LINEWIDTH = 22.0
+CROSS_CHANNEL_CONTOUR_N_LINES = 12
+CROSS_CHANNEL_LINE_VMAX_FLOOR = 0.006
+CROSS_CHANNEL_MESH_REFINE = 4
 
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
@@ -197,6 +206,99 @@ def filter_contour_line_levels(
     return line_levels[line_levels >= floor]
 
 
+def cross_channel_contour_levels(
+    plot_grid: np.ndarray,
+    norm: LogNorm,
+    *,
+    n_lines: int = CROSS_CHANNEL_CONTOUR_N_LINES,
+    vmax_floor_fraction: float = CROSS_CHANNEL_LINE_VMAX_FLOOR,
+) -> np.ndarray:
+    """Place fewer, bolder isolines only where cross-channel spectral weight is non-negligible."""
+    vmax = float(norm.vmax)
+    lo = max(vmax * vmax_floor_fraction, float(norm.vmin))
+    active = plot_grid[np.isfinite(plot_grid) & (plot_grid >= lo)]
+    if active.size:
+        lo = max(lo, float(np.percentile(active, 8.0)))
+    hi = vmax
+    if hi <= lo * (1.0 + 1.0e-12):
+        return np.array([hi])
+    return np.geomspace(lo, hi, n_lines)
+
+
+def refine_plot_mesh(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    plot_grid: np.ndarray,
+    *,
+    q_factor: int = CROSS_CHANNEL_MESH_REFINE,
+    w_factor: int = CROSS_CHANNEL_MESH_REFINE,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Upsample the causal field so cross-channel isolines trace smooth, continuous curves."""
+    q_axis = q_grid[0, :]
+    w_axis = w_grid[:, 0]
+    q_fine = np.linspace(float(q_axis[0]), float(q_axis[-1]), (len(q_axis) - 1) * q_factor + 1)
+    w_fine = np.linspace(float(w_axis[0]), float(w_axis[-1]), (len(w_axis) - 1) * w_factor + 1)
+
+    along_q = np.vstack([np.interp(q_fine, q_axis, plot_grid[i, :]) for i in range(len(w_axis))])
+    along_w = np.vstack([np.interp(w_fine, w_axis, along_q[:, j]) for j in range(len(q_fine))]).T
+    q_fine_grid, w_fine_grid = np.meshgrid(q_fine, w_fine)
+    return q_fine_grid, w_fine_grid, along_w
+
+
+def draw_contour_isolines(
+    ax: plt.Axes,
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    plot_grid: np.ndarray,
+    color_norm: LogNorm | Normalize,
+    line_levels: np.ndarray,
+    *,
+    cross_channel: bool = False,
+    line_width: float | None = None,
+    line_alpha: float | None = None,
+) -> None:
+    width = (
+        CROSS_CHANNEL_ISOLINE_LINEWIDTH
+        if cross_channel
+        else CONTOUR_ISOLINE_LINEWIDTH
+        if line_width is None
+        else line_width
+    )
+    alpha = (
+        CROSS_CHANNEL_ISOLINE_ALPHA
+        if cross_channel
+        else CONTOUR_ISOLINE_ALPHA
+        if line_alpha is None
+        else line_alpha
+    )
+
+    contour_q, contour_w, contour_z = q_grid, w_grid, plot_grid
+    if cross_channel:
+        contour_q, contour_w, contour_z = refine_plot_mesh(q_grid, w_grid, plot_grid)
+
+    contour_set = ax.contour(
+        contour_q,
+        contour_w,
+        contour_z,
+        levels=line_levels,
+        norm=color_norm,
+        colors=CONTOUR_ISOLINE_COLOR,
+        linewidths=width,
+        alpha=alpha,
+        zorder=5,
+    )
+    if cross_channel:
+        contour_set.set(
+            path_effects=[
+                pe.withStroke(
+                    linewidth=CROSS_CHANNEL_HALO_LINEWIDTH,
+                    foreground=CROSS_CHANNEL_HALO_COLOR,
+                ),
+                pe.Normal(),
+            ]
+        )
+
+
 def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
     finite = grid[np.isfinite(grid)]
     if finite.size == 0:
@@ -240,7 +342,18 @@ def render_contour(
     q_xmax: float | None = None,
     omega_ymin: float | None = None,
     omega_ymax: float | None = None,
+    contour_linewidth: float | None = None,
+    contour_profile: str = "default",
 ) -> None:
+    cross_channel = contour_profile == "cross"
+    line_width = (
+        CROSS_CHANNEL_ISOLINE_LINEWIDTH
+        if cross_channel
+        else CONTOUR_ISOLINE_LINEWIDTH
+        if contour_linewidth is None
+        else contour_linewidth
+    )
+    line_alpha = CROSS_CHANNEL_ISOLINE_ALPHA if cross_channel else CONTOUR_ISOLINE_ALPHA
     cmap = rainbow_log_cmap()
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
     scalar_map.set_array([])
@@ -248,7 +361,10 @@ def render_contour(
     fig, ax = plt.subplots(figsize=(10, 7), layout="constrained")
     if isinstance(color_norm, LogNorm):
         fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
-        line_levels = filter_contour_line_levels(line_levels, color_norm)
+        if cross_channel:
+            line_levels = cross_channel_contour_levels(plot_grid, color_norm)
+        else:
+            line_levels = filter_contour_line_levels(line_levels, color_norm)
         ax.contourf(
             q_grid,
             w_grid,
@@ -258,27 +374,33 @@ def render_contour(
             norm=color_norm,
             extend="min",
         )
-        ax.contour(
+        draw_contour_isolines(
+            ax,
             q_grid,
             w_grid,
             plot_grid,
-            levels=line_levels,
-            norm=color_norm,
-            colors=CONTOUR_ISOLINE_COLOR,
-            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
-            alpha=CONTOUR_ISOLINE_ALPHA,
+            color_norm,
+            line_levels,
+            cross_channel=cross_channel,
+            line_width=line_width,
+            line_alpha=line_alpha,
         )
     else:
         ax.contourf(q_grid, w_grid, plot_grid, levels=150, cmap=cmap, norm=color_norm)
-        ax.contour(
+        draw_contour_isolines(
+            ax,
             q_grid,
             w_grid,
             plot_grid,
-            levels=60,
-            norm=color_norm,
-            colors=CONTOUR_ISOLINE_COLOR,
-            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
-            alpha=CONTOUR_ISOLINE_ALPHA,
+            color_norm,
+            np.geomspace(
+                float(color_norm.vmin) if hasattr(color_norm, "vmin") else 0.0,
+                float(color_norm.vmax) if hasattr(color_norm, "vmax") else 1.0,
+                60,
+            ),
+            cross_channel=cross_channel,
+            line_width=line_width,
+            line_alpha=line_alpha,
         )
 
     frame_contour_axis(ax)
@@ -351,6 +473,8 @@ def render_channel(
     plot_grid, norm = prepare_plot_grid(grid)
     color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
 
+    cross_profile = "cross" if stem == "S_ei" else "default"
+
     if stem == "S_ii":
         q_xmax = min(S_II_CONTOUR_Q_MAX, float(np.max(q_grid)))
         render_contour(
@@ -362,6 +486,7 @@ def render_channel(
             title,
             output_path(f"{stem}_contour"),
             q_xmax=q_xmax,
+            contour_profile=cross_profile,
         )
         # 3D companion stays on the low-q electron-sector mesh for readability.
         electron_rows_mask = q_grid[0, :] <= ELECTRON_CHANNEL_Q_MAX + 1.0e-9
@@ -391,6 +516,7 @@ def render_channel(
         label,
         title,
         output_path(f"{stem}_contour"),
+        contour_profile=cross_profile,
     )
     render_surface(
         q_grid,

@@ -120,6 +120,7 @@ def main() -> None:
             output_path(stem),
             q_xmax=q_max,
             omega_ymax=OMEGA_MAX,
+            contour_profile="cross" if stem.startswith("chi_ei") else "default",
         )
 
 
