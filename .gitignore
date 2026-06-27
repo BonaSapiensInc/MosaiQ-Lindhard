@@ -47,9 +47,4 @@ compile_commands.json
 
 # Simulator CLI output (regenerate via mosaiq_simulator)
 output/*.dat
-!output/output_lindhard_base.dat
-!output/output_lindhard_base_T11.dat
-!output/output_lindhard_base_T1000.dat
-!output/output_lindhard_base_T10000.dat
-!output/output_structure_factor_T10000.dat
 output/*.png
