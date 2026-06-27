@@ -71,7 +71,6 @@ def bohm_gross_legend_handle() -> plt.Line2D:
         color=COLOR_BOHM_GROSS,
         linewidth=2.0,
         linestyle="--",
-        dashes=(6, 3),
     )
 
 
@@ -388,19 +387,21 @@ def plot_dispersion(
         ax_top.set_ylim(w_lo, w_hi)
         ax_top.margins(x=0, y=0)
 
-    for q_seg, y_seg in finite_segments(q, bohm_gross):
+    q_mask = (q >= q_lo) & (q <= q_hi)
+
+    for q_seg, y_seg in finite_segments(q[q_mask], bohm_gross[q_mask]):
         ax_top.plot(
             q_seg,
             y_seg,
             color=COLOR_BOHM_GROSS,
             linewidth=2.0,
             linestyle="--",
-            dashes=(6, 3),
-            solid_capstyle="round",
+            solid_capstyle="butt",
+            dash_capstyle="butt",
             zorder=4,
         )
 
-    for q_seg, y_seg in finite_segments(q, omega_p):
+    for q_seg, y_seg in finite_segments(q[q_mask], omega_p[q_mask]):
         ax_top.plot(
             q_seg,
             y_seg,
