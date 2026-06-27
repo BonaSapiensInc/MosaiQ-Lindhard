@@ -28,6 +28,7 @@ manuscript/two-fermiNotes.bib
 
 # Generated PDF (rebuild from manuscript/two-fermi.tex)
 *.pdf
+!output/chi_*.pdf
 
 # CMake / C++ build
 simulator/build/
@@ -45,4 +46,5 @@ compile_commands.json
 
 # Simulator CLI output (regenerate via mosaiq_simulator)
 output/*.dat
+!output/output_lindhard_base.dat
 output/*.png
