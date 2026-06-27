@@ -25,6 +25,8 @@ import seaborn as sns
 
 from plot_common import OUTPUT_DIR, PDF_RCPARAMS, output_path
 from plot_Sqw import (
+    ION_CHANNEL_OMEGA_MAX,
+    ION_CHANNEL_OMEGA_MIN,
     configure_seaborn,
     load_gridded,
     prepare_plot_grid,
@@ -35,7 +37,7 @@ DATA_FILE = OUTPUT_DIR / "output_lindhard_base.dat"
 
 ELECTRON_Q_MAX = 4.0
 ION_Q_MAX = 50.0
-OMEGA_MAX = 3.0
+ELECTRON_OMEGA_MAX = 3.0
 
 # (output stem, value column, q cap, colorbar label, title)
 PANEL_SPECS: tuple[tuple[str, int, float, str, str], ...] = (
@@ -93,9 +95,14 @@ def load_data(path: Path) -> np.ndarray:
 
 
 def channel_grid(
-    data: np.ndarray, value_col: int, q_max: float
+    data: np.ndarray,
+    value_col: int,
+    q_max: float,
+    omega_max: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rows = data[data[:, 0] <= q_max + 1.0e-9]
+    if omega_max is not None:
+        rows = rows[rows[:, 1] <= omega_max + 1.0e-9]
     q_grid, w_grid, value_grid = load_gridded(rows, value_col)
     return q_grid, w_grid, np.abs(value_grid)
 
@@ -105,7 +112,11 @@ def main() -> None:
     data = load_data(DATA_FILE)
 
     for stem, value_col, q_max, cbar_label, title in PANEL_SPECS:
-        q_grid, w_grid, magnitude = channel_grid(data, value_col, q_max)
+        ion_panel = stem.startswith("chi_i")
+        omega_cap = ION_CHANNEL_OMEGA_MAX if ion_panel else ELECTRON_OMEGA_MAX
+        q_grid, w_grid, magnitude = channel_grid(
+            data, value_col, q_max, omega_max=omega_cap if ion_panel else None
+        )
         plot_grid, color_norm = prepare_plot_grid(magnitude)
         if color_norm is None:
             raise RuntimeError(f"No finite positive amplitudes for {stem}")
@@ -119,7 +130,8 @@ def main() -> None:
             title,
             output_path(stem),
             q_xmax=q_max,
-            omega_ymax=OMEGA_MAX,
+            omega_ymin=ION_CHANNEL_OMEGA_MIN if ion_panel else None,
+            omega_ymax=omega_cap,
             contour_profile="cross" if stem.startswith("chi_ei") else "default",
         )
 

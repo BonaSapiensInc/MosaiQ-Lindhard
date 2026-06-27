@@ -10,7 +10,7 @@
 # * Contact: kim.ingee@bonasapiens.com
 # ==========================================================================
 
-"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures for Figure 3."""
+"""Render S_ee, S_ii, S_ei(q, omega) contour figures for Figure 4."""
 
 from __future__ import annotations
 
@@ -39,8 +39,10 @@ FIG4_OMEGA_YMAX = 10.0
 # Electron-channel Figure 3 panels (plasmon / screening sector).
 ELECTRON_CHANNEL_Q_MAX = 4.0
 
-# Ion-acoustic contour: macroscopic q extent; omega uses the same simulator grid as electron channels.
+# Ion-acoustic contour: macroscopic q extent with Golden Scale omega zoom.
 S_II_CONTOUR_Q_MAX = 50.0
+ION_CHANNEL_OMEGA_MIN = 0.0
+ION_CHANNEL_OMEGA_MAX = 0.20
 
 # Log-spaced isoline styling (white on rainbow fill).
 CONTOUR_ISOLINE_COLOR = "white"
@@ -165,6 +167,17 @@ def load_channel_grid(
     q_cap = min(ELECTRON_CHANNEL_Q_MAX, float(np.max(data[:, 0])))
     channel_rows = data[data[:, 0] <= q_cap + 1.0e-9]
     return load_gridded(channel_rows, value_col)
+
+
+def crop_omega_band(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
+    omega_max: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Restrict contour data to the ion-acoustic frequency window."""
+    band = w_grid[:, 0] <= omega_max + 1.0e-9
+    return q_grid[band, :], w_grid[band, :], grid[band, :]
 
 
 def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ndarray, LogNorm | None]:
@@ -422,46 +435,6 @@ def render_contour(
     print(f"Saved {output_path_saved}")
 
 
-def render_surface(
-    q_grid: np.ndarray,
-    w_grid: np.ndarray,
-    plot_grid: np.ndarray,
-    color_norm: LogNorm | Normalize,
-    label: str,
-    title: str,
-    output_path: Path,
-) -> None:
-    cmap = rainbow_log_cmap()
-    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
-    scalar_map.set_array([])
-
-    fig = plt.figure(figsize=(10, 8), layout="constrained")
-    ax = fig.add_subplot(111, projection="3d")
-    z_surface = plot_grid.astype(float)
-    ax.plot_surface(
-        q_grid,
-        w_grid,
-        z_surface,
-        cmap=cmap,
-        norm=color_norm,
-        shade=False,
-        edgecolor="#333333",
-        linewidth=0.2,
-        antialiased=True,
-        alpha=1.0,
-    )
-    ax.set_xlabel(r"$q \ [k_F]$", labelpad=10)
-    ax.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
-    ax.set_zlabel(label, labelpad=10)
-    ax.set_title(f"{title} — 3D Surface", fontweight="bold")
-    ax.view_init(elev=35, azim=-120)
-    fig.colorbar(scalar_map, ax=ax, fraction=0.04, pad=0.08, label=label)
-
-    output_path_saved = save_figure(fig, output_path.stem)
-    plt.close(fig)
-    print(f"Saved {output_path_saved}")
-
-
 def render_channel(
     q_grid: np.ndarray,
     w_grid: np.ndarray,
@@ -477,34 +450,25 @@ def render_channel(
 
     if stem == "S_ii":
         q_xmax = min(S_II_CONTOUR_Q_MAX, float(np.max(q_grid)))
+        zoom_q, zoom_w, zoom_grid = crop_omega_band(
+            q_grid, w_grid, grid, ION_CHANNEL_OMEGA_MAX
+        )
+        zoom_plot, zoom_norm = prepare_plot_grid(zoom_grid)
+        zoom_color: LogNorm | Normalize = (
+            zoom_norm if zoom_norm is not None else Normalize()
+        )
         render_contour(
-            q_grid,
-            w_grid,
-            plot_grid,
-            color_norm,
+            zoom_q,
+            zoom_w,
+            zoom_plot,
+            zoom_color,
             label,
             title,
             output_path(f"{stem}_contour"),
             q_xmax=q_xmax,
+            omega_ymin=ION_CHANNEL_OMEGA_MIN,
+            omega_ymax=ION_CHANNEL_OMEGA_MAX,
             contour_profile=cross_profile,
-        )
-        # 3D companion stays on the low-q electron-sector mesh for readability.
-        electron_rows_mask = q_grid[0, :] <= ELECTRON_CHANNEL_Q_MAX + 1.0e-9
-        surface_q = q_grid[:, electron_rows_mask]
-        surface_w = w_grid[:, electron_rows_mask]
-        surface_grid = grid[:, electron_rows_mask]
-        surface_plot, surface_norm = prepare_plot_grid(surface_grid)
-        surface_color: LogNorm | Normalize = (
-            surface_norm if surface_norm is not None else Normalize()
-        )
-        render_surface(
-            surface_q,
-            surface_w,
-            surface_plot,
-            surface_color,
-            label,
-            title,
-            output_path(f"{stem}_3d"),
         )
         return
 
@@ -517,15 +481,6 @@ def render_channel(
         title,
         output_path(f"{stem}_contour"),
         contour_profile=cross_profile,
-    )
-    render_surface(
-        q_grid,
-        w_grid,
-        plot_grid,
-        color_norm,
-        label,
-        title,
-        output_path(f"{stem}_3d"),
     )
 
 
