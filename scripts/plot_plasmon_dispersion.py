@@ -273,7 +273,7 @@ def plot_dispersion(
             zorder=5,
         )
 
-    ax_top.set_ylabel(r"$\bar{\omega}_p$ [$E_\mathrm{F}/\hbar$]")
+    ax_top.set_ylabel(r"$\bar{\omega}_p = \hbar\omega_p/\epsilon_\mathrm{F}$")
     ax_top.set_ylim(0.0, PANEL_A_OMEGA_YMAX)
     ax_top.set_xlim(0.0, q_view_max)
     ax_top.grid(False)

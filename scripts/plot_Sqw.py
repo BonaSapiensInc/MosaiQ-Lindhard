@@ -217,8 +217,8 @@ def render_contour(
         )
 
     frame_contour_axis(ax)
-    ax.set_xlabel(r"Wave vector $q \ [k_F]$")
-    ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
+    ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_\mathrm{F}$")
+    ax.set_ylabel(r"Reduced frequency $\bar{\omega} = \hbar\omega/\epsilon_\mathrm{F}$")
     ax.set_ylim(0.0, omega_ymax)
     ax.set_title(title, fontweight="bold")
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
