@@ -34,7 +34,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`scripts/`](scripts/) | Python figure generators (matplotlib / seaborn) |
 | [`manuscript/`](manuscript/) | LaTeX source and cover letter |
 | [`docs/`](docs/) | Architecture notes and reference extracts |
-| [`output/`](output/) | CLI data (`.dat`) and manuscript figures (`*.pdf`) |
+| [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
 
 ---
@@ -68,23 +68,40 @@ ctest --test-dir simulator/build --output-on-failure
 
 ### Regenerate figures
 
+**Version control:** Manuscript figure PDFs under `output/` (for example `chi_*.pdf`, `S_*_contour.pdf`, `thermal_anatomy.pdf`) are tracked in git. **`output/*.dat` simulator grids are not** — they are listed in [`.gitignore`](.gitignore) and must be generated locally after clone. Plotting scripts call `mosaiq_simulator` automatically when a required `.dat` file is missing.
+
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Figures 3 & 4 (Figure 3: q<=4 structure factors; Figure 4: plasmon dispersion)
+# Build simulator (once)
+cmake -S simulator -B simulator/build -DCMAKE_BUILD_TYPE=Release
+cmake --build simulator/build --target mosaiq_simulator
+
+# Figures 3 & 4 (bare Lindhard + RPA structure factors; writes output/*.dat then PDFs)
 ./scripts/regenerate_figures_3_4.sh 1 10000 2 10000
 
-# Or plot only, if .dat files already exist:
+# Figure 7 — thermal anatomy (runs T = 11, 1000, 10000 K if tagged .dat files absent)
+python3 scripts/plot_thermal_anatomy.py
+
+# Or plot only, if .dat files already exist locally:
+python3 scripts/plot_lindhard_base.py
 python3 scripts/plot_Sqw.py
 python3 scripts/plot_plasmon_dispersion.py
 
-# Static S(q) gamma sweep
+# Static S(q) gamma sweep (Figure 8)
 ./scripts/regenerate_sq_gamma.sh 1 10,50,100,150
 python3 scripts/plot_Sq_gamma.py
 
-python3 scripts/plot_t0_error.py
+# T = 0 validation panels (Figure 6)
 python3 scripts/plot_lindhard_t0_2d.py
+python3 scripts/plot_t0_error.py   # requires output/output_t0_limit.dat from CTest
+```
+
+Typical single-run CLI (writes `output/output_lindhard_base.dat`, `output/output_structure_factor.dat`, and related files):
+
+```bash
+./simulator/build/mosaiq_simulator 1.0 10000
 ```
 
 Or run the gamma sweep directly:
@@ -137,3 +154,7 @@ Until the DOI is available, please reference this repository and the preprint/ma
 Source code, test suites, and build instructions are published under the **MosaiQ-Lindhard** name to avoid confusion with unrelated third-party packages.
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
+
+**What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
+
+**What is not in git:** **`output/*.dat`** numerical grids from the CLI (ignored by design). After cloning, build `mosaiq_simulator` and run the [Regenerate figures](#regenerate-figures) commands above; each workflow documents the `(r_s, T)` or `--gamma-sweep` parameters used in the manuscript.
