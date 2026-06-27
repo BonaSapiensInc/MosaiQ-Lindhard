@@ -35,6 +35,17 @@ FIG4_Q_MIN = 0.1
 FIG4_Q_MAX = 4.0
 FIG4_OMEGA_YMAX = 10.0
 
+# Electron-channel Figure 3 panels (plasmon / screening sector).
+ELECTRON_CHANNEL_Q_MAX = 4.0
+
+# Ion-acoustic contour: macroscopic q extent; omega uses the same simulator grid as electron channels.
+S_II_CONTOUR_Q_MAX = 50.0
+
+# Log-spaced isoline styling (white on rainbow fill).
+CONTOUR_ISOLINE_COLOR = "white"
+CONTOUR_ISOLINE_LINEWIDTH = 1.35
+CONTOUR_ISOLINE_ALPHA = 0.88
+
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
     ("S_ii", 5, r"$S_{ii}(q, \omega)$ — ion-ion (ion-acoustic)"),
@@ -78,6 +89,7 @@ def build_contour_grid(
     q_max: float,
     w_max: float,
     n_omega: int = 400,
+    w_min: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Interpolate samples onto a rectangular mesh (Figure 4 background fallback)."""
     q_col = data[:, 0]
@@ -93,14 +105,22 @@ def build_contour_grid(
         & (q_col <= q_max + 1.0e-9)
         & (w_col <= w_max + 1.0e-9)
     )
+    if w_min is not None:
+        in_range &= w_col >= w_min - 1.0e-9
+
     positive_w = w_col[in_range & (w_col > 0.0)]
-    w_min = float(np.min(positive_w)) if positive_w.size else 1.0e-2
-    w_min = max(w_min, 1.0e-2)
-    w_axis = np.geomspace(w_min, w_max, n_omega)
+    if w_min is not None:
+        w_axis_lo = w_min
+    else:
+        w_axis_lo = float(np.min(positive_w)) if positive_w.size else 1.0e-2
+        w_axis_lo = max(w_axis_lo, 1.0e-2)
+    w_axis = np.geomspace(w_axis_lo, w_max, n_omega)
 
     value_grid = np.full((n_omega, q_points.size), np.nan)
     for j, q in enumerate(q_points):
         sel = np.isclose(q_col, q, rtol=0.0, atol=1.0e-9) & (w_col <= w_max + 1.0e-9)
+        if w_min is not None:
+            sel &= w_col >= w_min - 1.0e-9
         if not np.any(sel):
             continue
         w_slice = w_col[sel]
@@ -124,12 +144,57 @@ def load_gridded_for_fig4(
     return build_contour_grid(data, value_col, FIG4_Q_MIN, q_max, w_max, n_omega=250)
 
 
-def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ma.MaskedArray, LogNorm | None]:
-    plot_grid = np.ma.masked_invalid(np.abs(grid))
-    norm = choose_log_norm(plot_grid.filled(np.nan))
-    if norm is not None:
-        plot_grid = np.ma.masked_less_equal(plot_grid, 0.0)
+def load_channel_grid(
+    data: np.ndarray, value_col: int, stem: str
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build the plotting mesh with channel-specific q windows; omega grid is shared."""
+    if stem == "S_ii":
+        q_cap = min(S_II_CONTOUR_Q_MAX, float(np.max(data[:, 0])))
+        channel_rows = data[data[:, 0] <= q_cap + 1.0e-9]
+        return load_gridded(channel_rows, value_col)
+
+    q_cap = min(ELECTRON_CHANNEL_Q_MAX, float(np.max(data[:, 0])))
+    channel_rows = data[data[:, 0] <= q_cap + 1.0e-9]
+    return load_gridded(channel_rows, value_col)
+
+
+def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ndarray, LogNorm | None]:
+    """Map |S| onto a log color scale; clamp vacuum (zero/invalid) to vmin, not white."""
+    magnitude = np.abs(grid).astype(float)
+    positive = magnitude[np.isfinite(magnitude) & (magnitude > 0.0)]
+    norm = choose_log_norm(positive)
+    if norm is None:
+        return np.nan_to_num(magnitude, nan=0.0), None
+
+    vmin = float(norm.vmin)
+    plot_grid = np.where(
+        np.isfinite(magnitude) & (magnitude > 0.0),
+        np.maximum(magnitude, vmin),
+        vmin,
+    )
     return plot_grid, norm
+
+
+def rainbow_log_cmap() -> cm.Colormap:
+    """Rainbow with masked/underflow pinned to the purple log-floor."""
+    cmap = cm.rainbow.copy()
+    floor = cmap(0.0)
+    cmap.set_under(floor)
+    cmap.set_bad(floor)
+    return cmap
+
+
+def filter_contour_line_levels(
+    line_levels: np.ndarray,
+    norm: LogNorm,
+    *,
+    min_vmax_fraction: float = 1.0e-3,
+) -> np.ndarray:
+    """Drop isolines in the deep-vacuum decade so white lines do not wash out purple fill."""
+    vmin = float(norm.vmin)
+    vmax = float(norm.vmax)
+    floor = max(vmin * 10.0, vmax * min_vmax_fraction)
+    return line_levels[line_levels >= floor]
 
 
 def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
@@ -167,29 +232,41 @@ def log_contour_levels(norm: LogNorm, n_filled: int, n_lines: int) -> tuple[np.n
 def render_contour(
     q_grid: np.ndarray,
     w_grid: np.ndarray,
-    plot_grid: np.ma.MaskedArray,
+    plot_grid: np.ndarray,
     color_norm: LogNorm | Normalize,
     label: str,
     title: str,
     output_path: Path,
+    q_xmax: float | None = None,
+    omega_ymin: float | None = None,
+    omega_ymax: float | None = None,
 ) -> None:
-    cmap = cm.rainbow
+    cmap = rainbow_log_cmap()
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
     scalar_map.set_array([])
 
     fig, ax = plt.subplots(figsize=(10, 7), layout="constrained")
     if isinstance(color_norm, LogNorm):
         fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
-        ax.contourf(q_grid, w_grid, plot_grid, levels=fill_levels, cmap=cmap, norm=color_norm)
+        line_levels = filter_contour_line_levels(line_levels, color_norm)
+        ax.contourf(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=fill_levels,
+            cmap=cmap,
+            norm=color_norm,
+            extend="min",
+        )
         ax.contour(
             q_grid,
             w_grid,
             plot_grid,
             levels=line_levels,
             norm=color_norm,
-            colors="black",
-            linewidths=0.45,
-            alpha=0.75,
+            colors=CONTOUR_ISOLINE_COLOR,
+            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
+            alpha=CONTOUR_ISOLINE_ALPHA,
         )
     else:
         ax.contourf(q_grid, w_grid, plot_grid, levels=150, cmap=cmap, norm=color_norm)
@@ -199,15 +276,23 @@ def render_contour(
             plot_grid,
             levels=60,
             norm=color_norm,
-            colors="black",
-            linewidths=0.45,
-            alpha=0.75,
+            colors=CONTOUR_ISOLINE_COLOR,
+            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
+            alpha=CONTOUR_ISOLINE_ALPHA,
         )
 
     frame_contour_axis(ax)
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
     ax.set_title(f"{title} — Contour Map", fontweight="bold")
+    if q_xmax is not None:
+        ax.set_xlim(0.0, q_xmax)
+    if omega_ymin is not None or omega_ymax is not None:
+        y_lo, y_hi = ax.get_ylim()
+        ax.set_ylim(
+            omega_ymin if omega_ymin is not None else y_lo,
+            omega_ymax if omega_ymax is not None else y_hi,
+        )
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
     output_path_saved = save_figure(fig, output_path.stem)
@@ -218,13 +303,13 @@ def render_contour(
 def render_surface(
     q_grid: np.ndarray,
     w_grid: np.ndarray,
-    plot_grid: np.ma.MaskedArray,
+    plot_grid: np.ndarray,
     color_norm: LogNorm | Normalize,
     label: str,
     title: str,
     output_path: Path,
 ) -> None:
-    cmap = cm.rainbow
+    cmap = rainbow_log_cmap()
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
     scalar_map.set_array([])
 
@@ -265,6 +350,39 @@ def render_channel(
 ) -> None:
     plot_grid, norm = prepare_plot_grid(grid)
     color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+
+    if stem == "S_ii":
+        q_xmax = min(S_II_CONTOUR_Q_MAX, float(np.max(q_grid)))
+        render_contour(
+            q_grid,
+            w_grid,
+            plot_grid,
+            color_norm,
+            label,
+            title,
+            output_path(f"{stem}_contour"),
+            q_xmax=q_xmax,
+        )
+        # 3D companion stays on the low-q electron-sector mesh for readability.
+        electron_rows_mask = q_grid[0, :] <= ELECTRON_CHANNEL_Q_MAX + 1.0e-9
+        surface_q = q_grid[:, electron_rows_mask]
+        surface_w = w_grid[:, electron_rows_mask]
+        surface_grid = grid[:, electron_rows_mask]
+        surface_plot, surface_norm = prepare_plot_grid(surface_grid)
+        surface_color: LogNorm | Normalize = (
+            surface_norm if surface_norm is not None else Normalize()
+        )
+        render_surface(
+            surface_q,
+            surface_w,
+            surface_plot,
+            surface_color,
+            label,
+            title,
+            output_path(f"{stem}_3d"),
+        )
+        return
+
     render_contour(
         q_grid,
         w_grid,
@@ -297,8 +415,15 @@ def main() -> None:
             f"Error: expected at least 8 columns in {DATA_FILE}, got shape {data.shape}"
         )
 
+    q_data_max = float(np.max(data[:, 0]))
+    if q_data_max + 1.0e-9 < S_II_CONTOUR_Q_MAX:
+        print(
+            f"Warning: data q_max={q_data_max:g} < {S_II_CONTOUR_Q_MAX:g}; "
+            "re-run mosaiq_simulator to refresh the wide S_ii mesh."
+        )
+
     for stem, col, title in PLOT_SPECS:
-        q_grid, w_grid, value_grid = load_gridded(data, col)
+        q_grid, w_grid, value_grid = load_channel_grid(data, col, stem)
         render_channel(
             q_grid,
             w_grid,

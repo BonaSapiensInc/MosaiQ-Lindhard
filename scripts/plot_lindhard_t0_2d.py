@@ -22,9 +22,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import cm
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LogNorm, Normalize
 
-from plot_common import apply_pdf_rcparams, save_figure
+from plot_common import save_figure
+from plot_Sqw import (
+    CONTOUR_ISOLINE_ALPHA,
+    CONTOUR_ISOLINE_COLOR,
+    CONTOUR_ISOLINE_LINEWIDTH,
+    configure_seaborn,
+    filter_contour_line_levels,
+    frame_contour_axis,
+    log_contour_levels,
+    prepare_plot_grid,
+    rainbow_log_cmap,
+)
 
 
 def calc_t0_lindhard(q_grid: np.ndarray, w_grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -38,7 +50,6 @@ def calc_t0_lindhard(q_grid: np.ndarray, w_grid: np.ndarray) -> tuple[np.ndarray
     xi_minus_sq = xi_minus**2
     xi_plus_sq = xi_plus**2
 
-    # --- Imaginary Part (Piecewise) ---
     im_chi = np.zeros_like(q)
 
     mask1 = (xi_minus_sq <= 1.0) & (xi_plus_sq >= 1.0)
@@ -48,7 +59,6 @@ def calc_t0_lindhard(q_grid: np.ndarray, w_grid: np.ndarray) -> tuple[np.ndarray
     im_chi[mask2] = w[mask2]
     im_chi *= np.pi / (4.0 * q)
 
-    # --- Real Part (Logarithmic) ---
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
 
@@ -69,35 +79,59 @@ def render_contour(
     title: str,
     label: str,
     filename: str,
-    cmap: cm.Colormap = cm.rainbow,
 ) -> None:
-    apply_pdf_rcparams({"font.size": 12, "font.family": "serif"})
-    fig, ax = plt.subplots(figsize=(8, 6))
+    """Match Figure 3 structure-factor contour styling (log rainbow + white isolines)."""
+    configure_seaborn()
 
-    levels = np.linspace(np.min(z_grid), np.max(z_grid), 150)
-    contour = ax.contourf(q_grid, w_grid, z_grid, levels=levels, cmap=cmap)
+    plot_grid, norm = prepare_plot_grid(z_grid)
+    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
+    cmap = rainbow_log_cmap()
+    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
+    scalar_map.set_array([])
 
-    line_levels = np.linspace(np.min(z_grid), np.max(z_grid), 25)
-    ax.contour(
-        q_grid,
-        w_grid,
-        z_grid,
-        levels=line_levels,
-        colors="white",
-        linewidths=0.45,
-        alpha=0.75,
-    )
+    fig, ax = plt.subplots(figsize=(10, 7), layout="constrained")
+    if isinstance(color_norm, LogNorm):
+        fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=72)
+        line_levels = filter_contour_line_levels(line_levels, color_norm)
+        ax.contourf(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=fill_levels,
+            cmap=cmap,
+            norm=color_norm,
+            extend="min",
+        )
+        ax.contour(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=line_levels,
+            norm=color_norm,
+            colors=CONTOUR_ISOLINE_COLOR,
+            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
+            alpha=CONTOUR_ISOLINE_ALPHA,
+        )
+    else:
+        ax.contourf(q_grid, w_grid, plot_grid, levels=150, cmap=cmap, norm=color_norm)
+        ax.contour(
+            q_grid,
+            w_grid,
+            plot_grid,
+            levels=60,
+            norm=color_norm,
+            colors=CONTOUR_ISOLINE_COLOR,
+            linewidths=CONTOUR_ISOLINE_LINEWIDTH,
+            alpha=CONTOUR_ISOLINE_ALPHA,
+        )
 
-    cbar = fig.colorbar(contour, ax=ax, pad=0.02)
-    cbar.set_label(label)
-
-    ax.set_xlabel(r"Wave vector $\bar{q} = q/k_F$")
-    ax.set_ylabel(r"Frequency $\bar{\omega} = \hbar\omega/\epsilon_F$")
-    ax.set_title(title, fontweight="bold")
-
+    frame_contour_axis(ax)
+    ax.set_xlabel(r"Wave vector $q \ [k_F]$")
+    ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
+    ax.set_title(f"{title} — Contour Map", fontweight="bold")
     ax.axvline(x=1.0, color="white", linestyle="--", linewidth=1.5, alpha=0.9)
+    fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
-    plt.tight_layout()
     saved_path = save_figure(fig, filename)
     plt.close(fig)
     print(f"Saved {saved_path}")
@@ -113,9 +147,9 @@ def main() -> None:
     render_contour(
         q_grid,
         w_grid,
-        re_chi,
+        np.abs(re_chi),
         title=r"Analytic $T=0$ Lindhard: Real Part",
-        label=r"$\Re\tilde{\chi}_{T=0}$ [$D(\epsilon_F)$ units]",
+        label=r"$|\Re\tilde{\chi}_{T=0}|$ [$D(\epsilon_F)$ units]",
         filename="t0_analytic_re_contour",
     )
     render_contour(

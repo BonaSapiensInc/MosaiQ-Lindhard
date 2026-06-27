@@ -18,7 +18,7 @@ FIG3_T="${2:-10000}"
 FIG4_RS="${3:-2}"
 FIG4_T="${4:-10000}"
 
-echo "=== Figure 3: dynamic S(q,omega) at r_s=${FIG3_RS}, T=${FIG3_T} K (q in [0.1, 4.0]) ==="
+echo "=== Figure 3: dynamic S(q,omega) at r_s=${FIG3_RS}, T=${FIG3_T} K (ee/ei q<=4; S_ii q<=50) ==="
 "$SIM" "$FIG3_RS" "$FIG3_T"
 cp output/output_structure_factor.dat "output/output_structure_factor_rs${FIG3_RS}.dat"
 python3 scripts/plot_Sqw.py
@@ -29,4 +29,4 @@ cp output/output_structure_factor.dat "output/output_structure_factor_rs${FIG4_R
 cp output/output_plasmon_dispersion.dat "output/output_plasmon_dispersion_rs${FIG4_RS}.dat"
 python3 scripts/plot_plasmon_dispersion.py
 
-echo "Done. Figures written to output/S_*_{contour,3d}.pdf and output/plasmon_dispersion.pdf"
+echo "Done. Figures written to output/S_*_contour.pdf and output/plasmon_dispersion.pdf"

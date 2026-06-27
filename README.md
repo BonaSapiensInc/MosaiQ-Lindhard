@@ -21,7 +21,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 
 - **Exact causality constraint** — Real and imaginary parts of $\chi^0_{ee}$, $\chi^0_{ii}$, and $\chi^0_{ei}$ are linked by the Hilbert transform; $\varepsilon(q,\omega)$ is assembled in the two-component RPA dielectric formalism without analytic continuation artifacts.
 - **Elimination of $\mathcal{O}(1)$ real-part errors** — Removes the low-$T$ real-axis bias endemic to standard Matsubara/contour schemes; validated against sum rules and limiting cases (see `simulator/tests/`).
-- **Dynamic structure factor maps** — $S_{ee}$, $S_{ii}$, $S_{ei}(\bar{q},\bar{\omega})$ contour and 3D surface panels for $\bar{q}\le 4$ (Figure 3).
+- **Dynamic structure factor contours** — $S_{ee}$, $S_{ii}$, $S_{ei}(\bar{q},\bar{\omega})$ logarithmic contour panels (Figure 3; $S_{ii}$ to $\bar{q}=50$).
 - **Deterministic plasmon root-finding** — Brent-based pole extraction and $\gamma$-sweep static structure factors $S(q)$ up to $q = 50.0$.
 
 ---

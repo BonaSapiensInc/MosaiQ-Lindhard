@@ -28,7 +28,13 @@ from matplotlib.figure import Figure
 import numpy as np
 
 from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
-from plot_Sqw import build_contour_grid, log_contour_levels, prepare_plot_grid
+from plot_Sqw import (
+    build_contour_grid,
+    filter_contour_line_levels,
+    log_contour_levels,
+    prepare_plot_grid,
+    rainbow_log_cmap,
+)
 
 DISPERSION_FILE = OUTPUT_DIR / "output_plasmon_dispersion.dat"
 STRUCTURE_FACTOR_FILE = OUTPUT_DIR / "output_structure_factor.dat"
@@ -186,12 +192,13 @@ def render_s_ee_background(
     ax: plt.Axes,
     q_grid: np.ndarray,
     w_grid: np.ndarray,
-    plot_grid: np.ma.MaskedArray,
+    plot_grid: np.ndarray,
     color_norm: LogNorm | Normalize,
 ) -> None:
-    cmap = cm.rainbow
+    cmap = rainbow_log_cmap()
     if isinstance(color_norm, LogNorm):
         fill_levels, line_levels = log_contour_levels(color_norm, n_filled=200, n_lines=48)
+        line_levels = filter_contour_line_levels(line_levels, color_norm)
         ax.contourf(
             q_grid,
             w_grid,
@@ -199,6 +206,7 @@ def render_s_ee_background(
             levels=fill_levels,
             cmap=cmap,
             norm=color_norm,
+            extend="min",
             zorder=0,
         )
         ax.contour(

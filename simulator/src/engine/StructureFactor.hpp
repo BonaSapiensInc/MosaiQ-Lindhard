@@ -28,7 +28,8 @@ inline constexpr double default_q_max = 50.0;
 inline constexpr double default_q_step = 0.05;
 
 /// Upper $\bar{q}$ limit for the dynamic $S(\bar{q},\bar{\omega})$ mesh (Figure 3).
-inline constexpr double dynamic_sq_q_max = 4.0;
+/// Electron panels crop to $\bar{q}\le 4$ in plotting; $S_{ii}$ uses the full macroscopic extent.
+inline constexpr double dynamic_sq_q_max = 50.0;
 
 inline constexpr double default_omega_min = 0.01;
 inline constexpr double default_omega_max = 3.0;
