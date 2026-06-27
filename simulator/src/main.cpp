@@ -165,25 +165,25 @@ int run_standard_mode(double rs, double T_kelvin)
 
     const std::size_t total_q =
         grid_node_count(default_q_min, default_q_max, default_q_step);
+    const std::size_t dynamic_sq_q_nodes =
+        grid_node_count(default_q_min, dynamic_sq_q_max, default_q_step);
+    const std::size_t total_omega =
+        grid_node_count(default_omega_min, default_omega_max, default_omega_step);
 
     std::cerr << "Tracing plasmon dispersion over " << total_q << " q points...\n";
     const std::size_t dispersion_roots =
         sweep_plasmon_dispersion(dispersion_output, rs, plasma);
     std::cerr << "  Plasmon roots found: " << dispersion_roots << " / " << total_q << '\n';
 
-    std::cerr << "Scanning dynamic structure factors over " << total_q
-              << " q points (adaptive omega mesh up to "
-              << dynamic_sq_omega_ceiling << ")...\n";
+    std::cerr << "Scanning dynamic structure factors over " << dynamic_sq_q_nodes
+              << " x " << total_omega << " (q, omega) grid...\n";
 
     std::size_t rows_written = 0;
-    for (double q = default_q_min; q <= default_q_max + 0.5 * default_q_step;
+    for (double q = default_q_min; q <= dynamic_sq_q_max + 0.5 * default_q_step;
          q += default_q_step) {
-        const double omega_max_q = dynamic_structure_factor_omega_max(q, plasma);
-        const double omega_step_q = dynamic_structure_factor_omega_step(omega_max_q);
-
         for (double omega_e = default_omega_min;
-             omega_e <= omega_max_q + 0.5 * omega_step_q;
-             omega_e += omega_step_q) {
+             omega_e <= default_omega_max + 0.5 * default_omega_step;
+             omega_e += default_omega_step) {
             const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
             const RpaResult<> rpa = evaluate_rpa_response(q, omega_e, plasma);
 

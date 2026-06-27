@@ -21,7 +21,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 
 - **Exact causality constraint** — Real and imaginary parts of $\chi^0_{ee}$, $\chi^0_{ii}$, and $\chi^0_{ei}$ are linked by the Hilbert transform; $\varepsilon(q,\omega)$ is assembled in the two-component RPA dielectric formalism without analytic continuation artifacts.
 - **Elimination of $\mathcal{O}(1)$ real-part errors** — Removes the low-$T$ real-axis bias endemic to standard Matsubara/contour schemes; validated against sum rules and limiting cases (see `simulator/tests/`).
-- **Dual-scale spectrum extraction** — Focused and wide-range dynamic structure factor panels $S_{ee}$, $S_{ii}$, $S_{ei}(q,\omega)$ from a single CLI run.
+- **Dynamic structure factor maps** — $S_{ee}$, $S_{ii}$, $S_{ei}(\bar{q},\bar{\omega})$ contour and 3D surface panels for $\bar{q}\le 4$ (Figure 3).
 - **Deterministic plasmon root-finding** — Brent-based pole extraction and $\gamma$-sweep static structure factors $S(q)$ up to $q = 50.0$.
 
 ---
@@ -72,7 +72,7 @@ ctest --test-dir simulator/build --output-on-failure
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Figures 3 & 4 (full q=50 mesh; ~1 min per r_s run)
+# Figures 3 & 4 (Figure 3: q<=4 structure factors; Figure 4: plasmon dispersion)
 ./scripts/regenerate_figures_3_4.sh 1 10000 2 10000
 
 # Or plot only, if .dat files already exist:

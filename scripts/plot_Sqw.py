@@ -10,7 +10,7 @@
 # * Contact: kim.ingee@bonasapiens.com
 # ==========================================================================
 
-"""Render S_ee, S_ii, S_ei(q, omega) focused and wide-range contour figures from MosaiQ-Lindhard CLI output."""
+"""Render S_ee, S_ii, S_ei(q, omega) contour and 3D surface figures for Figure 3."""
 
 from __future__ import annotations
 
@@ -30,13 +30,10 @@ from plot_common import OUTPUT_DIR, PDF_RCPARAMS, output_path, save_figure
 
 DATA_FILE = OUTPUT_DIR / "output_structure_factor.dat"
 
-MICRO_Q_MIN = 0.1
-MICRO_Q_MAX = 4.0
-MACRO_Q_MIN = 0.1
-MACRO_Q_MAX = 50.0
-
-FOCUSED_OMEGA_YMAX = 10.0
-MACRO_OMEGA_YMAX = MACRO_Q_MAX * MACRO_Q_MAX
+# Figure 4 background helper bounds (plasmon sector).
+FIG4_Q_MIN = 0.1
+FIG4_Q_MAX = 4.0
+FIG4_OMEGA_YMAX = 10.0
 
 PLOT_SPECS: tuple[tuple[str, int, str], ...] = (
     ("S_ee", 3, r"$S_{ee}(q, \omega)$ — electron-electron"),
@@ -62,6 +59,18 @@ def configure_seaborn() -> None:
     )
 
 
+def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    q_1d = data[:, 0]
+    w_1d = data[:, 1]
+    values = data[:, value_col]
+
+    q_unique = np.unique(q_1d)
+    w_unique = np.unique(w_1d)
+    q_grid, w_grid = np.meshgrid(q_unique, w_unique)
+    value_grid = values.reshape(len(q_unique), len(w_unique)).T
+    return q_grid, w_grid, value_grid
+
+
 def build_contour_grid(
     data: np.ndarray,
     value_col: int,
@@ -70,7 +79,7 @@ def build_contour_grid(
     w_max: float,
     n_omega: int = 400,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Interpolate adaptive (q, omega) samples onto a rectangular mesh for contour plotting."""
+    """Interpolate samples onto a rectangular mesh (Figure 4 background fallback)."""
     q_col = data[:, 0]
     w_col = data[:, 1]
     v_col = data[:, value_col]
@@ -107,30 +116,12 @@ def build_contour_grid(
     return q_grid, w_grid, value_grid
 
 
-def load_gridded(data: np.ndarray, value_col: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Build a contour mesh over the full adaptive dataset (used by Figure 4 background)."""
-    q_max = float(np.max(data[:, 0]))
-    w_max = float(np.max(data[:, 1]))
-    return build_contour_grid(data, value_col, MICRO_Q_MIN, q_max, w_max, n_omega=400)
-
-
-def subset_gridded(
-    q_grid: np.ndarray,
-    w_grid: np.ndarray,
-    value_grid: np.ndarray,
-    q_min: float,
-    q_max: float,
-    w_max: float | None = None,
+def load_gridded_for_fig4(
+    data: np.ndarray, value_col: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    q_axis = q_grid[0, :]
-    w_axis = w_grid[:, 0]
-    q_sel = (q_axis >= q_min - 1.0e-9) & (q_axis <= q_max + 1.0e-9)
-    w_sel = np.ones_like(w_axis, dtype=bool)
-    if w_max is not None:
-        w_sel = w_axis <= w_max + 1.0e-9
-
-    idx = np.ix_(w_sel, q_sel)
-    return q_grid[idx], w_grid[idx], value_grid[idx]
+    q_max = min(float(np.max(data[:, 0])), FIG4_Q_MAX)
+    w_max = min(float(np.max(data[:, 1])), FIG4_OMEGA_YMAX)
+    return build_contour_grid(data, value_col, FIG4_Q_MIN, q_max, w_max, n_omega=250)
 
 
 def prepare_plot_grid(grid: np.ndarray) -> tuple[np.ma.MaskedArray, LogNorm | None]:
@@ -158,7 +149,6 @@ def choose_log_norm(grid: np.ndarray) -> LogNorm | None:
 
 
 def frame_contour_axis(ax: plt.Axes) -> None:
-    """Closed rectangular frame for the 2D contour panel."""
     ax.set_frame_on(True)
     for spine in ax.spines.values():
         spine.set_visible(True)
@@ -167,7 +157,6 @@ def frame_contour_axis(ax: plt.Axes) -> None:
 
 
 def log_contour_levels(norm: LogNorm, n_filled: int, n_lines: int) -> tuple[np.ndarray, np.ndarray]:
-    """Log-spaced levels so contour density is uniform across decades of magnitude."""
     vmin = float(norm.vmin)
     vmax = float(norm.vmax)
     filled = np.geomspace(vmin, vmax, n_filled)
@@ -183,7 +172,6 @@ def render_contour(
     label: str,
     title: str,
     output_path: Path,
-    omega_ymax: float,
 ) -> None:
     cmap = cm.rainbow
     scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
@@ -199,7 +187,7 @@ def render_contour(
             plot_grid,
             levels=line_levels,
             norm=color_norm,
-            colors="white",
+            colors="black",
             linewidths=0.45,
             alpha=0.75,
         )
@@ -211,16 +199,15 @@ def render_contour(
             plot_grid,
             levels=60,
             norm=color_norm,
-            colors="white",
+            colors="black",
             linewidths=0.45,
             alpha=0.75,
         )
 
     frame_contour_axis(ax)
-    ax.set_xlabel(r"Reduced wavevector $\bar{q} = q/k_\mathrm{F}$")
-    ax.set_ylabel(r"Reduced frequency $\bar{\omega} = \hbar\omega/\epsilon_\mathrm{F}$")
-    ax.set_ylim(0.0, omega_ymax)
-    ax.set_title(title, fontweight="bold")
+    ax.set_xlabel(r"Wave vector $q \ [k_F]$")
+    ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
+    ax.set_title(f"{title} — Contour Map", fontweight="bold")
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
 
     output_path_saved = save_figure(fig, output_path.stem)
@@ -228,50 +215,73 @@ def render_contour(
     print(f"Saved {output_path_saved}")
 
 
+def render_surface(
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    plot_grid: np.ma.MaskedArray,
+    color_norm: LogNorm | Normalize,
+    label: str,
+    title: str,
+    output_path: Path,
+) -> None:
+    cmap = cm.rainbow
+    scalar_map = ScalarMappable(cmap=cmap, norm=color_norm)
+    scalar_map.set_array([])
+
+    fig = plt.figure(figsize=(10, 8), layout="constrained")
+    ax = fig.add_subplot(111, projection="3d")
+    z_surface = plot_grid.astype(float)
+    ax.plot_surface(
+        q_grid,
+        w_grid,
+        z_surface,
+        cmap=cmap,
+        norm=color_norm,
+        shade=False,
+        edgecolor="#333333",
+        linewidth=0.2,
+        antialiased=True,
+        alpha=1.0,
+    )
+    ax.set_xlabel(r"$q \ [k_F]$", labelpad=10)
+    ax.set_ylabel(r"$\omega \ [E_F/\hbar]$", labelpad=10)
+    ax.set_zlabel(label, labelpad=10)
+    ax.set_title(f"{title} — 3D Surface", fontweight="bold")
+    ax.view_init(elev=35, azim=-120)
+    fig.colorbar(scalar_map, ax=ax, fraction=0.04, pad=0.08, label=label)
+
+    output_path_saved = save_figure(fig, output_path.stem)
+    plt.close(fig)
+    print(f"Saved {output_path_saved}")
+
+
 def render_channel(
-    data: np.ndarray,
-    value_col: int,
+    q_grid: np.ndarray,
+    w_grid: np.ndarray,
+    grid: np.ndarray,
     stem: str,
     label: str,
     title: str,
 ) -> None:
-    micro_q, micro_w, micro_grid = build_contour_grid(
-        data, value_col, MICRO_Q_MIN, MICRO_Q_MAX, w_max=FOCUSED_OMEGA_YMAX, n_omega=200
-    )
-    macro_w_max = MACRO_OMEGA_YMAX
-    macro_q, macro_w, macro_grid = build_contour_grid(
-        data, value_col, MACRO_Q_MIN, MACRO_Q_MAX, w_max=macro_w_max, n_omega=400
-    )
-
-    micro_plot, micro_norm = prepare_plot_grid(micro_grid)
-    macro_plot, macro_norm = prepare_plot_grid(macro_grid)
-
-    micro_color_norm: LogNorm | Normalize = (
-        micro_norm if micro_norm is not None else Normalize()
-    )
-    macro_color_norm: LogNorm | Normalize = (
-        macro_norm if macro_norm is not None else Normalize()
-    )
-
+    plot_grid, norm = prepare_plot_grid(grid)
+    color_norm: LogNorm | Normalize = norm if norm is not None else Normalize()
     render_contour(
-        micro_q,
-        micro_w,
-        micro_plot,
-        micro_color_norm,
+        q_grid,
+        w_grid,
+        plot_grid,
+        color_norm,
         label,
-        f"{title} — Focused Contour ($\\bar{{q}} \\leq {MICRO_Q_MAX:.1f}$)",
+        title,
         output_path(f"{stem}_contour"),
-        FOCUSED_OMEGA_YMAX,
     )
-    render_contour(
-        macro_q,
-        macro_w,
-        macro_plot,
-        macro_color_norm,
+    render_surface(
+        q_grid,
+        w_grid,
+        plot_grid,
+        color_norm,
         label,
-        f"{title} — Extended Contour ($\\bar{{q}} \\leq {MACRO_Q_MAX:.1f}$)",
-        output_path(f"{stem}_wide_contour"),
-        MACRO_OMEGA_YMAX,
+        title,
+        output_path(f"{stem}_3d"),
     )
 
 
@@ -288,9 +298,11 @@ def main() -> None:
         )
 
     for stem, col, title in PLOT_SPECS:
+        q_grid, w_grid, value_grid = load_gridded(data, col)
         render_channel(
-            data,
-            col,
+            q_grid,
+            w_grid,
+            value_grid,
             stem,
             label=title.split("—")[0].strip(),
             title=title,

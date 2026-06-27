@@ -27,6 +27,9 @@ inline constexpr double default_q_min = 0.1;
 inline constexpr double default_q_max = 50.0;
 inline constexpr double default_q_step = 0.05;
 
+/// Upper $\bar{q}$ limit for the dynamic $S(\bar{q},\bar{\omega})$ mesh (Figure 3).
+inline constexpr double dynamic_sq_q_max = 4.0;
+
 inline constexpr double default_omega_min = 0.01;
 inline constexpr double default_omega_max = 3.0;
 inline constexpr double default_omega_step = 0.02;
