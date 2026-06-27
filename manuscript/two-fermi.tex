@@ -1649,7 +1649,8 @@ The engine inverts the chemical potential for electrons and ions ($m_i/m_e \appr
 evaluates the finite-temperature Lindhard functions via the Kramers-Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
 assembles the two-component RPA susceptibilities Eqs.~(\ref{rpa-responses}),
 and extracts the dynamic structure factors through the fluctuation--dissipation relation Eq.~(\ref{fluctuation-dissipation})
-on a dense simulator mesh with $\bar{q} \in [0.1, 50.0]$ and $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units.
+on a dense simulator mesh with $\bar{q} \in [0.1, 50.0]$ and $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units for the structure-factor panels of Figs.~\ref{fig:bare-lindhard}--\ref{fig:structure-factors};
+the Figure~\ref{fig:plasmon-dispersion} background extends the same causal export to $\bar{\omega} \le 6.5$ so that the plasmon branch and its continuum merge remain fully sampled.
 The contour figures below resample these causal grids onto channel-specific display rectangles with integer axis limits matched to the $T=0$ reference panels of Fig.~\ref{fig:t0-limit-validation}.
 
 Before analyzing the collective excitations born from Coulomb screening, it is instructive to establish the non-interacting baseline.
@@ -1728,13 +1729,16 @@ into an otherwise strictly constrained physical space.
 Instead, the engine employs a pure, stateless Brent method~\cite{Brent1973} on the bracketed interval,
 which evaluates $\Re \varepsilon$ only through point values supplied by the Lindhard--RPA pipeline.
 
-The search bracket is physically anchored by the classical Bohm--Gross long-wavelength dispersion relation~\cite{Bohm-Gross1949}. As depicted in Fig.~\ref{fig:plasmon-dispersion}(a), the deterministically extracted plasmon branch diverges cleanly from this classical limit due to exact quantum screening effects, ultimately terminating with abrupt precision as it merges into the single-particle continuum. Confining the initial frequency scan to this physically informed collective sector prevents the root finder from locking onto unphysical sign changes or spurious resonances that routinely plague Matsubara-contaminated dielectric functions.
-This prevents the root finder from locking onto unphysical sign changes
-associated with non-plasmon structure or with the spurious resonances
-that arise when Matsubara or ensemble-mixed routes contaminate the dielectric function.
+Figure~\ref{fig:plasmon-dispersion}(a) superimposes the extracted dispersion on $|S_{ee}(\bar{q}, \bar{\omega})|$ from the \emph{same} deterministic run at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
+The background is resampled onto a uniform plasmon-sector display rectangle $\bar{q} \in [0, 2.0]$ and $\bar{\omega} \in [0, 6.5]$, with axis limits snapped to the finite root extent so that the contour field fills the panel without extraneous margins, and rendered with the identical base-10 logarithmic rainbow convention of Figs.~\ref{fig:bare-lindhard}--\ref{fig:structure-factors} ($N_{\mathrm{fill}}=200$ filled levels, $N_{\mathrm{line}}=72$ white isolines equally spaced in $\log_{10}|S_{ee}|$).
+The search bracket is physically anchored by the classical Bohm--Gross long-wavelength dispersion relation~\cite{Bohm-Gross1949}.
+As depicted in panel~\textbf{(a)}, the deterministically extracted plasmon branch diverges cleanly from this classical limit due to exact quantum screening effects, ultimately terminating with abrupt precision as it merges into the single-particle continuum.
+Confining the initial frequency scan to this physically informed collective sector prevents the root finder from locking onto unphysical sign changes or spurious resonances that routinely plague Matsubara-contaminated dielectric functions,
+including sign reversals associated with non-plasmon structure when the dielectric function is assembled from Matsubara or ensemble-mixed routes.
 Upon convergence, the Landau damping coefficient
 $\Im \varepsilon \left( \bar{q}, \bar{\omega}_p \right)$
 is tracked in Fig.~\ref{fig:plasmon-dispersion}(b) along the identical on-pole root trajectory and evaluated using the identical complex $\varepsilon$,
+together with the bare single-particle channel weight $|\Im \chi_e^L(\bar{q}, \bar{\omega}_p)|$ on the extracted branch,
 so that the damping rate inherits the exact causality of the Kramers--Kr\"onig construction
 rather than a finite-difference estimate or a separate Matsubara channel.
 The resulting dispersion table $\omega_p(\bar{q})$ and on-pole damping
@@ -3437,9 +3441,9 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$; panel~\textbf{(c)} uses the bold cross-channel isoline profile of Fig.~\ref{fig:bare-lindhard}(f).
 
     \item \textbf{FIG. 5.} Extracted electron plasmon dispersion trajectory and corresponding Landau damping for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
-    \textbf{(a)} The extracted dispersion trajectory (solid curve) and the classical Bohm--Gross limit~\cite{Bohm-Gross1949} (dashed curve) superimposed directly on top of a 2D background contour map of the canonical spectral response $S_{ee}(\bar{q}, \bar{\omega})$ (filled color field in the legend).
-    The rainbow background encodes $|S_{ee}|$ on a base-10 logarithmic scale; the solid black curve is the extracted plasmon branch $\bar{\omega}_p(\bar{q})$, and the dashed curve is the Bohm--Gross long-wavelength anchor.
-    \textbf{(b)} The exact multi-component Landau damping rate $\Im[\varepsilon(\bar{q}, \bar{\omega}_p)]$ (solid curve) plotted against the non-interacting single-particle excitation (SPE) continuum baseline, illustrating the sudden dissipation onset at the kinematic boundary.
+    \textbf{(a)} The extracted dispersion trajectory (solid black curve) and the classical Bohm--Gross limit~\cite{Bohm-Gross1949} (dashed curve) superimposed on $|S_{ee}(\bar{q}, \bar{\omega})|$ from the identical MosaiQ-Lindhard run, resampled onto the plasmon-sector display rectangle $\bar{q} \in [0, 2.0]$ and $\bar{\omega} \in [0, 6.5]$ in electron Fermi units.
+    The rainbow background uses the same base-10 logarithmic contour convention as Fig.~\ref{fig:structure-factors}: $N_{\mathrm{fill}}=200$ filled levels and $N_{\mathrm{line}}=72$ white isolines equally spaced in $\log_{10}|S_{ee}|$, with axis limits snapped to the finite plasmon root extent so that the spectral field fills the panel.
+    \textbf{(b)} The exact multi-component Landau damping rate $\Im[\varepsilon(\bar{q}, \bar{\omega}_p)]$ (red curve) plotted against the bare non-interacting single-particle channel $|\Im \chi_e^L(\bar{q}, \bar{\omega}_p)|$ (blue fill and curve), illustrating the sudden dissipation onset at the kinematic boundary as the branch merges into the continuum.
     Roots were deterministically extracted via Brent's method~\cite{Brent1973} on the causality-constrained $\Re[\varepsilon]$ manifold.
 
     \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). \textbf{(a)--(b)} The causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. A black dashed vertical guide marks the $\bar{q} = 1.0$ slice used in panel~\textbf{(c)}. \textbf{(c)} Top panel: 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers). Bottom panel: absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of the standard Matsubara/contour formulations discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
