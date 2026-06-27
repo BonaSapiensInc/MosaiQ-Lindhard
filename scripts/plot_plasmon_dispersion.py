@@ -293,7 +293,7 @@ def plot_dispersion(
     ax_top.legend(
         legend_handles,
         legend_labels,
-        loc="upper right",
+        loc="upper left",
         frameon=True,
         framealpha=0.92,
         edgecolor="0.75",
