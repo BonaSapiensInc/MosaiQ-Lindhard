@@ -1648,29 +1648,34 @@ The engine inverts the chemical potential for electrons and ions ($m_i/m_e \appr
 evaluates the finite-temperature Lindhard functions via the Kramers-Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
 assembles the two-component RPA susceptibilities Eqs.~(\ref{rpa-responses}),
 and extracts the dynamic structure factors through the fluctuation--dissipation relation Eq.~(\ref{fluctuation-dissipation})
-on a dense $(\bar{q}, \bar{\omega})$ mesh with $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units.
+on a dense simulator mesh with $\bar{q} \in [0.1, 50.0]$ and $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units.
+The contour figures below resample these causal grids onto channel-specific display rectangles with integer axis limits matched to the $T=0$ reference panels of Fig.~\ref{fig:t0-limit-validation}.
 
 Before analyzing the collective excitations born from Coulomb screening, it is instructive to establish the non-interacting baseline.
 Figure~\ref{fig:bare-lindhard} displays the six fundamental components of the bare, un-screened Lindhard response functions $\chi_{st}^L(\bar{q}, \bar{\omega})$ across the electron, ion, and cross-species channels.
-Rendered using a unified high-contrast logarithmic color scale, these panels uncover the raw kinematic terrain of the two-fermion plasma.
-Crucially, due to the extreme mass asymmetry ($m_i/m_e \gg 1$), the ion response manifolds in Figs.~\ref{fig:bare-lindhard}(c) and (d) are scaled out to the $\bar{q} = 50.0$ horizon.
-This coordinate alignment successfully restores the kinematic symmetry, allowing a direct visual comparison of the single-particle continuum boundaries and causality-driven profiles against their electron counterparts.
+Panels~\textbf{(a)}--\textbf{(b)} map $|\Re \chi_{e}^L|$ and $|\Im \chi_{e}^L|$ on the plasmon-sector window $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$;
+panels~\textbf{(e)}--\textbf{(f)} show the corresponding bare cross-coupling products $|\Re \chi_{ei}^L|$ and $|\Im \chi_{ei}^L|$ on the same window.
+Rendered with a unified high-contrast base-10 logarithmic color scale ($N_{\mathrm{fill}}=200$ filled levels, $N_{\mathrm{line}}=72$ white isolines equally spaced in $\log_{10}|\chi^L|$), these panels expose the raw single-particle continuum and Landau boundaries of the light electron fluid.
 
-Figure~\ref{fig:structure-factors} subsequently illustrates how the collective random-phase approximation (RPA) dynamics reshape this bare lake into sharp, localized collective modes ($S_{ee}$, $S_{ii}$, $S_{ei}$)
-obtained from the same run, each rendered as a separate logarithmic contour map on the causal evaluation pipeline above.
-Panels~\textbf{(a)} and~\textbf{(c)} use the low-momentum sector $\bar{q} \in [0.1, 4.0]$, while panel~\textbf{(b)} extends $S_{ii}$ to the macroscopic horizon $\bar{q} = 50.0$.
+Due to the extreme mass asymmetry ($m_i/m_e \gg 1$), the ion manifolds in panels~\textbf{(c)}--\textbf{(d)} require a kinematic Golden Scale: an expanded momentum horizon $\bar{q} \in [0, 50.0]$ together with an extreme low-frequency zoom $\bar{\omega} \in [0, 0.20]$.
+Without this $15\times$ frequency magnification, the ion-acoustic weight would collapse into an unreadable strip at the bottom of the electron-scale $\bar{\omega}$ axis; the zoom restores direct visual access to the ion single-particle continuum and acoustic damping profile while preserving the high-$\bar{q}$ tail up to the macroscopic horizon.
+
+Figure~\ref{fig:structure-factors} subsequently illustrates how Coulomb screening and RPA resummation reshape this bare terrain into sharp collective modes ($S_{ee}$, $S_{ii}$, $S_{ei}$)
+obtained from the identical run.
+Panels~\textbf{(a)} and~\textbf{(c)} display $|S_{ee}|$ and $|S_{ei}|$ on $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$;
+panel~\textbf{(b)} applies the same ion Golden Scale ($\bar{q} \in [0, 50.0]$, $\bar{\omega} \in [0, 0.20]$) to $|S_{ii}|$, framing the low-frequency ion-acoustic collective ridge.
 No Matsubara pole summation, no Euler--Maclaurin hybrid, and no ensemble-mixed analytic shortcut enters the pipeline;
 every panel is generated from the same pinned Hilbert-transform evaluation of the real Lindhard part
 and the closed-form imaginary part Eq.~(\ref{imaginary-Lindhard}).
-In the contour panels, each channel is rendered on a base-10 logarithmic scale with
-$S_{\max}$ set by the grid maximum and
-$S_{\min}=\max\!\left(S_{>0},\,10^{-12}\right)$,
-where $S_{>0}$ is the smallest positive amplitude on the $(\bar{q},\bar{\omega})$ mesh.
-The color field uses $N_{\mathrm{fill}}=200$ uniformly log-spaced levels and the white isolines
+Each contour maps its channel magnitude on a base-10 logarithmic scale with
+$M_{\max}$ set by the displayed-mesh maximum ($M=S$ or $|\chi^L|$) and
+$M_{\min}=\max\!\left(M_{>0},\,10^{-12}\right)$,
+where $M_{>0}$ is the smallest positive amplitude on the panel rectangle.
+The filled color field uses $N_{\mathrm{fill}}=200$ uniformly log-spaced levels and white isolines
 $N_{\mathrm{line}}=72$ uniformly log-spaced contours,
-$S_k = S_{\min}\left(S_{\max}/S_{\min}\right)^{k/N}$,
-so that successive contours are separated by equal increments in $\log_{10} S$
-rather than in linear spectral weight.
+$M_k = M_{\min}\left(M_{\max}/M_{\min}\right)^{k/N}$,
+so that successive contours are separated by equal increments in $\log_{10} M$
+rather than in linear spectral weight; the sparse $|S_{ei}|$ and $|\chi_{ei}^L|$ panels employ a bolder cross-channel isoline profile to keep the interspecies footprint legible.
 
 Three features stand out.
 First, $S_{ee}(\bar{q}, \bar{\omega})$ [Fig.~\ref{fig:S_ee}] exhibits a sharp plasmon peak in the high-frequency, high-momentum sector.
@@ -1679,10 +1684,10 @@ Matsubara-based or ensemble-mixed implementations;
 this is direct evidence that the sinc-quadrature Hilbert transform preserves a causal real--imaginary pair
 throughout the accessible $(\bar{q}, \bar{\omega})$ domain.
 
-Second, $S_{ii}(\bar{q}, \bar{\omega})$ [Fig.~\ref{fig:S_ii}] is confined to the extreme low-frequency band ($\bar{\omega} \rightarrow 0$),
+Second, $S_{ii}(\bar{q}, \bar{\omega})$ [Fig.~\ref{fig:S_ii}] is confined to the extreme low-frequency band ($\bar{\omega} \lesssim 0.2$ in electron Fermi units),
 as expected for ion-acoustic excitations in a plasma where $m_i \gg m_e$.
 The ion branch is dynamically separated from the electron Fermi scale by a factor $\sim m_i/m_e$,
-and the structure factor weight concentrates in the acoustic window rather than tracking the electron plasmon dispersion; the extended $\bar{q}$ axis in Fig.~\ref{fig:S_ii} confirms that this low-frequency manifold persists across the macroscopic momentum range.
+and the structure factor weight concentrates in the acoustic window rather than tracking the electron plasmon dispersion; the Golden Scale of Fig.~\ref{fig:S_ii} ($\bar{q}$ to $50.0$, $\bar{\omega}$ to $0.20$) makes this manifold fully visible rather than compressed against the $\bar{\omega}=0$ axis.
 
 Third, $S_{ei}(\bar{q}, \bar{\omega})$ [Fig.~\ref{fig:S_ei}] provides the decisive smoking gun for intercomponent screening and entanglement.
 Although the cross susceptibility $\chi^{RPA}_{ei}$ is driven by the bare coupling $v_{ei}$ in Eq.~(\ref{response-ei}),
@@ -3411,16 +3416,17 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     and the contour of integral of the Fermi-Dirac integrals~(\ref{transformed-Fermi-Dirac-integrals})
     with the integrand~Eq.(\ref{new-Fermi-Dirac-integrand}).
 
-    \item \textbf{FIG. 3.} The non-interacting base manifolds of the finite-temperature Lindhard response functions $\chi_{st}^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
-    Panels \textbf{(a)}--\textbf{(b)} show the real and imaginary parts for the electron channel, panels \textbf{(c)}--\textbf{(d)} for the ion channel (kinematically scaled to an expanded horizon $\bar{q} \in [0, 50.0]$ and an extreme low-frequency zoom $\bar{\omega} \in [0, 0.20]$ to capture the acoustic band), and panels \textbf{(e)}--\textbf{(f)} for the cross-species channel.
-    The unified color coding mapping the response magnitudes demonstrates absolute numerical continuity and smooth causality-constrained profiles entirely free from legacy grid artifacts.
+    \item \textbf{FIG. 3.} The non-interacting base manifolds of the finite-temperature Lindhard response functions $\chi_{st}^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$, resampled onto channel-specific display rectangles with integer axis limits.
+    Panels~\textbf{(a)}--\textbf{(b)} show $|\Re \chi_{e}^L|$ and $|\Im \chi_{e}^L|$ on $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$.
+    Panels~\textbf{(c)}--\textbf{(d)} show $|\Re \chi_{i}^L|$ and $|\Im \chi_{i}^L|$ on the ion Golden Scale $\bar{q} \in [0, 50.0]$ and $\bar{\omega} \in [0, 0.20]$, magnifying the acoustic band that would otherwise be compressed against the origin on the electron frequency axis.
+    Panels~\textbf{(e)}--\textbf{(f)} show $|\Re \chi_{ei}^L|$ and $|\Im \chi_{ei}^L|$ on the cross-channel window $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$, with bold isolines for legibility.
+    All panels share a unified base-10 logarithmic color field ($N_{\mathrm{fill}}=200$) and white isolines ($N_{\mathrm{line}}=72$) equally spaced in $\log_{10}|\chi^L|$, mapping $|\chi^L|$ from $\chi_{\min}=\max(\chi_{>0},10^{-12})$ to the channel maximum on the displayed mesh.
 
-    \item \textbf{FIG. 4.} Dynamic structure factors from the MosaiQ-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$.
-    Panels~\textbf{(a)}, \textbf{(b)}, and~\textbf{(c)} show $S_{ee}$, $S_{ii}$, and $S_{ei}$, respectively, as logarithmic contour maps of $|S_{st}(\bar{q}, \bar{\omega})|$ on the causal $(\bar{q}, \bar{\omega})$ mesh ($\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units for the electron and cross channels).
-    Panels~\textbf{(a)} and~\textbf{(c)} cover $\bar{q} \in [0.1, 4.0]$.
-    Panel~\textbf{(b)} displays the ion--ion channel, subjected to a kinematic scale extraction ($\bar{q} \le 50.0$, $\bar{\omega} \le 0.20$) to perfectly frame the low-frequency ion-acoustic collective mode.
+    \item \textbf{FIG. 4.} Dynamic structure factors from the MosaiQ-Lindhard deterministic sandbox at $r_s = 1.0$ and $T = 10{,}000\,\mathrm{K}$, using the same display-frame convention as Fig.~\ref{fig:bare-lindhard}.
+    Panels~\textbf{(a)} and~\textbf{(c)} show $|S_{ee}|$ and $|S_{ei}|$ on $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$ in electron Fermi units.
+    Panel~\textbf{(b)} shows $|S_{ii}|$ on the ion Golden Scale $\bar{q} \in [0, 50.0]$ and $\bar{\omega} \in [0, 0.20]$, isolating the low-frequency ion-acoustic collective mode.
     Each panel maps $|S_{st}|$ on a base-10 logarithmic scale from $S_{\min}=\max(S_{>0},10^{-12})$ to $S_{\max}$ (the channel maximum on the displayed mesh).
-    The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and the white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$.
+    The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$; panel~\textbf{(c)} uses the bold cross-channel isoline profile of Fig.~\ref{fig:bare-lindhard}(f).
 
     \item \textbf{FIG. 5.} Extracted electron plasmon dispersion trajectory and corresponding Landau damping for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
     \textbf{(a)} The extracted dispersion trajectory (solid curve) and the classical Bohm--Gross limit~\cite{Bohm-Gross1949} (dashed curve) superimposed directly on top of a 2D background contour map of the canonical spectral response $S_{ee}(\bar{q}, \bar{\omega})$ (filled color field in the legend).
