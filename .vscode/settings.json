@@ -24,6 +24,10 @@
         "isolines",
         "Kronig",
         "Krönig",
+        "L'Hopital",
+        "L'Hôpital",
+        "Hopital",
+        "opital",
         "labelpad",
         "Lindhard",
         "loadtxt",
@@ -33,7 +37,6 @@
         "MosaiQ",
         "nodiscard",
         "onig",
-        "opital's",
         "pcolormesh",
         "plasmon",
         "RCPARAMS",
@@ -56,6 +59,7 @@
         "zorder"
     ],
     "cSpell.enabledLanguageIds": [
+        "latex",
         "markdown",
         "plaintext",
         "scminput"

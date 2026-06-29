@@ -69,7 +69,7 @@
 \date{\today}
 
 \begin{abstract}
-We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, identifying and resolving analytic inconsistencies present in standard contour-integration approaches~\cite{Gouedard-Deutsch1978,Giuliani-Vignale2005}. We demonstrate that these widely cited Matsubara/contour formulations---which rely on converting the real part of the susceptibility into infinite residue sums over Matsubara-like poles---violate the prerequisite conditions of Jordan's Lemma and suffer from divergent series tails. Furthermore, hybrid methods that combine grand-canonical dissipation with canonical contour sums introduce an ensemble inconsistency, breaking exact causality and resulting in $\mathcal{O}(1)$ real-part errors that manifest prominently as a persistent offset from the exact analytical solutions in the highly degenerate $T \to 0$ limit. To restore rigorous thermodynamic and analytic consistency, we map the evaluation into a strictly constrained physical space: the imaginary part is derived in closed form within the grand-canonical ensemble, and the real part is exclusively obtained via the Kramers--Kr\"onig relation. By employing a modified sinc-quadrature rule with a theoretical truncation error bound of $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ (where $N$ is the truncation limit, $d$ is the half-width of the analytic strip, and $\alpha$ is a convergence parameter), we achieve an evaluation accuracy exponentially suppressed well below machine precision ($\sim 10^{-259}$ for the chosen parameters $N=16384$, $d/\alpha=7$). We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating the precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
+We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, identifying and resolving analytic inconsistencies present in standard contour-integration approaches. We demonstrate that these widely cited Matsubara/contour formulations---which rely on converting the real part of the susceptibility into infinite residue sums over Matsubara-like poles---violate the prerequisite conditions of Jordan's Lemma and suffer from divergent series tails. Furthermore, hybrid methods that combine grand-canonical dissipation with canonical contour sums introduce an ensemble inconsistency, breaking exact causality and resulting in $\mathcal{O}(1)$ real-part errors that manifest prominently as a persistent offset from the exact analytical solutions in the highly degenerate $T \to 0$ limit. To restore rigorous thermodynamic and analytic consistency, we map the evaluation into a strictly constrained physical space: the imaginary part is derived in closed form within the grand-canonical ensemble, and the real part is exclusively obtained via the Kramers--Kr\"onig relation. By employing a modified sinc-quadrature rule with a theoretical truncation error bound of $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ (where $N$ is the truncation limit, $d$ is the half-width of the analytic strip, and $\alpha$ is a convergence parameter), we achieve an evaluation accuracy exponentially suppressed well below machine precision ($\sim 10^{-259}$ for the chosen parameters $N=16384$, $d/\alpha=7$). We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating the precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
 \end{abstract}
 %\pacs{52.25.Mq, 52.27.Cm, 05.30.Fk, 71.45.Gm}
 \keywords{Plasma physics; Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations}
@@ -354,7 +354,7 @@ The static structure factors of a two-component system are in a generalized form
 where $n_s = {\left\langle N_s \right\rangle} / \Omega$ is the density of the $s$-th component
 and ${{\chi_{st}} ( q, \omega )}$ is the two-density fluctuation correlation functions.
 An explicit description of the dynamic response of a two-component model plasma 
-was established by Selchow \textit{et al.}~\cite{Selchow2001}.
+was established by Selchow, R\"opke, \textit{et al.}~\cite{Selchow2001}.
 As we considered in Eq. (\ref{Lindhard}), the first order approximation can be the Lindhard function
 in an extended form to consider two components:
 \begin{equation}
@@ -715,13 +715,13 @@ encountered in the real-part summation below.
 Application of Cauchy's residue theorem to Eq.~(\ref{differential-Lindhard-analytic-continuation})
 requires a closed contour $C$ for which (i)~all enclosed poles are accounted for and
 (ii)~the integral over any infinite auxiliary arc that closes $C$ vanishes as its radius $R \to \infty$.
-Condition~(ii) is the content of Jordan's Lemma \cite{Jordan1894,BrownChurchill2009}:
+Condition~(ii) is the content of Jordan's Lemma \cite{Jordan1894,Arfken-Weber1995}:
 for an integrand $g(\kappa)$ analytic in the upper half-plane except for isolated singularities,
 the integral over the semicircular arc $|\kappa| = R$, $\mathrm{Im}\,\kappa > 0$ satisfies
 $\int g(\kappa)\,d\kappa \to 0$ as $R \to \infty$ only if $|g(\kappa)|$ decays sufficiently rapidly
 uniformly in the upper-half directions.
 This vanishing arc contribution is a non-negotiable prerequisite for replacing a real-axis integral
-by a sum of residues~\cite{BrownChurchill2009}.
+by a sum of residues~\cite{Byron-Fuller1992}.
 
 For the present integrand, $g(\kappa) = \kappa\, n(\kappa)\,[\cdots]$,
 the Fermi--Dirac factor $n(\kappa) = \left[e^{\left(\kappa^2 - \gamma\right)/\tau} + 1\right]^{-1}$
@@ -731,7 +731,7 @@ the exponent depends on $\mathrm{Re}\!\left(\kappa^2\right) = R^2 \cos 2\theta$.
 In the angular wedge $\pi/4 < \theta < 3\pi/4$, $\cos 2\theta < 0$,
 so $e^{\left(\kappa^2 - \gamma\right)/\tau} \to 0$ and $n(\kappa) \to 1$ as $R \to \infty$.
 The integrand therefore does not decay along a substantial portion of the closing arc;
-the arc integral does not vanish, and Jordan's Lemma \cite{Jordan1894,BrownChurchill2009} cannot be invoked.
+the arc integral does not vanish, and Jordan's Lemma \cite{Jordan1894,Arfken-Weber1995} cannot be invoked.
 Applying Cauchy's residue theorem along the contour routes of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978} while neglecting this non-vanishing arc contribution
 introduces an analytic inconsistency in the contour integration.
 Because the pole sequence Eq.~(\ref{series-poles}) extends to infinity with spacing $\mathcal{O}(j^{-1/2})$,
@@ -809,7 +809,7 @@ This relation can also be derived in a different way as in Appendix~\ref{sec:Kha
 However, the required summation in Eq.~(\ref{formal-real-Lindhard}) or in Eq.~(\ref{summation-form-real-Lindhard})
 does not converge, against their claims~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}.
 Kim and Lee~\cite{Kim-Lee1998} suggested a hybrid method for performing the summation 
-by applying Euler-Maclaurin formula to the summation after a certain amount of direct summation,
+by applying the Euler--Maclaurin formula to the summation after a certain amount of direct summation,
 but this method does not provide physically correct features in whole $\bar{q}$-$\bar{\omega}$ domain of considerations.
 The Kim-Lee method provides correct feature only when the direct summation contribution is excluded.
 This method is summarized in Appendix~\ref{sec:Kim-Lee}.
@@ -908,7 +908,7 @@ It is expected that the logarithmic representation of inverse tangent function,
 will reproduce Eq.~(\ref{formal-real-Lindhard}).
 This formal equivalence suggests us to evaluate the Hilbert transformation Eq.~(\ref{Hilbert-transformation})
 numerically for obtaining the real part of the finite temperature Lindhard function.
-The Cauchy principal value integral in the Kramers-Kr\"onig relation Eq.~(\ref{real-Lindhard-Kramers-Kronig}) can be solved numerically
+The Cauchy principal value integral in the Kramers--Kr\"onig relation Eq.~(\ref{real-Lindhard-Kramers-Kronig}) can be solved numerically
 by using a sinc-quadrature rule~\cite{Stanger1976} via the formulation appeared in Ref.~\cite{Davis-Rabinowitz1984}:
 \begin{equation}
 \left\vert
@@ -1257,7 +1257,7 @@ This is the last step from the quantum mechanical side.
 Unfortunately, no concrete numerical method for evaluating the frequency integral
 in Eq.~(\ref{two-component-quantum-structure-factor}) has been available.
 The available methods today are not direct evaluations of the integral, 
-but they are based on, for example, the dynamic structure factor sum rules~\cite{Pines-Nozieres1989},
+but they are based on, for example, the dynamic structure factor sum rules of Pines and Nozi\`eres~\cite{Pines-Nozieres1989},
 \begin{subequations}
 \label{dynamic-structure-factor-sum-rules}
 \begin{eqnarray}
@@ -1363,7 +1363,7 @@ but the imaginary parts of the response function given in Eqs.~(\ref{rpa-respons
 seem not to be available to extract $x \left( = \beta \hbar \omega \right)$ factor
 from their complicated structure.
 
-It is better to examine a more symmetric form of the structure factor~\cite{Pines-Nozieres1989}
+It is better to examine the more symmetric form of the structure factor of Pines and Nozi\`eres~\cite{Pines-Nozieres1989}
 \begin{equation}
 {S_{st} ( q )} = - \frac{1}{\sqrt{ n_s n_t }} \frac{1}{2 \pi \beta \hbar}
 \int_{-\infty}^{\infty} dx \, {\coth \left( \frac{x}{2} \right)}  
@@ -1631,7 +1631,7 @@ $\omega = \omega \left( q \right)$ of the corresponding collective modes~\cite{P
 Unfortunately, there is no systematic method for identifying the relevant collective modes.
 Indeed, the identification of the collective modes and the evaluation of the spectral functions
 of those modes constitute much of many-body 
-physics~\cite{Pines-Nozieres1989,Giuliani-Vignale2005,Kremp2010,Fetter-Walecka1971,Pines1962,Ichimaru1973}.
+physics~\cite{Giuliani-Vignale2005,Kremp2010,Fetter-Walecka1971,Pines1962,Ichimaru1973}, including Pines and Nozi\`eres~\cite{Pines-Nozieres1989}.
 One may choose a couple of relevant collective excitations being added 
 to the quadrature Eq.~(\ref{analytic-structure-factor}),
 based on the importance to the corresponding physics.
@@ -1646,7 +1646,7 @@ we executed the MosaiQ-Lindhard C++20 sandbox on a partially degenerate two-comp
 in the parameter regime characteristic of a brown-dwarf core:
 Wigner--Seitz radius $r_s = 1.0$ and temperature $T = 10{,}000\,\mathrm{K}$.
 The engine inverts the chemical potential for electrons and ions ($m_i/m_e \approx 1836$),
-evaluates the finite-temperature Lindhard functions via the Kramers-Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
+evaluates the finite-temperature Lindhard functions via the Kramers--Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
 assembles the two-component RPA susceptibilities Eqs.~(\ref{rpa-responses}),
 and extracts the dynamic structure factors through the fluctuation--dissipation relation Eq.~(\ref{fluctuation-dissipation})
 on a dense simulator mesh with $\bar{q} \in [0.1, 50.0]$ and $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units for the structure-factor panels of Figs.~\ref{fig:bare-lindhard}--\ref{fig:structure-factors};
@@ -1908,7 +1908,7 @@ The deterministic plasmon dispersion extraction of Sec.~\ref{sec:plasmon-pole-ex
 and the macroscopic sum-rule validation of Sec.~\ref{sec:sum-rule-validation}
 establish that this sandbox not only produces smooth spectral surfaces on a grid,
 but also preserves the integrated constraints---Eqs.~(\ref{f-sum-rule})--(\ref{compressibility-sum-rule})---
-that have served for decades as consistency standards for dynamic structure factors~\cite{Pines-Nozieres1989}.
+that have served for decades as consistency standards for dynamic structure factors, notably those of Pines and Nozi\`eres~\cite{Pines-Nozieres1989}.
 Because $\Re \chi^L$ is evaluated exclusively through the Hilbert transform of the causal $\Im \chi^L$,
 the engine satisfies these relations within controlled numerical tolerance
 without the arbitrary parameter tuning required by Matsubara-based codes;
@@ -2264,7 +2264,7 @@ Now $\Phi\left( x \right)$ is an entire function of $x$, and a direct expansion 
 
 However, we already have the method of Cauchy principal value integration 
 in Eq.~(\ref{sinc-quadrature-Cauchy-principal-value-integral})
-for performing the Kramers-Kronig relation Eq.~(\ref{Kramers-Kronig-relation}).
+for performing the Kramers--Kr\"onig relation Eq.~(\ref{Kramers-Kronig-relation}).
 Eq.~(\ref{sinc-quadrature-Cauchy-principal-value-integral}) yields 
 the numerically exact value of the plasma dispersion function Eq.~(\ref{real-plasma-dispersion-function}).
 
@@ -2603,7 +2603,7 @@ as $j \to \infty$ the spacing decreases as $\Delta |\kappa| \sim \mathcal{O}(j^{
 To convert the real-axis integral in Eq.~(\ref{differential-Lindhard-analytic-continuation})
 into a residue sum, one must close the contour with a semicircular arc
 $|\kappa| = R$, $0 \le \theta \le \pi$ in the upper half-plane and take $R \to \infty$.
-Jordan's Lemma \cite{Jordan1894,BrownChurchill2009} guarantees that the arc integral vanishes
+Jordan's Lemma \cite{Jordan1894,Arfken-Weber1995} guarantees that the arc integral vanishes
 only if the integrand decays uniformly as $R \to \infty$ along this arc.
 Setting $\kappa = R e^{i\theta}$, the exponent of $n(\kappa)$ depends on
 $\mathrm{Re}\!\left(\kappa^2\right) = R^2 \cos 2\theta$.
@@ -3258,7 +3258,7 @@ While elegant in idealized contexts, traditional infinite-domain quadratures fai
 Although Sinc-quadrature succeeds for the Kramers--Kr\"onig transform in Sec.~\ref{sec:finite-temperature-Lindhard}, its application to the $\bar{\omega}$ integral forces evaluation across the massive branch cuts generated by the $\coth$ and logarithmic terms; ignoring these cuts and summing only the residues produces catastrophic topological failure and an artificial divergence of $S(\bar{q})$.
 Trigonometric mapping of $(-\infty,\infty)$ onto the finite interval $(-\pi/2,\pi/2)$ via $x=\tan\theta$ eliminates truncation error in principle, yet at large $\bar{q}$ the plasmon peak and single-particle continuum shift to $\bar{\omega}\sim\bar{q}^2+2\bar{q}$, compressing high-frequency spectral weight into a microscopically thin sliver just below $\pi/2$ where adaptive integrators report false convergence and miss the weight entirely.
 Quadratures based on exponential decay or absolute analyticity, including Tanh--Sinh and Gauss--Hermite rules, degrade severely in the highly degenerate limit ($T\to 0$), where $\Im\chi^L$ develops near-discontinuous kinks at the single-particle boundaries.
-A further failure mode arises at grid resonance: when the kinematic variable $\xi_-$ aligns with a quadrature node (e.g., $s=0$), the Cauchy principal-value kernel $[1-\cos(\pi(s-\xi_-)/h)]/(s-\xi_-)$ encounters a $0/0$ singularity that, without the exact L'H\^opital limit ($0$), yields \texttt{NaN} and evaporates the dominant spectral peak, artificially driving $S_{ee}(\bar{q}\to\infty)\to 0$; the MosaiQ engine applies the analytic limit at these nodes, eliminating ad-hoc grid offsets or smearing.
+A further failure mode arises at grid resonance: when the kinematic variable $\xi_-$ aligns with a quadrature node (e.g., $s=0$), the Cauchy principal-value kernel $[1-\cos(\pi(s-\xi_-)/h)]/(s-\xi_-)$ encounters a $0/0$ singularity that, without applying L'H\^opital's rule (which gives $0$), yields \texttt{NaN} and evaporates the dominant spectral peak, artificially driving $S_{ee}(\bar{q}\to\infty)\to 0$; the MosaiQ engine applies the analytic limit at these nodes, eliminating ad-hoc grid offsets or smearing.
 
 The only mathematically robust and physically sound solution is to define a \emph{dynamic upper bound} derived from the exact physical kinematics. The single-particle continuum is strictly bounded by $\bar{\omega}_{\max} \approx \bar{q}^2 + 2\bar{q}\sqrt{\gamma + 36\tau}$. By expanding the real-axis integration window dynamically to track this precise physical boundary, and employing a dense adaptive quadrature (or sufficiently resolved uniform trapezoidal rule), the MosaiQ-Lindhard pipeline successfully captures the entirety of the shifting spectral weight without triggering false convergence or violating branch cuts, rigorously securing the $S(\bar{q} \to \infty) \to 1$ asymptote.
 
@@ -3302,10 +3302,7 @@ Phys. Rev. E \textbf{64}, 056410 (2001).
 
 \bibitem{Jordan1894} C. Jordan, \textit{Cours d'analyse de l'\'Ecole Polytechnique},
 Vol.~II: Calcul int\'egral (Gauthier-Villars, Paris, 1894);
-see also the discussion of Jordan's Lemma in Ref.~\cite{BrownChurchill2009}.
-
-\bibitem{BrownChurchill2009} J. W. Brown and R. V. Churchill,
-\textit{Complex Variables and Applications}, 8th ed. (McGraw-Hill, New York, 2009) Sec.~5.
+see also Ref.~\cite{Arfken-Weber1995}.
 
 \bibitem{Rudin1976} W. Rudin, \textit{Principles of Mathematical Analysis}, 3rd ed. (McGraw-Hill, New York, 1976).
 
@@ -3332,8 +3329,8 @@ see also the discussion of Jordan's Lemma in Ref.~\cite{BrownChurchill2009}.
 
 \bibitem{Dingle1957} R. B. Dingle, Appl. Sci. Res. B \textbf{6}, 225 (1957).
 
-\bibitem{Arfken-Weber1995} G. B. Arfken and H. J. Weber, \textit{Mathematical Methods for Physicists Fourth Edition}
-(Academic Press, San Diego, 1995) Chap. 10.
+\bibitem{Arfken-Weber1995} G. B. Arfken and H. J. Weber, \textit{Mathematical Methods for Physicists}, 4th ed.
+(Academic Press, San Diego, 1995) Sec.~7.2 (p.~425); Chap.~10.
 
 \bibitem{Asgari2001} R. Asgari, B. Davoudi, and B. Tanatar, Phys. Rev. E \textbf{64}, 041406 (2001).
 
