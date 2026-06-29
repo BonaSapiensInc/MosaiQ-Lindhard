@@ -2537,51 +2537,42 @@ and is studied intensively for the fermionic cases by Melrose and Mushtaq~\cite{
 
 One of the central claims of this work is that the finite-temperature formulation maintains exact causality. To demonstrate this analytic continuity explicitly, Appendix~\ref{sec:Lindhard-function} shows that the well-known zero-temperature Lindhard function can be recovered purely from the imaginary part through the Kramers--Kr\"onig relation, without invoking contour integration in the complex plane. The structure of this appendix is as follows:
 \begin{itemize}
-    \item Sec.~\ref{sec:t0-imaginary-part}: causal imaginary part at $T=0$ on the real axis;
-    \item Sec.~\ref{sec:t0-kk-reconstruction}: Hilbert-transform reconstruction of $\Re \chi^L$;
+    \item Sec.~\ref{sec:t0-kk-reconstruction}: exact $T=0$ imaginary and real parts via real-axis Kramers--Kr\"onig reconstruction;
     \item Sec.~\ref{sec:t0-kk-contrast}: contrast with standard contour/pole-summation routes and the $\mathcal{O}(1)$ real-part offset of Fig.~\ref{fig:t0-1d-slice}.
 \end{itemize}
 
-\subsection{Causal imaginary part at $T=0$}
-\label{sec:t0-imaginary-part}
-
-In the limit \(\tau \to 0\), the Fermi--Dirac distribution becomes the Heaviside step function \(n(\kappa) \to \Theta(1 - \kappa)\). Standard Matsubara/contour formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} routinely attempt to substitute this step function back into the contour integration. However, \(\Theta(1-\kappa)\) is a distribution that is strictly non-analytic (non-holomorphic) across the complex \(\kappa\)-plane. By definition, it violates the fundamental prerequisite of Cauchy's residue theorem, which requires the integrand to be analytic everywhere within the closed contour except at isolated singularities. Therefore, extending the \(T=0\) step-function Lindhard integral into the complex plane is a mathematically illegal operation from the very beginning.
-
-Instead, evaluating the causality-constrained imaginary part strictly on the real axis yields the standard piecewise form~\cite{Lindhard1954}:
-\begin{equation}
-\frac{\Im \chi^L(\bar{q}, \bar{\omega}, 0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{\pi}{4 \bar{q}}
-\begin{cases}
-0 , & \xi_-^2 \ge 1 \\
-\left( 1 - \xi_-^2 \right) , & \xi_-^2 \le 1 \quad \mathrm{and} \quad \xi_+^2 \ge 1 \\
-\bar{\omega} , & \xi_-^2 \le 1 \quad \mathrm{and} \quad \xi_+^2 \le 1 
-\end{cases}
-\end{equation}
-Applying the Kramers--Kr\"onig relation directly to this causal dissipative part,
-\begin{equation}
-\Re \chi^L(\bar{q}, \bar{\omega}, 0) = \frac{1}{\pi} \mathcal{P} \int_{-\infty}^{\infty} 
-\frac{\Im \chi^L(\bar{q}, \bar{\omega}', 0)}{\bar{\omega}' - \bar{\omega}} \, d\bar{\omega}'.
-\end{equation}
-
-\subsection{Hilbert-transform reconstruction on the real axis}
+\subsection{Exact $T=0$ limit via Kramers--Kr\"onig reconstruction}
 \label{sec:t0-kk-reconstruction}
 
-By substituting the piecewise imaginary part into the Kramers--Kr\"onig relation, the principal-value integral naturally splits into strictly finite domains bounded by \(\bar{\omega}'\) where \(\xi_{\pm}^2(\bar{\omega}') = 1\). The integration requires no complex contour closures, but merely the evaluation of elementary rational functions on the real axis:
+In the limit $\tau\to 0$, the Fermi--Dirac distribution reduces to the Heaviside step function $n(\kappa)\to\Theta(1-\kappa)$.
+Standard Matsubara/contour formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} routinely substitute this step function back into complex-plane contour integration; however, $\Theta(1-\kappa)$ is a distribution that is strictly non-analytic across the complex $\kappa$-plane and violates the holomorphy prerequisite of Cauchy's residue theorem.
+Evaluating the causality-constrained imaginary part Eq.~(\ref{imaginary-Lindhard}) strictly on the real axis instead yields the exact compact-support $T=0$ limit~\cite{Lindhard1954}
 \begin{equation}
-\Re \chi^L(\bar{q}, \bar{\omega}, 0) = \frac{1}{\pi} \left[ \int_{\Delta_1} \frac{\frac{\pi}{4\bar{q}} \bar{\omega}'}{\bar{\omega}' - \bar{\omega}} d\bar{\omega}' + \int_{\Delta_2} \frac{\frac{\pi}{4\bar{q}} (1 - \xi_-^2(\bar{\omega}'))}{\bar{\omega}' - \bar{\omega}} d\bar{\omega}' \right] ,
+\frac{\Im \chi^L(\bar{q},\bar{\omega};T=0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{\pi}{4\bar{q}}
+\begin{cases}
+0 , & \xi_-^2 \ge 1 , \\
+\left( 1 - \xi_-^2 \right) , & \xi_-^2 \le 1 \quad \mathrm{and} \quad \xi_+^2 \ge 1 , \\
+\bar{\omega} , & \xi_-^2 \le 1 \quad \mathrm{and} \quad \xi_+^2 \le 1 ,
+\end{cases}
+\label{t0-imaginary-Lindhard}
 \end{equation}
-where the intervals \(\Delta_1\) and \(\Delta_2\) correspond to the piecewise supports defined in Eq.~(D1). Through straightforward partial fraction decomposition, the singularities at \(\bar{\omega}' = \bar{\omega}\) yield the exact logarithmic terms without any ad-hoc cancellations:
-\begin{equation}
-\int \frac{d\bar{\omega}'}{\bar{\omega}' - \bar{\omega}} \rightarrow \ln|\bar{\omega}' - \bar{\omega}| ,
-\end{equation}
-which, upon evaluating the boundaries of \(\Delta_1\) and \(\Delta_2\), algebraically reorganizes into the standard real-part expression:
-\begin{equation}
-\frac{\Re \chi^L(\bar{q}, \bar{\omega}, 0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{1}{2\bar{q}} \left[ \bar{q} 
-+ \frac{1}{2} \left( 1 - \xi_-^2(\bar{\omega}) \right) \ln\left\vert \frac{\xi_-(\bar{\omega}) - 1}{\xi_-(\bar{\omega}) + 1} \right\vert
-+ \frac{1}{2} \left( 1 - \xi_+^2(\bar{\omega}) \right) \ln\left\vert \frac{\xi_+(\bar{\omega}) - 1}{\xi_+(\bar{\omega}) + 1} \right\vert
-\right] .
-\end{equation}
+where $\xi_\pm(\bar{\omega}) = \frac{1}{2}\left(\bar{\omega}/\bar{q} \pm \bar{q}\right)$.
 
-This derivation is performed entirely on the real axis. No analytic continuation into the complex \(\kappa\)- or \(\omega\)-plane is required, thereby avoiding the analytic inconsistency that arises when one attempts to represent the step function \(\Theta(1-\kappa)\) via its Fourier integral.
+The real part is obtained strictly from the Kramers--Kr\"onig relation,
+\begin{equation}
+\Re \chi^L(\bar{q},\bar{\omega};T=0) = \frac{1}{\pi}\,\mathcal{P}\int_{-\infty}^{\infty}\frac{\Im \chi^L(\bar{q},\bar{\omega}';T=0)}{\bar{\omega}'-\bar{\omega}}\,d\bar{\omega}' .
+\label{t0-Kramers-Kronig}
+\end{equation}
+Evaluating this principal-value integral over the finite kinematic intervals dictated by the compact support of Eq.~(\ref{t0-imaginary-Lindhard})---without any complex contour closure---yields the definitive logarithmic form
+\begin{equation}
+\frac{\Re \chi^L(\bar{q},\bar{\omega};T=0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{1}{2\bar{q}} \left[ \bar{q}
++ \frac{1}{2} \left( 1 - \xi_-^2 \right) \ln\left\vert \frac{\xi_- - 1}{\xi_- + 1} \right\vert
++ \frac{1}{2} \left( 1 - \xi_+^2 \right) \ln\left\vert \frac{\xi_+ - 1}{\xi_+ + 1} \right\vert
+\right] .
+\label{t0-real-Lindhard}
+\end{equation}
+This derivation is performed entirely on the real axis; no analytic continuation of the step function into the complex $\kappa$- or $\bar{\omega}$-plane is required.
+It demonstrates the analytic continuity of the causality-constrained framework: the $T>0$ formulation reduces exactly to the known $T=0$ Lindhard limits via the Hilbert transform, definitively bypassing the Jordan's-lemma violations inherent in direct complex-plane contour evaluations of $\Theta(1-\kappa)$.
 
 \subsection{Contrast with standard contour routes and the $\mathcal{O}(1)$ real-part offset}
 \label{sec:t0-kk-contrast}
@@ -2589,7 +2580,7 @@ This derivation is performed entirely on the real axis. No analytic continuation
 \textbf{Methodological contrast with standard Matsubara/contour formulations.}
 While Jordan's lemma is routinely assumed to hold in many contour-based calculations in theoretical physics under the implicit faith that physical quantities naturally converge, the specific analytic structure of the Fermi--Dirac factor (and its zero-temperature step-function limit) violates the necessary decay condition in substantial portions of the complex plane. Our real-axis formulation avoids this subtlety entirely. The fact that the correct \(T=0\) real part can be reconstructed solely from the imaginary part via the Kramers--Kr\"onig transform underscores that our causality-constrained framework is not only consistent with the established zero-temperature result, but also provides the physically rigorous route for finite temperature, free from the systemic ensemble inconsistencies of the standard contour routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
 
-The $\mathcal{O}(1)$ real-part offset reported in Sec.~\ref{sec:t0-limit-validation} and Fig.~\ref{fig:t0-1d-slice} is therefore not a failure of the MosaiQ-Lindhard engine, but a direct thermodynamic consequence of comparing a causality-pinned Hilbert transform against the real part assembled in Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} from contour sums or canonical limits that are not jointly constrained with the grand-canonical dissipative kernel. Within the causality-constrained space defined by Eqs.~(\ref{imaginary-Lindhard}) and (\ref{real-Lindhard-Kramers-Kronig}), the engine and the analytic reconstruction above coincide at $T=0$; the offset appears only when one demands agreement with the ensemble-mixed textbook real part. Appendix~\ref{sec:Gouedard-Deutsch} supplies the complementary pole-summation proof that such contour routes cannot provide a convergent, causality-consistent representation of $\Re \chi^L$.
+The $\mathcal{O}(1)$ real-part offset reported in Sec.~\ref{sec:t0-limit-validation} and Fig.~\ref{fig:t0-1d-slice} is therefore not a failure of the MosaiQ-Lindhard engine, but a direct thermodynamic consequence of comparing a causality-pinned Hilbert transform against the real part assembled in Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} from contour sums or canonical limits that are not jointly constrained with the grand-canonical dissipative kernel. Within the causality-constrained space defined by Eqs.~(\ref{imaginary-Lindhard}) and (\ref{real-Lindhard-Kramers-Kronig}), the engine and the analytic reconstruction of Eq.~(\ref{t0-real-Lindhard}) coincide at $T=0$; the offset appears only when one demands agreement with the ensemble-mixed textbook real part. Appendix~\ref{sec:Gouedard-Deutsch} supplies the complementary pole-summation proof that such contour routes cannot provide a convergent, causality-consistent representation of $\Re \chi^L$.
 
 \section{Note on the Gouedard and Deutsch method and the Breakdown of Contour Integration}
 \label{sec:Gouedard-Deutsch}
