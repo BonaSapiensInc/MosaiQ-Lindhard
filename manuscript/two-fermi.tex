@@ -3479,47 +3479,51 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}
  % axis
-  \draw  (-5.2, 0) -- (5.2, 0);
-  \draw  (0, -3.5) -- (0, 5.2);
+  \draw[->]  (-5.2, 0) -- (5.2, 0);
+  \node[right] at (5.2, 0) {$\Re \kappa$};
+  \draw[->]  (0, -3.5) -- (0, 5.2);
+  \node[above] at (0, 5.2) {$\Im \kappa$};
 
  % simple poles from the generic integrals
-  \node at (2, 0) {$\bullet$};
-  \node at (3, 0) {$\bullet$};
+  \tikzset{fdpole/.style={circle,fill=black,inner sep=0.8pt},
+           xipole/.style={circle,fill=black,inner sep=1.15pt}}
+  \node[xipole] at (2, 0) {};
+  \node[xipole] at (3, 0) {};
   \node [above] at (2, 0) {$+\xi_{-}$};
   \node [above] at (3, 0) {$+\xi_{+}$};
-  \node at (-2, 0) {$\bullet$};
-  \node at (-3, 0) {$\bullet$};
+  \node[xipole] at (-2, 0) {};
+  \node[xipole] at (-3, 0) {};
   \node [below] at (-2, 0) {$-\xi_{-}$};
   \node [below] at (-3, 0) {$-\xi_{+}$};
 
-  % simple poles from the Fermi-Dirac distribution
-  \node at (1.2, 1.0) {$\bullet$};
-  \node at (1.7, 1.5) {$\bullet$};
-  \node at (2.3, 2.0) {$\bullet$};
-  \node at (2.8, 2.5) {$\bullet$};
-  \node at (3.3, 3.0) {$\bullet$};
-  \node at (2.2, 2.6) {${\kappa_j^+}$};
+  % simple poles from the Fermi-Dirac distribution (45° ray families)
+  \node[fdpole] at (1.09, 0.91) {};
+  \node[fdpole] at (1.55, 1.37) {};
+  \node[fdpole] at (2.09, 1.82) {};
+  \node[fdpole] at (2.55, 2.28) {};
+  \node[fdpole] at (3.00, 2.73) {};
+  \node at (2.00, 2.37) {${\kappa_j^+}$};
 
-  \node at (-1.2, 1.0) {$\bullet$};
-  \node at (-1.7, 1.5) {$\bullet$};
-  \node at (-2.3, 2.0) {$\bullet$};
-  \node at (-2.8, 2.5) {$\bullet$};
-  \node at (-3.3, 3.0) {$\bullet$};
-  \node at (-2.2, 2.6) {${\kappa_j^-}$};
+  \node[fdpole] at (-1.09, 0.91) {};
+  \node[fdpole] at (-1.55, 1.37) {};
+  \node[fdpole] at (-2.09, 1.82) {};
+  \node[fdpole] at (-2.55, 2.28) {};
+  \node[fdpole] at (-3.00, 2.73) {};
+  \node at (-2.00, 2.37) {${\kappa_j^-}$};
 
-  \node at (1.2, -1.0) {$\bullet$};
-  \node at (1.7, -1.5) {$\bullet$};
-  \node at (2.3, -2.0) {$\bullet$};
-  \node at (2.8, -2.5) {$\bullet$};
-  \node at (3.3, -3.0) {$\bullet$};
-  \node at (-2.2, -2.6) {${\kappa_j^{-\ast}}$};
+  \node[fdpole] at (1.09, -0.91) {};
+  \node[fdpole] at (1.55, -1.37) {};
+  \node[fdpole] at (2.09, -1.82) {};
+  \node[fdpole] at (2.55, -2.28) {};
+  \node[fdpole] at (3.00, -2.73) {};
+  \node at (2.00, -2.37) {${\kappa_j^{+\ast}}$};
 
-  \node at (-1.2, -1.0) {$\bullet$};
-  \node at (-1.7, -1.5) {$\bullet$};
-  \node at (-2.3, -2.0) {$\bullet$};
-  \node at (-2.8, -2.5) {$\bullet$};
-  \node at (-3.3, -3.0) {$\bullet$};
-  \node at (2.2, -2.6) {${\kappa_j^{+\ast}}$};
+  \node[fdpole] at (-1.09, -0.91) {};
+  \node[fdpole] at (-1.55, -1.37) {};
+  \node[fdpole] at (-2.09, -1.82) {};
+  \node[fdpole] at (-2.55, -2.28) {};
+  \node[fdpole] at (-3.00, -2.73) {};
+  \node at (-2.00, -2.37) {${\kappa_j^{-\ast}}$};
 
   % integration contour  
   \draw[thick, decoration = { markings,
@@ -3531,7 +3535,7 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     mark = at position 0.9 with {\arrow{latex}}
     }, postaction={decorate} 
    ] (-5, 0) -- (-3.2, 0) arc(180:0:0.2) -- (-2.2,0) arc(180:0:0.2) 
-    -- (1.8,0) arc(180:360:0.2) -- (2.8,0) arc(180:360:0.2) -- (5,0) arc(0:180:5);
+    -- (1.8,0) arc(180:360:0.2) -- (2.8,0) arc(180:360:0.2) -- (4.5,0) arc(0:180:4.5) -- (-5,0);
 \end{tikzpicture}%
 }
 \vfill
