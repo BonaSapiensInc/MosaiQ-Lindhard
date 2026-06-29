@@ -35,6 +35,7 @@ from plot_Sqw import (
 )
 
 DATA_FILE = OUTPUT_DIR / "output_lindhard_base.dat"
+DEFAULT_TEMPERATURE_K = 10_000.0
 
 ELECTRON_Q_MAX = 4.0
 ION_Q_MAX = 50.0
@@ -135,6 +136,7 @@ def main() -> None:
             q_bounds=q_bounds,
             w_bounds=w_bounds,
             contour_profile="cross" if stem.startswith("chi_ei") else "default",
+            temperature_k=DEFAULT_TEMPERATURE_K,
         )
 
 

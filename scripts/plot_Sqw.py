@@ -27,9 +27,10 @@ from matplotlib import cm
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LogNorm, Normalize
 
-from plot_common import OUTPUT_DIR, PDF_RCPARAMS, output_path, save_figure
+from plot_common import OUTPUT_DIR, PDF_RCPARAMS, format_temperature_k, output_path, save_figure
 
 DATA_FILE = OUTPUT_DIR / "output_structure_factor.dat"
+DEFAULT_TEMPERATURE_K = 10_000.0
 
 # Figure 4 background helper bounds (plasmon sector).
 FIG4_Q_MIN = 0.1
@@ -323,6 +324,8 @@ def format_contour_display_axes(
     ax.margins(x=0, y=0)
     if q_hi <= 4.0 + 1.0e-9:
         ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 1))
+    elif q_hi <= 20.0 + 1.0e-9:
+        ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 5))
     else:
         ax.set_xticks(np.arange(int(q_lo), int(q_hi) + 1, 10))
     if w_hi <= 0.25 + 1.0e-9:
@@ -546,6 +549,7 @@ def render_contour(
     w_bounds: tuple[float, float] | None = None,
     contour_linewidth: float | None = None,
     contour_profile: str = "default",
+    temperature_k: float | None = None,
 ) -> None:
     cross_channel = contour_profile == "cross"
     line_width = (
@@ -608,7 +612,13 @@ def render_contour(
     frame_contour_axis(ax)
     ax.set_xlabel(r"Wave vector $q \ [k_F]$")
     ax.set_ylabel(r"Frequency $\omega \ [E_F/\hbar]$")
-    ax.set_title(f"{title} — Contour Map", fontweight="bold")
+    if temperature_k is not None:
+        ax.set_title(
+            f"{title} — {format_temperature_k(temperature_k)}",
+            fontweight="bold",
+        )
+    else:
+        ax.set_title(title, fontweight="bold")
     if q_bounds is not None and w_bounds is not None:
         format_contour_display_axes(ax, *q_bounds, *w_bounds)
     fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.04, label=label)
@@ -625,6 +635,7 @@ def render_channel(
     stem: str,
     label: str,
     title: str,
+    temperature_k: float = DEFAULT_TEMPERATURE_K,
 ) -> None:
     cross_profile = "cross" if stem == "S_ei" else "default"
     magnitude = np.abs(grid)
@@ -658,6 +669,7 @@ def render_channel(
         q_bounds=q_bounds,
         w_bounds=w_bounds,
         contour_profile=cross_profile,
+        temperature_k=temperature_k,
     )
 
 

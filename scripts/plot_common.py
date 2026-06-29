@@ -43,6 +43,17 @@ def output_path(name: str) -> Path:
     return OUTPUT_DIR / f"{Path(name).stem}.{DEFAULT_FIG_FORMAT}"
 
 
+def format_temperature_k(t_kelvin: float) -> str:
+    """Matplotlib mathtext temperature tag, e.g. $T = 10\\,000\\,\\mathrm{K}$."""
+    if t_kelvin <= 0.0:
+        return r"$T = 0$"
+    t_int = int(round(t_kelvin))
+    if t_int >= 1000:
+        grouped = f"{t_int:,}".replace(",", r"\,")
+        return rf"$T = {grouped}\,\mathrm{{K}}$"
+    return rf"$T = {t_int}\,\mathrm{{K}}$"
+
+
 def misc_output_path(name: str) -> Path:
     """Resolve an exploratory / non-manuscript figure path under output/misc/."""
     return OUTPUT_MISC_DIR / f"{Path(name).stem}.{DEFAULT_FIG_FORMAT}"

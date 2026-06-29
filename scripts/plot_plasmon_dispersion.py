@@ -26,7 +26,7 @@ from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
 import numpy as np
 
-from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
+from plot_common import OUTPUT_DIR, apply_pdf_rcparams, format_temperature_k, output_path, save_figure
 from plot_Sqw import (
     CONTOUR_ISOLINE_ALPHA,
     CONTOUR_ISOLINE_LINEWIDTH,
@@ -367,6 +367,7 @@ def plot_dispersion(
     background: tuple[np.ndarray, np.ndarray, np.ndarray, LogNorm | Normalize, float, float] | None,
     bare_spe: np.ndarray,
     display_bounds: tuple[float, float, float, float],
+    temperature_k: float = MANUSCRIPT_FIG5_T_KELVIN,
 ) -> Figure:
     configure_matplotlib()
 
@@ -430,7 +431,7 @@ def plot_dispersion(
         )
         legend_labels.insert(0, r"$S_{ee}(\bar{q}, \bar{\omega})$")
 
-    ax_top.legend(
+    legend = ax_top.legend(
         legend_handles,
         legend_labels,
         loc="upper left",
@@ -438,6 +439,22 @@ def plot_dispersion(
         framealpha=0.92,
         edgecolor="0.75",
         facecolor="white",
+    )
+
+    fig.canvas.draw()
+    legend_bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(
+        ax_top.transAxes.inverted()
+    )
+    ax_top.text(
+        legend_bbox.x0,
+        legend_bbox.y0 - 0.012,
+        format_temperature_k(temperature_k),
+        transform=ax_top.transAxes,
+        color="white",
+        fontsize=10,
+        va="top",
+        ha="left",
+        zorder=10,
     )
 
     spe_active = np.isfinite(omega_p) & np.isfinite(bare_spe) & (bare_spe > 0.0)
@@ -525,13 +542,13 @@ def plot_dispersion(
 
     ax_top.text(
         0.98,
-        0.06,
+        0.98,
         "(a)",
         transform=ax_top.transAxes,
         color="white",
         fontsize=12,
         fontweight="bold",
-        va="bottom",
+        va="top",
         ha="right",
         zorder=10,
     )
@@ -575,17 +592,26 @@ def main() -> None:
 
     background = load_s_ee_background(structure_factor_path, display_bounds)
 
+    disp_rs, disp_t = parse_run_metadata(dispersion_path)
     params_path = dispersion_path
     gamma_e, tau_e = parse_electron_reduced_params(params_path)
     bare_spe = bare_imaginary_lindhard_along_roots(q, omega_p, tau_e, gamma_e)
 
-    fig = plot_dispersion(q, omega_p, landau, bohm_gross, background, bare_spe, display_bounds)
+    fig = plot_dispersion(
+        q,
+        omega_p,
+        landau,
+        bohm_gross,
+        background,
+        bare_spe,
+        display_bounds,
+        temperature_k=disp_t if disp_t is not None else MANUSCRIPT_FIG5_T_KELVIN,
+    )
 
     saved_path = save_figure(fig, OUTPUT_FIG.stem)
     plt.close(fig)
 
     n_roots = int(np.sum(np.isfinite(omega_p)))
-    disp_rs, disp_t = parse_run_metadata(dispersion_path)
     print(f"Figure 5 data: r_s={disp_rs}, T={disp_t} K")
     print(f"  dispersion: {dispersion_path.name}")
     print(f"  structure factor: {structure_factor_path.name} (omega_max={omega_max:.3f})")
