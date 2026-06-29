@@ -39,15 +39,16 @@ FIG4_OMEGA_YMAX = 10.0
 # Electron-channel Figure 3 panels (plasmon / screening sector).
 ELECTRON_CHANNEL_Q_MAX = 4.0
 
-# Ion-acoustic contour: macroscopic q extent with Golden Scale omega zoom.
+# Ion-acoustic contour: full simulator q extent; Golden Scale display window.
 S_II_CONTOUR_Q_MAX = 50.0
+ION_DISPLAY_Q_MAX = 20.0
 ION_CHANNEL_OMEGA_MAX = 0.20
 ION_CHANNEL_OMEGA_DATA_PAD = 0.02
 
 # Tidy display frames (match t0_analytic contour styling).
 DISPLAY_MESH_POINTS = 400
 ELECTRON_DISPLAY_BOUNDS = (0.0, 4.0, 0.0, 3.0)
-ION_DISPLAY_BOUNDS = (0.0, 50.0, 0.0, ION_CHANNEL_OMEGA_MAX)
+ION_DISPLAY_BOUNDS = (0.0, ION_DISPLAY_Q_MAX, 0.0, ION_CHANNEL_OMEGA_MAX)
 
 # Backward-compatible aliases.
 ION_CHANNEL_OMEGA_DATA_MIN = 0.01
@@ -339,7 +340,11 @@ def prepare_ion_channel_mesh(
     cropped_q, cropped_w, cropped_grid = crop_omega_band(
         q_grid, w_grid, grid, ion_channel_data_omega_cap()
     )
-    return interpolate_to_display_mesh(cropped_q, cropped_w, cropped_grid, *ION_DISPLAY_BOUNDS)
+    q_display, w_display, value_display = interpolate_to_display_mesh(
+        cropped_q, cropped_w, cropped_grid, *ION_DISPLAY_BOUNDS
+    )
+    value_display = fill_display_boundary(value_display)
+    return q_display, w_display, value_display
 
 
 def prepare_ion_plot_grid(
@@ -347,7 +352,7 @@ def prepare_ion_plot_grid(
     w_grid: np.ndarray,
     grid: np.ndarray,
 ) -> tuple[np.ndarray, LogNorm | None]:
-    """Color-normalize on the Golden Scale band only, excluding the padding row."""
+    """Color-normalize on the Golden Scale band; pin vacuum and edges to the log floor."""
     magnitude = np.abs(grid).astype(float)
     in_band = w_grid <= ION_CHANNEL_OMEGA_MAX + 1.0e-9
     band_magnitude = np.where(in_band, magnitude, np.nan)
@@ -357,11 +362,11 @@ def prepare_ion_plot_grid(
         return np.nan_to_num(magnitude, nan=0.0), None
 
     vmin = float(norm.vmin)
-    plot_grid = np.where(
-        in_band & np.isfinite(magnitude) & (magnitude > 0.0),
-        np.maximum(magnitude, vmin),
-        np.nan,
-    )
+    plot_grid = np.full_like(magnitude, np.nan)
+    plot_grid[in_band] = vmin
+    active = in_band & np.isfinite(magnitude) & (magnitude > 0.0)
+    plot_grid[active] = np.maximum(magnitude[active], vmin)
+    plot_grid = fill_display_border(plot_grid)
     return plot_grid, norm
 
 
