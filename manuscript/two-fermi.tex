@@ -25,31 +25,58 @@
 \makeatother
 \captionsetup{justification=raggedright,singlelinecheck=false,skip=0.5em}
 
+% Submission figure numbering (independent of float counter increments per page).
+\newcounter{submitfig}
+\newcounter{submitpanel}
+\renewcommand{\thesubmitfig}{\arabic{submitfig}}
+\renewcommand{\thesubmitpanel}{\arabic{submitfig}(\alph{submitpanel})}
+
 % Panel tag only — visual label without REVTeX auto-caption text.
 \newcommand{\figurepaneltag}[1]{%
   \par\medskip
   {\centering\small\rmfamily #1\par}%
 }
 
-% Register \label anchors for submission figures without printing a \caption block.
-\newcommand{\registerfigurelabels}[2][]{%
-  \refstepcounter{figure}%
+% Standalone submission figure (one number, one page).
+\newcommand{\registerstandalonefigurelabel}[1]{%
+  \refstepcounter{submitfig}%
   \phantomsection
-  \label{#2}%
-  \ifx\relax#1\relax\else\label{#1}\fi
+  \label{#1}%
+}
+
+% Composite figure panel: one number shared; panels become 3(a), 3(b), ...
+\newcommand{\registerpanelfigurelabel}[2][]{%
+  \ifx\relax#1\relax
+    \refstepcounter{submitpanel}%
+    \phantomsection
+    \label{#2}%
+  \else
+    \refstepcounter{submitfig}%
+    \setcounter{submitpanel}{0}%
+    \phantomsection
+    \label{#1}%
+    \refstepcounter{submitpanel}%
+    \phantomsection
+    \label{#2}%
+  \fi
+}
+
+% Legacy name kept for Fig.~1--2; routes to standalone registration.
+\newcommand{\registerfigurelabels}[1]{%
+  \registerstandalonefigurelabel{#1}%
 }
 
 % Traditional submission layout: one panel per page, full text width.
-% Optional first argument: additional cross-reference label (e.g., composite figure).
-\newcommand{\panelpagefigure}[4][]{%
+% Optional first argument: composite cross-reference label (e.g., fig:bare-lindhard).
+\newcommand{\panelpagefigure}[3][]{%
   \clearpage
   \begin{figure}[p]
     \centering
     \vfill
     \includegraphics[width=\textwidth]{#2}%
     \vfill
-    \figurepaneltag{#3}%
-    \registerfigurelabels[#1]{#4}%
+    \registerpanelfigurelabel[#1]{#3}%
+    \figurepaneltag{Fig.~\thesubmitpanel}%
   \end{figure}%
 }
 
@@ -683,14 +710,16 @@ We can also write these pole positions in the polar form
 ${\kappa_j^+} = {\eta_j} e^{i \varphi_j}$ and ${\kappa_j^-} = \eta_j e^{i \left( \pi - \varphi_j \right) }$
 with their complex conjugate ${\kappa_j^{+\ast}}$ and ${\kappa_j^{-\ast}}$,
 where
-\begin{eqnarray*}
-{\eta_j}  &=& \left( \gamma^2 + \left( \pi {\tau_j} \right)^2 \right)^{1/4}, \\
-{\varphi_j} &=& \begin{cases}
+\begin{equation}
+\label{polar-form-series-poles}
+\begin{aligned}
+{\eta_j}  &= \left( \gamma^2 + \left( \pi {\tau_j} \right)^2 \right)^{1/4}, \\
+{\varphi_j} &= \begin{cases}
 \frac{1}{2} {\tan^{-1} \left( \frac{\pi {\tau_j}}{\gamma} \right) }, & \gamma > 0 , \\
 \frac{\pi}{2} - \frac{1}{2} {\tan^{-1} \left( \frac{\pi {\tau_j}}{\gamma} \right)}, & \gamma < 0 .
 \end{cases}
-\label{polar-form-series-poles}
-\end{eqnarray*}
+\end{aligned}
+\end{equation}
 The pole topology is summarized schematically in Fig.~\ref{contour}
 with labels ${\kappa_j^\pm}$ and ${\kappa_j^{\pm\ast}}$.
 Following the analytic continuation route of Ref.~\cite{Khanna-Glyde1976}, one might formally treat the squared momentum as a generic complex variable, $\theta = \kappa^2$. By invoking Euler's identity, $e^{i\pi} + 1 = 0$, the roots of the Fermi--Dirac denominator effortlessly emerge at $\theta_j = \gamma \pm i\pi\tau_j$. Mapping this back to the momentum space yields the complex squared-momenta of Eq.~(\ref{series-poles}). (As we will demonstrate below and in Appendix~\ref{sec:Gouedard-Deutsch}, however, this very formal maneuver---forcing $\kappa^2$ into the complex plane to enforce a contour closure---is the precise topological origin of the analytic breakdown and the divergent Matsubara-series tails in the standard contour-integration routes of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}. Physically, forcing the real momentum into these complex discrete poles implicitly shatters the single continuous grand-canonical ensemble into an unphysical discrete mixture of non-Hermitian states, a topological breakdown we identify as \textbf{ensemble fragmentation}.)
@@ -1646,7 +1675,7 @@ we executed the MosaiQ-Lindhard C++20 sandbox on a partially degenerate two-comp
 in the parameter regime characteristic of a brown-dwarf core:
 Wigner--Seitz radius $r_s = 1.0$ and temperature $T = 10{,}000\,\mathrm{K}$.
 The engine inverts the chemical potential for electrons and ions ($m_i/m_e \approx 1836$),
-evaluates the finite-temperature Lindhard functions via the Kramers--Kr\"onig / sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
+evaluates the finite-temperature Lindhard functions via the Kramers--Kr\"onig relation with the sinc-quadrature route of Sec.~\ref{sec:finite-temperature-Lindhard},
 assembles the two-component RPA susceptibilities Eqs.~(\ref{rpa-responses}),
 and extracts the dynamic structure factors through the fluctuation--dissipation relation Eq.~(\ref{fluctuation-dissipation})
 on a dense simulator mesh with $\bar{q} \in [0.1, 50.0]$ and $\bar{\omega} \in [0.01, 3.0]$ in electron Fermi units for the structure-factor panels of Figs.~\ref{fig:bare-lindhard}--\ref{fig:structure-factors};
@@ -1870,9 +1899,9 @@ Because the quantum kinetic energy of the heavy ion ($\sim \bar{q}^2 / 2m_i$) is
 Remarkably, our engine flawlessly captures this microphysical scale delay---evaluating frequency integrations up to $\bar{\omega} \approx 2500$ without numerical degradation---purely through the causality-constrained Kramers--Kr\"onig integration, entirely independent of ad hoc bridge functions or phenomenological liquid-state closures.
 
 The high-resolution insets in Fig.~\ref{fig:Sq-gamma} provide an anatomical dissection of the structural response in the microscopic sector.
-In Fig.~\ref{fig:Sq-gamma}(a), the inset spanning $\bar{q} \in [1.4, 2.0]$ magnifies the $S_{ee}$ peak at $\bar{q} \approx 1.7$ and reveals the progressive heightening of the first coordination shell as $\Gamma$ increases, a hallmark of nascent short-range order.
-Similarly, the insets in Fig.~\ref{fig:Sq-gamma}(b) and (c) capture the precise long-wavelength behavior of the ion--ion and electron--ion correlations for $\bar{q} \le 4.0$.
-The induction of a distinct peak in $S_{ei}$ [Fig.~\ref{fig:Sq-gamma}(c) inset], despite its small magnitude ($\mathcal{O}(10^{-4})$), quantifies the exact electron-drag effect where the light electron fluid adheres to the heavy-ion acoustic manifold.
+In Fig.~\ref{fig:Sq-gamma-ee}, the inset spanning $\bar{q} \in [1.4, 2.0]$ magnifies the $S_{ee}$ peak at $\bar{q} \approx 1.7$ and reveals the progressive heightening of the first coordination shell as $\Gamma$ increases, a hallmark of nascent short-range order.
+Similarly, the insets in Fig.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} capture the precise long-wavelength behavior of the ion--ion and electron--ion correlations for $\bar{q} \le 4.0$.
+The induction of a distinct peak in $S_{ei}$ [Fig.~\ref{fig:Sq-gamma-ei} inset], despite its small magnitude ($\mathcal{O}(10^{-4})$), quantifies the exact electron-drag effect where the light electron fluid adheres to the heavy-ion acoustic manifold.
 The ability to resolve these subtle features simultaneously with the macroscopic $1.0$ plateau demonstrates the extreme dynamic range and deterministic stability of the MosaiQ-Lindhard integration pipeline.
 
 \section{Conclusion}
@@ -3425,7 +3454,7 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     Panels~\textbf{(a)} and~\textbf{(c)} show $|S_{ee}|$ and $|S_{ei}|$ on $\bar{q} \in [0, 4.0]$ and $\bar{\omega} \in [0, 3.0]$ in electron Fermi units.
     Panel~\textbf{(b)} shows $|S_{ii}|$ on the ion Golden Scale $\bar{q} \in [0, 50.0]$ and $\bar{\omega} \in [0, 0.20]$, isolating the low-frequency ion-acoustic collective mode.
     Each panel maps $|S_{st}|$ on a base-10 logarithmic scale from $S_{\min}=\max(S_{>0},10^{-12})$ to $S_{\max}$ (the channel maximum on the displayed mesh).
-    The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$; panel~\textbf{(c)} uses the bold cross-channel isoline profile of Fig.~\ref{fig:bare-lindhard}(f).
+    The filled color field uses $N_{\mathrm{fill}}=200$ log-uniform levels and white isolines $N_{\mathrm{line}}=72$ log-uniform contours, $S_k=S_{\min}(S_{\max}/S_{\min})^{k/N}$, so that successive isolines are equally spaced in $\log_{10} S$; panel~\textbf{(c)} uses the bold cross-channel isoline profile of Fig.~\ref{fig:chi_ei_im}.
 
     \item \textbf{FIG. 5.} Extracted electron plasmon dispersion trajectory and corresponding Landau damping for a partially degenerate plasma at $r_s = 2.0$ and $T = 10{,}000\,\mathrm{K}$.
     \textbf{(a)} The extracted plasmon branch $\bar{\omega}_p(\bar{q})$ (solid black) and the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949} $\bar{\omega}_{\mathrm{BG}}(\bar{q})$ (black dashed) superimposed on $|S_{ee}(\bar{q}, \bar{\omega})|$ from the identical MosaiQ-Lindhard run, resampled onto the plasmon-sector display rectangle $\bar{q} \in [0, 2.0]$ and $\bar{\omega} \in [0, 6.5]$ in electron Fermi units.
@@ -3506,8 +3535,8 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \end{tikzpicture}%
 }
 \vfill
-\figurepaneltag{Fig.~1}
-\registerfigurelabels{contour}
+\registerstandalonefigurelabel{contour}
+\figurepaneltag{Fig.~\thesubmitfig}
 \end{figure}
 
 \clearpage
@@ -3597,20 +3626,20 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \end{tikzpicture}%
 }
 \vfill
-\figurepaneltag{Fig.~2}
-\registerfigurelabels{Fermi-Dirac-contour-integral}
+\registerstandalonefigurelabel{Fermi-Dirac-contour-integral}
+\figurepaneltag{Fig.~\thesubmitfig}
 \end{figure}
 
-\panelpagefigure[fig:bare-lindhard]{../output/chi_e_re.pdf}{Fig.~3(a)}{fig:chi_e_re}
-\panelpagefigure{../output/chi_e_im.pdf}{Fig.~3(b)}{fig:chi_e_im}
-\panelpagefigure{../output/chi_i_re.pdf}{Fig.~3(c)}{fig:chi_i_re}
-\panelpagefigure{../output/chi_i_im.pdf}{Fig.~3(d)}{fig:chi_i_im}
-\panelpagefigure{../output/chi_ei_re.pdf}{Fig.~3(e)}{fig:chi_ei_re}
-\panelpagefigure{../output/chi_ei_im.pdf}{Fig.~3(f)}{fig:chi_ei_im}
+\panelpagefigure[fig:bare-lindhard]{../output/chi_e_re.pdf}{fig:chi_e_re}
+\panelpagefigure{../output/chi_e_im.pdf}{fig:chi_e_im}
+\panelpagefigure{../output/chi_i_re.pdf}{fig:chi_i_re}
+\panelpagefigure{../output/chi_i_im.pdf}{fig:chi_i_im}
+\panelpagefigure{../output/chi_ei_re.pdf}{fig:chi_ei_re}
+\panelpagefigure{../output/chi_ei_im.pdf}{fig:chi_ei_im}
 
-\panelpagefigure[fig:structure-factors]{../output/S_ee_contour.pdf}{Fig.~4(a)}{fig:S_ee}
-\panelpagefigure{../output/S_ii_contour.pdf}{Fig.~4(b)}{fig:S_ii}
-\panelpagefigure{../output/S_ei_contour.pdf}{Fig.~4(c)}{fig:S_ei}
+\panelpagefigure[fig:structure-factors]{../output/S_ee_contour.pdf}{fig:S_ee}
+\panelpagefigure{../output/S_ii_contour.pdf}{fig:S_ii}
+\panelpagefigure{../output/S_ei_contour.pdf}{fig:S_ei}
 
 \clearpage
 \begin{figure}[p]
@@ -3618,21 +3647,21 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \vfill
 \includegraphics[width=\textwidth]{../output/plasmon_dispersion.pdf}
 \vfill
-\figurepaneltag{Fig.~5}
-\registerfigurelabels{fig:plasmon-dispersion}
+\registerstandalonefigurelabel{fig:plasmon-dispersion}
+\figurepaneltag{Fig.~\thesubmitfig}
 \end{figure}
 
-\panelpagefigure[fig:t0-limit-validation]{../output/t0_analytic_re_contour.pdf}{Fig.~6(a)}{fig:t0-re-2d}
-\panelpagefigure{../output/t0_analytic_im_contour.pdf}{Fig.~6(b)}{fig:t0-im-2d}
-\panelpagefigure{../output/t0_limit_validation.pdf}{Fig.~6(c)}{fig:t0-1d-slice}
+\panelpagefigure[fig:t0-limit-validation]{../output/t0_analytic_re_contour.pdf}{fig:t0-re-2d}
+\panelpagefigure{../output/t0_analytic_im_contour.pdf}{fig:t0-im-2d}
+\panelpagefigure{../output/t0_limit_validation.pdf}{fig:t0-1d-slice}
 
-\panelpagefigure[fig:thermal-anatomy]{../output/thermal_anatomy_a.pdf}{Fig.~7(a)}{fig:thermal-anatomy-a}
-\panelpagefigure{../output/thermal_anatomy_b.pdf}{Fig.~7(b)}{fig:thermal-anatomy-b}
-\panelpagefigure{../output/thermal_anatomy_c.pdf}{Fig.~7(c)}{fig:thermal-anatomy-c}
-\panelpagefigure{../output/thermal_anatomy_d.pdf}{Fig.~7(d)}{fig:thermal-anatomy-d}
+\panelpagefigure[fig:thermal-anatomy]{../output/thermal_anatomy_a.pdf}{fig:thermal-anatomy-a}
+\panelpagefigure{../output/thermal_anatomy_b.pdf}{fig:thermal-anatomy-b}
+\panelpagefigure{../output/thermal_anatomy_c.pdf}{fig:thermal-anatomy-c}
+\panelpagefigure{../output/thermal_anatomy_d.pdf}{fig:thermal-anatomy-d}
 
-\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{Fig.~8(a)}{fig:Sq-gamma-ee}
-\panelpagefigure{../output/Sq_gamma_ii.pdf}{Fig.~8(b)}{fig:Sq-gamma-ii}
-\panelpagefigure{../output/Sq_gamma_ei.pdf}{Fig.~8(c)}{fig:Sq-gamma-ei}
+\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{fig:Sq-gamma-ee}
+\panelpagefigure{../output/Sq_gamma_ii.pdf}{fig:Sq-gamma-ii}
+\panelpagefigure{../output/Sq_gamma_ei.pdf}{fig:Sq-gamma-ei}
 
 \end{document}
