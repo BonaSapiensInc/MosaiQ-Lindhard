@@ -10,7 +10,7 @@
 # * Contact: kim.ingee@bonasapiens.com
 # ==========================================================================
 
-"""Figure 7: thermal anatomy of bare electron Lindhard real-part sharpening (2x2 companion panel)."""
+"""Figure 7: thermal anatomy of bare electron Lindhard real-part sharpening (four panel PDFs)."""
 
 from __future__ import annotations
 
@@ -53,13 +53,17 @@ COLORBAR_FRACTION = 0.046
 COLORBAR_PAD = 0.04
 LADDER_CBAR_LABEL = r"$|\Re \tilde{\chi}_e^L|$"
 RATIO_CBAR_LABEL = r"$S_{ee}\,/\,|\Re \tilde{\chi}_e^L|$"
+SINGLE_PANEL_FIGSIZE = (10, 7)
 COLD_LADDER_T_K = 70
 COLD_LADDER_Q_POINTS = 79
 
 LADDER_PANELS: tuple[tuple[int, str], ...] = (
-    (1000, "(a)"),
-    (COLD_LADDER_T_K, "(b)"),
+    (1000, "thermal_anatomy_a"),
+    (COLD_LADDER_T_K, "thermal_anatomy_b"),
 )
+
+PANEL_C_STEM = "thermal_anatomy_c"
+PANEL_D_STEM = "thermal_anatomy_d"
 
 SIMULATOR = Path(__file__).resolve().parent.parent / "simulator" / "build" / "mosaiq_simulator"
 
@@ -316,7 +320,7 @@ def render_slice_panel(ax: plt.Axes) -> None:
     ax.margins(x=0)
     ax.set_xlabel(r"$\bar{\omega}$ at $\bar{q}=1.0$")
     ax.set_ylabel(r"$|\Re \tilde{\chi}_e^L|$")
-    ax.set_title(r"(c) Real-part sharpening at $\bar{q}=1.0$", fontweight="bold")
+    ax.set_title(r"Real-part sharpening at $\bar{q}=1.0$", fontweight="bold")
     ax.legend(loc="lower right", fontsize=8, framealpha=0.95, edgecolor="0.75")
     ax.grid(True, alpha=0.25, linewidth=0.6)
 
@@ -361,49 +365,65 @@ def render_bare_rpa_panel(ax: plt.Axes) -> ScalarMappable:
         ratio,
         norm,
         title=(
-            r"(d) RPA/bare ratio $S_{ee}/|\Re \tilde{\chi}_e^L|$"
+            r"RPA/bare ratio $S_{ee}/|\Re \tilde{\chi}_e^L|$"
             r" at $T=10{,}000\,\mathrm{K}$"
         ),
         draw_isolines=True,
     )
 
 
+def save_ladder_panel(
+    t_kelvin: int,
+    stem: str,
+    shared_norm: LogNorm,
+) -> Path:
+    path = ensure_lindhard_data(t_kelvin)
+    q_grid, w_grid, z_grid = load_re_chi_electron(path)
+    fig, ax = plt.subplots(figsize=SINGLE_PANEL_FIGSIZE, layout="constrained")
+    mesh = render_log_rainbow_field(
+        ax,
+        q_grid,
+        w_grid,
+        z_grid,
+        shared_norm,
+        title=rf"$|\Re \tilde{{\chi}}_e^L|$, $T={t_kelvin:,}\,\mathrm{{K}}$",
+        fill_border=(t_kelvin == COLD_LADDER_T_K),
+    )
+    attach_log_colorbar(fig, ax, mesh, LADDER_CBAR_LABEL)
+    saved = save_figure(fig, stem)
+    plt.close(fig)
+    return saved
+
+
+def save_slice_panel() -> Path:
+    fig, ax = plt.subplots(figsize=SINGLE_PANEL_FIGSIZE, layout="constrained")
+    render_slice_panel(ax)
+    saved = save_figure(fig, PANEL_C_STEM)
+    plt.close(fig)
+    return saved
+
+
+def save_ratio_panel() -> Path:
+    fig, ax = plt.subplots(figsize=SINGLE_PANEL_FIGSIZE, layout="constrained")
+    mesh = render_bare_rpa_panel(ax)
+    attach_log_colorbar(fig, ax, mesh, RATIO_CBAR_LABEL)
+    saved = save_figure(fig, PANEL_D_STEM)
+    plt.close(fig)
+    return saved
+
+
 def main() -> None:
     configure_seaborn()
     shared_norm = ladder_shared_norm(tuple(t for t, _ in LADDER_PANELS))
 
-    fig, axes = plt.subplots(2, 2, figsize=(15.5, 11), layout="constrained")
+    saved_paths: list[Path] = []
+    for t_kelvin, stem in LADDER_PANELS:
+        saved_paths.append(save_ladder_panel(t_kelvin, stem, shared_norm))
+    saved_paths.append(save_slice_panel())
+    saved_paths.append(save_ratio_panel())
 
-    for ax, (t_kelvin, panel_tag) in zip(axes[0], LADDER_PANELS, strict=True):
-        path = ensure_lindhard_data(t_kelvin)
-        q_grid, w_grid, z_grid = load_re_chi_electron(path)
-        render_log_rainbow_field(
-            ax,
-            q_grid,
-            w_grid,
-            z_grid,
-            shared_norm,
-            title=rf"{panel_tag} $|\Re \tilde{{\chi}}_e^L|$, $T={t_kelvin:,}\,\mathrm{{K}}$",
-            fill_border=(t_kelvin == COLD_LADDER_T_K),
-        )
-
-    ladder_sm = ScalarMappable(cmap=rainbow_log_cmap(), norm=shared_norm)
-    ladder_sm.set_array([])
-    attach_log_colorbar(fig, axes[0, :], ladder_sm, LADDER_CBAR_LABEL)
-
-    render_slice_panel(axes[1, 0])
-    ratio_mesh = render_bare_rpa_panel(axes[1, 1])
-    attach_log_colorbar(fig, axes[1, 1], ratio_mesh, RATIO_CBAR_LABEL)
-
-    fig.suptitle(
-        rf"Thermal anatomy of bare electron $\Re\chi_e^L$ sharpening ($r_s={RS:.1f}$)",
-        fontsize=14,
-        fontweight="bold",
-    )
-
-    saved = save_figure(fig, "thermal_anatomy")
-    plt.close(fig)
-    print(f"Saved {saved}")
+    for path in saved_paths:
+        print(f"Saved {path}")
 
 
 if __name__ == "__main__":

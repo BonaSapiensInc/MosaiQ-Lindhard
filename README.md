@@ -76,7 +76,7 @@ ctest --test-dir simulator/build --output-on-failure
 
 ### Regenerate figures
 
-**Version control:** Manuscript figure PDFs under `output/` (for example `chi_*.pdf`, `S_*_contour.pdf`, `thermal_anatomy.pdf`) are tracked in git. **`output/*.dat` simulator grids are not** — they are listed in [`.gitignore`](.gitignore) and must be generated locally after clone. Plotting scripts call `mosaiq_simulator` automatically when a required `.dat` file is missing.
+**Version control:** Manuscript figure PDFs under `output/` (for example `chi_*.pdf`, `S_*_contour.pdf`, `thermal_anatomy_*.pdf`) are tracked in git. **`output/*.dat` simulator grids are not** — they are listed in [`.gitignore`](.gitignore) and must be generated locally after clone. Plotting scripts call `mosaiq_simulator` automatically when a required `.dat` file is missing.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
