@@ -28,6 +28,7 @@ manuscript/cover-letter.*
 *.run.xml
 *.xdv
 manuscript/two-fermiNotes.bib
+manuscript/submission.zip
 
 # Generated PDF (rebuild from manuscript/two-fermi.tex)
 *.pdf

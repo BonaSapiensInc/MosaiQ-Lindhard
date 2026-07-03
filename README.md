@@ -31,12 +31,29 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | Path | Purpose |
 |------|---------|
 | [`simulator/`](simulator/) | C++20 engine (`mosaiq_simulator` CLI) and CTest suite |
-| [`scripts/`](scripts/) | Python figure generators (matplotlib / seaborn) |
+| [`scripts/`](scripts/) | Python figure generators, figure sync, and APS submission packaging |
 | [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
 | [`manuscript/figures/`](manuscript/figures/) | APS submission figure PDFs (synced from `output/`) |
+| [`manuscript/submission.zip`](manuscript/submission.zip) | APS upload bundle (`two-fermi.tex` + cited PDFs only; generated locally, not in git) |
 | [`docs/`](docs/) | Architecture notes and reference extracts |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
+
+### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| [`plot_lindhard_base.py`](scripts/plot_lindhard_base.py) | Figure 3 — bare Lindhard contours |
+| [`plot_Sqw.py`](scripts/plot_Sqw.py) | Figure 4 — dynamic structure factor contours |
+| [`plot_plasmon_dispersion.py`](scripts/plot_plasmon_dispersion.py) | Figure 5 — plasmon dispersion |
+| [`plot_lindhard_t0_2d.py`](scripts/plot_lindhard_t0_2d.py) | Figure 6 — $T=0$ contour panels |
+| [`plot_t0_error.py`](scripts/plot_t0_error.py) | Figure 6 — $T=0$ validation slice |
+| [`plot_thermal_anatomy.py`](scripts/plot_thermal_anatomy.py) | Figure 7 — thermal sharpening |
+| [`plot_Sq_gamma.py`](scripts/plot_Sq_gamma.py) | Figure 8 — $\Gamma$ sweep static $S(q)$ |
+| [`regenerate_figures_3_4.sh`](scripts/regenerate_figures_3_4.sh) | Batch regenerate Figs. 3–4 |
+| [`regenerate_sq_gamma.sh`](scripts/regenerate_sq_gamma.sh) | Batch regenerate Fig. 8 data |
+| [`sync_manuscript_figures.py`](scripts/sync_manuscript_figures.py) | Copy cited PDFs from `output/` to `manuscript/figures/` |
+| [`package_aps_submission.sh`](scripts/package_aps_submission.sh) | Build `manuscript/submission.zip` for APS upload |
 
 ---
 
@@ -105,6 +122,10 @@ python3 scripts/plot_Sq_gamma.py
 # T = 0 validation panels (Figure 6)
 python3 scripts/plot_lindhard_t0_2d.py
 python3 scripts/plot_t0_error.py   # requires output/output_t0_limit.dat from CTest
+
+# Sync manuscript/figures/ and build APS submission.zip
+python3 scripts/sync_manuscript_figures.py
+./scripts/package_aps_submission.sh   # → manuscript/submission.zip
 ```
 
 Typical single-run CLI (writes `output/output_lindhard_base.dat`, `output/output_structure_factor.dat`, and related files):
@@ -137,6 +158,13 @@ Upload a self-contained bundle from `manuscript/`:
 - optional local `cover-letter.pdf`
 
 Do not rely on `../output/` paths; the submission server expects figures beside the main `.tex` file.
+
+Build a validator-safe zip (only `two-fermi.tex` + cited PDFs; no cover letter, build artifacts, or `.DS_Store`):
+
+```bash
+./scripts/package_aps_submission.sh
+# → manuscript/submission.zip
+```
 
 ---
 
@@ -174,6 +202,8 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.XXXXXXX](https://doi.org/10.5281/zenodo.XXXXXXX) (release `v1.0.1`; replace `XXXXXXX` after GitHub release triggers Zenodo deposit)
+
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 
-**What is not in git:** **`output/*.dat`** numerical grids from the CLI (ignored by design). After cloning, build `mosaiq_simulator` and run the [Regenerate figures](#regenerate-figures) commands above; each workflow documents the `(r_s, T)` or `--gamma-sweep` parameters used in the manuscript.
+**What is not in git:** **`output/*.dat`** numerical grids from the CLI (ignored by design) and **`manuscript/submission.zip`** (regenerate with [`package_aps_submission.sh`](scripts/package_aps_submission.sh)). After cloning, build `mosaiq_simulator` and run the [Regenerate figures](#regenerate-figures) commands above; each workflow documents the `(r_s, T)` or `--gamma-sweep` parameters used in the manuscript.
