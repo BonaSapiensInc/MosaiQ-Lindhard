@@ -202,7 +202,7 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
-**Zenodo archive:** [https://doi.org/10.5281/zenodo.XXXXXXX](https://doi.org/10.5281/zenodo.XXXXXXX) (release `v1.0.1`; replace `XXXXXXX` after GitHub release triggers Zenodo deposit)
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.XXXXXXX](https://doi.org/10.5281/zenodo.XXXXXXX) (release `v1.0.1-publish-release`; replace `XXXXXXX` after Zenodo deposit completes)
 
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 
