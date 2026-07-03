@@ -1,5 +1,5 @@
 \let\orilabel\label
-\documentclass[showkeys,noshowpacs,superscriptaddress,pre,preprint]{revtex4-1}
+\documentclass[aps,showkeys,noshowpacs,superscriptaddress,pre,preprint]{revtex4-2}
 \let\label\orilabel
 \usepackage{graphicx}
 \usepackage{subcaption}
@@ -84,7 +84,7 @@
 \title{Linear response representation of two-fermion plasmas}
 \author{In-Gee Kim}
 \email{kim.ingee@bonasapiens.com}
-\affiliation{Bona Sapiens, Inc., Seoul 07332, Republic of Korea}
+\affiliation{Bona Sapiens, Inc., Seoul, Republic of Korea}
 
 \date{\today}
 
@@ -184,7 +184,7 @@ However, it is also noticeable that there is the other factor that the inverse o
 $\left( \int_{-\infty}^\infty \frac{d\omega}{\pi} \frac{\Im \chi_{nn} ( q, \omega )}{1 - e^{-\beta\hbar\omega}} \right)^{-1}$.
 It is instructive to investigate the structure of $\Im \chi_{nn} ( q, \omega )$ by means of the Lindhard response theory,
 which considers only the quantum effects of responses.
-The Lindhard function is written as~\cite{Giuliani-Vignale2005}
+The Lindhard function~\cite{Lindhard1954} is written as~\cite{Giuliani-Vignale2005}
 \begin{equation}
 \chi_L \left( q, \omega \right) = \frac{1}{V}
 \sum_{\mathbf{k} \sigma} \frac{n_{\mathbf{k}, \sigma} - n_{\mathbf{k}+\mathbf{q}, \sigma}}{
@@ -594,9 +594,12 @@ and the reduced chemical potential
 where $\epsilon_\mathrm{F}$ is the Fermi energy,
 so we have the consequent substitutions
 \begin{equation*}
-\epsilon_\mathbf{k} = \left( \frac{\hbar}{2m} \right) k^2 \rightarrow {\epsilon ( \kappa )} = \epsilon_\mathrm{F} \kappa^2 ; \;
-n_\mathbf{k} \rightarrow {n ( \kappa )} = \frac{1}{e^{\left( \kappa^2 - \gamma \right) / \tau} + 1} ,
+\epsilon_\mathbf{k} = \left( \frac{\hbar}{2m} \right) k^2 \rightarrow {\epsilon ( \kappa )} = \epsilon_\mathrm{F} \kappa^2 ,
 \end{equation*}
+\begin{equation}
+n_\mathbf{k} \rightarrow n(\kappa) = \left[e^{\left(\kappa^2 - \gamma\right)/\tau} + 1\right]^{-1},
+\label{eq:fermi-kappa}
+\end{equation}
 where $\tau = k_\mathrm{B} T / \epsilon_\mathrm{F}$ the reduced temperature.
 By introducing two dimensionless variables,
 \begin{equation*}
@@ -746,7 +749,7 @@ This vanishing arc contribution is a non-negotiable prerequisite for replacing a
 by a sum of residues~\cite{Byron-Fuller1992}.
 
 For the present integrand, $g(\kappa) = \kappa\, n(\kappa)\,[\cdots]$,
-the Fermi--Dirac factor $n(\kappa) = \left[e^{\left(\kappa^2 - \gamma\right)/\tau} + 1\right]^{-1}$
+the Fermi--Dirac factor $n(\kappa)$ of Eq.~(\ref{eq:fermi-kappa})
 does not satisfy the decay condition on the upper-half semicircular arc.
 With $\kappa = R e^{i\theta}$ ($0 \le \theta \le \pi$),
 the exponent depends on $\mathrm{Re}\!\left(\kappa^2\right) = R^2 \cos 2\theta$.
@@ -843,8 +846,9 @@ These hybrid treatments assign the imaginary and real parts to differing thermod
 The pole-summation route of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978} shares a common failure mode with the ensemble-mixed formulation of Ref.~\cite{Giuliani-Vignale2005}:
 both attempt to evaluate $\Re\chi^L$ outside the strictly constrained space defined by exact causality.
 The residue sum underlying Eq.~(\ref{formal-real-Lindhard}) additionally suffers from
-an analytic inconsistency in the contour integration (Appendix~\ref{sec:Gouedard-Deutsch})
-and from the divergent Matsubara-series tail $\mathcal{O}(j^{-1/2})$.
+an analytic inconsistency in the contour integration (Appendix~\ref{sec:Gouedard-Deutsch}),
+from the divergent Matsubara-series tail $\mathcal{O}(j^{-1/2})$,
+and from interchanging the frequency integration with the infinite pole sum without the uniform-convergence conditions required by Fubini's theorem~\cite{Rudin1976}.
 Neither the Ref.~\cite{Giuliani-Vignale2005} ensemble-mixed prescription nor the Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978} contour summation provides a convergent representation of $\Re\chi^L$.
 
 The consistent formulation maps the calculation into a strictly constrained physical space
@@ -909,7 +913,7 @@ f\left( x \right) = \ln\left( 1 + e^{\left( \gamma - x^2 \right) / \tau} \right)
 \end{equation*}
 Since $\ln\left( 1 + e^{\left( \gamma - x^2 \right) / \tau} \right)$ generates
 the infinite number of poles $x_j$ as in Eq.~(\ref{series-poles}),
-the Cauchy principal value integration formula~\cite{Byron-Fuller1992,Arfken-Weber1995}
+the Cauchy principal value integration formula~\cite{Arfken-Weber1995,Byron-Fuller1992}
 \begin{equation*}
 \wp \int_{-\infty}^{\infty} \frac{f\left( x \right)}{x - \alpha} \, ds
 = i \pi  f\left( \alpha \right)
@@ -1648,7 +1652,7 @@ $\omega = \omega \left( q \right)$ of the corresponding collective modes~\cite{P
 Unfortunately, there is no systematic method for identifying the relevant collective modes.
 Indeed, the identification of the collective modes and the evaluation of the spectral functions
 of those modes constitute much of many-body 
-physics~\cite{Giuliani-Vignale2005,Kremp2010,Fetter-Walecka1971,Pines1962,Ichimaru1973}, including Pines and Nozi\`eres~\cite{Pines-Nozieres1989}.
+physics~\cite{Ichimaru1973,Giuliani-Vignale2005,Kremp2010,Fetter-Walecka1971,Pines1962}, including Pines and Nozi\`eres~\cite{Pines-Nozieres1989}.
 One may choose a couple of relevant collective excitations being added 
 to the quadrature Eq.~(\ref{analytic-structure-factor}),
 based on the importance to the corresponding physics.
@@ -1701,7 +1705,7 @@ Comparing the finite-temperature bare manifolds of Fig.~\ref{fig:bare-lindhard} 
 The structural blurring and expanded spectral weight outside the $T=0$ step-boundaries in Fig.~\ref{fig:bare-lindhard} are driven exclusively by thermodynamic Fermi-surface smearing, rather than multi-particle interaction or grid-induced numerical artifacts.
 To quantitatively isolate these mechanisms, Fig.~\ref{fig:thermal-anatomy} maps the real electron susceptibility on a thermal sharpening ladder at $r_s=1.0$.
 Figs.~\ref{fig:thermal-anatomy-a} and~\ref{fig:thermal-anatomy-b} contrast $T=1\,000\,\mathrm{K}$ with a moderately degenerate $T=70\,\mathrm{K}$ run; this cold rung was selected to fill the bare manifold on a complete $(\bar{q},\bar{\omega})$ grid, because sparse low-temperature exports can masquerade as artificial sharpening rather than genuine Fermi-surface narrowing.
-Fig.~\ref{fig:thermal-anatomy-c} overlays $T=70\,\mathrm{K}$, $1\,000\,\mathrm{K}$, and $10\,000\,\mathrm{K}$ at $\bar{q}=1.0$: at this coupling the three finite-$T$ curves are thermodynamically coincident, isolating the physical residual sharpening visible only against the strict $T=0$ analytic real susceptibility.
+Fig.~\ref{fig:thermal-anatomy-c} overlays $T=70\,\mathrm{K}$, $1\,000\,\mathrm{K}$, and $10\,000\,\mathrm{K}$ at $\bar{q}=1.0$: at this coupling the three finite-$T$ curves are thermodynamically coincident and are rendered with distinct linestyles and staggered markers ($\circ$, $\square$, $\triangle$) so their overlap remains legible, isolating the physical residual sharpening visible only against the strict $T=0$ analytic real susceptibility (solid black).
 Throughout the ladder the MosaiQ real part evolves smoothly toward the $T=0$ topology without Gibbs ringing or non-causal leakage---the severe structural distortions endemic to legacy real-part routes based on contour integration over Matsubara frequencies (Appendix~\ref{sec:Lindhard-function}; Fig.~\ref{fig:t0-limit-validation}).
 Furthermore, because Fig.~\ref{fig:bare-lindhard} is evaluated prior to RPA screening, a direct contrast with the sharp plasmon ridges in Fig.~\ref{fig:structure-factors} confirms that the diffuse background is entirely a non-interacting statistical trait, while the sharp collective resonances are strictly interaction-driven.
 
@@ -1813,7 +1817,7 @@ Because the pipeline evaluates $\Re \chi^L$ strictly as the Hilbert transform of
 causal $\Im \chi^L$, the integrated sum rules become macroscopic witnesses of
 mass conservation ($f$-sum), charge neutrality (perfect screening),
 current conservation (conductivity), and compressibility (acoustic limit).
-Standard implementations of contour integration over Matsubara frequencies that evaluate $\Re \chi^L$ through divergent pole summations~\cite{Gouedard-Deutsch1978,Khanna-Glyde1976},
+Standard implementations of contour integration over Matsubara frequencies that evaluate $\Re \chi^L$ through divergent pole summations~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978},
 Euler--Maclaurin hybrids, or the ensemble-mixed analytic continuations of Ref.~\cite{Giuliani-Vignale2005}
 do not inherit these constraints: their integrated spectral moments require ad hoc cutoffs,
 non-uniquely placed high-frequency tails, or parameter tuning that cannot be justified
@@ -1848,7 +1852,8 @@ the standard $T = 0$ Lindhard real part assembled via the contour routes of Refs
 a persistent $\mathcal{O}(1)$ offset remains even as $\tau$ is reduced further
 and the imaginary part has already converged to its $\tau \rightarrow 0$ limit.
 Figures~\ref{fig:t0-re-2d} and \ref{fig:t0-im-2d} visualize the causality-pinned $T=0$ topology derived in Appendix~\ref{sec:Lindhard-function} over the $(\bar{q}, \bar{\omega})$ plane, where the logarithmic singularity in the real part forms a sharp topological ridge; a black dashed vertical guide at $\bar{q}=1.0$ marks the slice extracted in Fig.~\ref{fig:t0-1d-slice}.
-When the numerical extraction is compared along that slice, the engine output (markers) tracks a well-defined, repeatable trajectory, while the contour-based textbook reference (solid curves) occupies a distinct manifold. As shown in the error analysis of Fig.~\ref{fig:t0-1d-slice}, the absolute errors in $\Re \chi^L$ remain at the $\mathcal{O}(1)$ level, whereas the imaginary errors are confined to the truncation floor of the sinc evaluation.
+When the numerical extraction is compared along that slice at $r_s = 2.0$, $\bar{q} = 1.0$, and $T \approx 11\,\mathrm{K}$ (Fig.~\ref{fig:t0-1d-slice}), the MosaiQ-Lindhard engine output (open markers) tracks a well-defined, repeatable trajectory, while the contour-based textbook reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} displays $\Re \tilde{\chi}_{T=0}$ as solid curves and $\Im \tilde{\chi}_{T=0}$ as dashed curves on a distinct manifold.
+As shown in the error panel of Fig.~\ref{fig:t0-1d-slice}, $|\Delta \Re|$ (solid) remains at the $\mathcal{O}(1)$ level, whereas $|\Delta \Im|$ (dashed) is confined to the truncation floor of the sinc evaluation.
 
 This $\mathcal{O}(1)$ offset must not be interpreted as a numerical artifact or a defect of the MosaiQ-Lindhard engine. Rather, it is the inescapable, operational signature of the thermodynamic inconsistency diagnosed in Sec.~\ref{sec:finite-temperature-Lindhard}: the standard $T = 0$ analytical formulas assembled in textbook contour routes~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} combine $\Re \chi$ and $\Im \chi$ from thermodynamically distinct prescriptions---canonical contour sums or zero-temperature limits for the real part, and grand-canonical dissipative kernels for the imaginary part---that are not jointly constrained by a single Kramers--Kr\"onig relation.
 The MosaiQ-Lindhard engine, by contrast, evaluates $\Re \chi^L$ exclusively as the Hilbert transform
@@ -1873,7 +1878,8 @@ $S_{st}(\bar{q}) = \int S_{st}(\bar{q}, \bar{\omega})\, d\bar{\omega}$
 that govern diffraction, compressibility, and interspecies screening in dense plasmas.
 Figure~\ref{fig:Sq-gamma} displays $S_{ee}(\bar{q})$, $S_{ii}(\bar{q})$, and the cross-correlation $S_{ei}(\bar{q})$ for a plasma at a fixed Wigner--Seitz radius $r_s = 1.0$,
 with temperature mapped deterministically to sweep the coupling parameter
-$\Gamma \in \{10, 50, 100, 150\}$ via Eq.~(\ref{plasma-coupling-parameter-Hartree}).
+$\Gamma \in \{10, 50, 100, 150\}$ via Eq.~(\ref{plasma-coupling-parameter-Hartree}),
+with each $\Gamma$ encoded by color and by a linestyle progression from dot-dot-dashed ($\Gamma = 10$) and dot-dashed ($\Gamma = 50$) through dashed ($\Gamma = 100$) to solid ($\Gamma = 150$).
 Each curve is obtained exclusively from the MosaiQ-Lindhard frequency integration of the causality-constrained dynamic response,
 without classical integral-equation closures or molecular-dynamics post-processing.
 As $\Gamma$ increases, correlation peaks sharpen in $S_{ee}$ and $S_{ii}$,
@@ -1930,7 +1936,7 @@ that have served for decades as consistency standards for dynamic structure fact
 Because $\Re \chi^L$ is evaluated exclusively through the Hilbert transform of the causal $\Im \chi^L$,
 the engine satisfies these relations within controlled numerical tolerance
 without the arbitrary parameter tuning required by Matsubara-based codes;
-this constitutes a resolution, within the RPA Lindhard class,
+this constitutes a resolution, within the RPA Lindhard class~\cite{Lindhard1954},
 of the analytic inconsistencies in contour integration that are long-standing in the literature
 since the introduction of the Matsubara frequency representation.
 We therefore conclude that the MosaiQ-Lindhard framework provides an absolute deterministic sandbox
@@ -1938,7 +1944,8 @@ capable of revealing the dynamical properties of relativistic and nonrelativisti
 without the distortions introduced by heuristic simplifications, order interchanges not justified by Fubini's theorem,
 or ensemble-inconsistent response formulations.
 Rather than treating the Kramers--Kr\"onig relation as an \emph{a posteriori} consistency check,
-the present formulation elevates causality to the primary construction principle of the finite-temperature response function.
+the present formulation elevates causality to the primary construction principle of the finite-temperature response function,
+recovering the exact $T=0$ Lindhard benchmark~\cite{Lindhard1954} as a special case of the grand-canonical Hilbert-transform route.
 The present deterministic formulation, supported by our open-source implementation,
 provides a rigorous, reproducible benchmark for evaluating causality-constrained linear response functions
 against standard contour-based formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
@@ -2686,7 +2693,7 @@ It is the formulation adopted throughout Sec.~\ref{sec:finite-temperature-Lindha
 \section{Explicit derivation of the divergent real-part summation}
 \label{sec:Khanna-Glyde}
 
-This appendix explicitly carries out the analytic reduction of the contour integration described in Sec.~IV. The purpose of this derivation is to demonstrate that even if one formally pushes the residue summation to its analytic conclusion, the resulting expression (Eq.~\ref{integrated-rapid-real-Lindhard}) inevitably exhibits the $\mathcal{O}(j^{-1/2})$ Matsubara-series divergence. It is presented here not as a valid computational route, but as an explicit proof of the mathematical breakdown inherent to the standard contour-integration routes of Refs.~\cite{Gouedard-Deutsch1978,Khanna-Glyde1976,Giuliani-Vignale2005}.
+This appendix explicitly carries out the analytic reduction of the contour integration described in Sec.~IV. The purpose of this derivation is to demonstrate that even if one formally pushes the residue summation to its analytic conclusion, the resulting expression (Eq.~\ref{integrated-rapid-real-Lindhard}) inevitably exhibits the $\mathcal{O}(j^{-1/2})$ Matsubara-series divergence. It is presented here not as a valid computational route, but as an explicit proof of the mathematical breakdown inherent to the standard contour-integration routes of Refs.~\cite{Giuliani-Vignale2005,Khanna-Glyde1976,Gouedard-Deutsch1978}.
 
 
 Although Eq.~(\ref{formal-real-Lindhard}) is a compact expression,
@@ -3280,26 +3287,22 @@ The only mathematically robust and physically sound solution is to define a \emp
 \bibitem{Ichimaru1973} S. Ichimaru, \textit{Basic Principles of Plasma Physics: A Statistical Approach}
 (Westview Press, Boulder, 1994).
 
-\bibitem{Pines-Nozieres1989} D. Pines and P. Nozi\`eres, \textit{The Theory of Quantum Liquids, Volume 1} (Westview Press, Boulder, 1989).
-
-\bibitem{DJKim2010} D. J. Kim, \textit{New Perspectives in Magnetism of Metals} (Kluwer Academic/Plenum Publishers, New York, 2010) Chap. 4.
-
 \bibitem{Giuliani-Vignale2005} G. F. Giuliani and G. Vignale, \textit{Quantum Theory of the Electron Liquid} (Cambridge University Press, Cambridge, 2005).
- 
+
+\bibitem{Lindhard1954} J. Lindhard, On the Properties of a Gas of Charged Particles,
+\textit{K. Dan. Vidensk. Selsk. Mat.-Fys. Medd.} \textbf{28}, No.~8 (1954).
+
 \bibitem{Dufty-Dutta2013} J. Dufty and S. Dutta, Phys. Rev. E \textbf{87}, 032101 (2013); S. Dutta and J. Dufty, \textit{ibid.} \textbf{87}, 032102 (2013).
-
-\bibitem{Dharma-wardana-Murillo2008} M. W. C. Dharma-wardana and M. S. Murillo, Phys. Rev. E \textbf{77}, 026401 (2008).
-
-\bibitem{Kremp2010} D. Kremp, M. Schlanges, and W. -D. Kraeft, \textit{Quantum Statistics of Nonideal Plasmas} (Springer-Verlag, Berlin, 2010) Chap. 4.
 
 \bibitem{NR} W. H. Press, S. A. Teukolsky, W. T. Vetterling, and B. P. Flannery, 
 \textit{Numerical Recipes: The Art of Scientific Computing, Third Edition} (Cambridge University Press, Cambridge, 2007) Chap. 9.
 
-\bibitem{Brent1973} R.~P. Brent, \textit{Algorithms for Minimization without Derivatives}
-(Prentice-Hall, Englewood Cliffs, 1973), Sec.~4.2.
+\bibitem{Kremp2010} D. Kremp, M. Schlanges, and W. -D. Kraeft, \textit{Quantum Statistics of Nonideal Plasmas} (Springer-Verlag, Berlin, 2010) Chap. 4.
 
 \bibitem{Selchow2001} A. Selchow, G. R\"opke, A. Wierling, H. Reinholz, T. Pschiwul, and G. Zwicknagel, 
 Phys. Rev. E \textbf{64}, 056410 (2001).
+
+\bibitem{Dharma-wardana-Murillo2008} M. W. C. Dharma-wardana and M. S. Murillo, Phys. Rev. E \textbf{77}, 026401 (2008).
 
 \bibitem{Holstein1959} T. Holstein, Ann. Phys. \textbf{8}, 325 (1959).
 
@@ -3313,28 +3316,32 @@ Phys. Rev. E \textbf{64}, 056410 (2001).
 \bibitem{Kim2018} In-Gee Kim (Ed.), \textit{Annotations to Quantum Statistical Mechanics}
 (Pan Stanford Publishing, 2018).
 
-\bibitem{Jordan1894} C. Jordan, \textit{Cours d'analyse de l'\'Ecole Polytechnique},
-Vol.~II: Calcul int\'egral (Gauthier-Villars, Paris, 1894);
-see also Ref.~\cite{Arfken-Weber1995}.
-
-\bibitem{Rudin1976} W. Rudin, \textit{Principles of Mathematical Analysis}, 3rd ed. (McGraw-Hill, New York, 1976).
-
 \bibitem{RPA} D. Bohm and D. Pines, Phys. Rev. \textbf{92}, 609 (1953).
-
-\bibitem{Bohm-Gross1949} D. Bohm and E. P. Gross, Phys. Rev. \textbf{75}, 1851 (1949).
 
 \bibitem{Fetter-Walecka1971} A. L. Fetter and J. D. Walecka, \textit{Quantum Theory of Many-Particle Systems} 
 (McGraw-Hill, New York, 1971).
 
 \bibitem{Khanna-Glyde1976} F. C. Khanna and H. R. Glyde, Can. J. Phys. \textbf{54}, 648 (1976).
 
+\bibitem{Gouedard-Deutsch1978} C. Gouedard and C. Deutsch, J. Math. Phys. \textbf{19}, 32 (1978).
+
+\bibitem{Jordan1894} C. Jordan, \textit{Cours d'analyse de l'\'Ecole Polytechnique},
+Vol.~II: Calcul int\'egral (Gauthier-Villars, Paris, 1894);
+see also Ref.~\cite{Arfken-Weber1995}.
+
+\bibitem{Arfken-Weber1995} G. B. Arfken and H. J. Weber, \textit{Mathematical Methods for Physicists}, 4th ed.
+(Academic Press, San Diego, 1995) Sec.~7.2 (p.~425); Chap.~10.
+
 \bibitem{Byron-Fuller1992} F. W. Byron, Jr. and R. W. Fuller, \textit{Mathematics of Classical and Quantum Physics} (Dover, New York, 1992) Chap. 6.
+
+\bibitem{Kim-Lee1998} J. G. Kim and E. K. Lee, Phys. Lett. A \textbf{245}, 139 (1998).
+
+\bibitem{Rudin1976} W. Rudin, \textit{Principles of Mathematical Analysis}, 3rd ed.
+(McGraw-Hill, New York, 1976), Theorem~11.32.
 
 \bibitem{Stanger1976} F. Stanger, J. Approx. Theory \textbf{17}, 222 (1976).
 
 \bibitem{Davis-Rabinowitz1984} P. J. Davis and P. Rabinowitz, ``Methods of Numerical Integration'' Second Edition (Dover, Mineola, 1984) Sec. 3.4.6.
-
-\bibitem{Edwards2001} H. M. Edwards, \textit{Riemann's Zeta Function} (Dover, Mineola, 2001).
 
 \bibitem{Ashcroft-Mermin1976} N. W. Ashcroft and N. D. Mermin, \textit{Solid State Physics} (Thomson Learning, United States, 1976) Chap 2.
 
@@ -3342,14 +3349,13 @@ see also Ref.~\cite{Arfken-Weber1995}.
 
 \bibitem{Dingle1957} R. B. Dingle, Appl. Sci. Res. B \textbf{6}, 225 (1957).
 
-\bibitem{Arfken-Weber1995} G. B. Arfken and H. J. Weber, \textit{Mathematical Methods for Physicists}, 4th ed.
-(Academic Press, San Diego, 1995) Sec.~7.2 (p.~425); Chap.~10.
-
-\bibitem{Asgari2001} R. Asgari, B. Davoudi, and B. Tanatar, Phys. Rev. E \textbf{64}, 041406 (2001).
+\bibitem{Edwards2001} H. M. Edwards, \textit{Riemann's Zeta Function} (Dover, Mineola, 2001).
 
 \bibitem{Mohankumar-Natarajan1995} N. Mohankumar and A. Natarajan, phys. stat. sol. (b) \textbf{188}, 635 (1995).
 
 \bibitem{Mohankumar-Natarajan1996} N. Mohankumar and A. Natarajan, Astrophys. J. \textbf{458}, 233 (1996).
+
+\bibitem{Pines-Nozieres1989} D. Pines and P. Nozi\`eres, \textit{The Theory of Quantum Liquids, Volume 1} (Westview Press, Boulder, 1989).
 
 \bibitem{Lovesey1975} S. W. Lovesey, J. Phys. C: Solid State Phys. \textbf{8}, 1649 (1975).
 
@@ -3382,17 +3388,16 @@ see also Ref.~\cite{Arfken-Weber1995}.
 
 \bibitem{Pines1962} D. Pines, \textit{The Many-Body Problem} (Benjamin/Cummings, Reading, 1962).
 
-\bibitem{Piron2010} R. Piron, Ph. D. Thesis ({\'Ecole Polytechnique}, Paris, 2010) Chap. 5.
+\bibitem{Brent1973} R.~P. Brent, \textit{Algorithms for Minimization without Derivatives}
+(Prentice-Hall, Englewood Cliffs, 1973), Sec.~4.2.
 
-\bibitem{Kim-Lee1998} J. G. Kim and E. K. Lee, Phys. Lett. A \textbf{245}, 139 (1998).
+\bibitem{Bohm-Gross1949} D. Bohm and E. P. Gross, Phys. Rev. \textbf{75}, 1851 (1949).
 
-\bibitem{Gouedard-Deutsch1978} C. Gouedard and C. Deutsch, J. Math. Phys. \textbf{19}, 32 (1978).
+\bibitem{Asgari2001} R. Asgari, B. Davoudi, and B. Tanatar, Phys. Rev. E \textbf{64}, 041406 (2001).
 
 \bibitem{Fried-Conte1961} B. D. Fried and S. D. Conte,  ``The Plasma Dispersion Function'' (Academic Press, New York, 1961).
 
 \bibitem{Melrose-Mushtaq2010} D. B. Melrose and A. Mushtaq, Phys. Plasmas \textbf{17}, 122103 (2010).
-
-\bibitem{Lindhard1954} J. Lindhard, K. Dan. Vidensk. Selsk. Mat.-Fys. Medd. \textbf{28}, 8 (1954).
 
 \end{thebibliography}
 
@@ -3446,14 +3451,14 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     In Fig.~\ref{fig:plasmon-dispersion}(b), the exact multi-component Landau damping rate $\Im[\varepsilon(\bar{q}, \bar{\omega}_p)]$ (red curve) is plotted against the bare non-interacting single-particle channel $|\Im \chi_e^L(\bar{q}, \bar{\omega}_p)|$ (blue fill and curve), illustrating the sudden dissipation onset at the kinematic boundary as the branch merges into the continuum.
     Roots were deterministically extracted via Brent's method~\cite{Brent1973} on the causality-constrained $\Re[\varepsilon]$ manifold.
 
-    \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). Figs.~\ref{fig:t0-re-2d} and~\ref{fig:t0-im-2d} show the causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. A black dashed vertical guide marks the $\bar{q} = 1.0$ slice used in Fig.~\ref{fig:t0-1d-slice}. In Fig.~\ref{fig:t0-1d-slice}, the top panel shows the 1D extraction along $\bar{q} = 1.0$ comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} (solid curves) against the MosaiQ-Lindhard engine (markers); the bottom panel shows absolute errors $|\Delta \Re|$ and $|\Delta \Im|$ on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of standard contour integration over Matsubara frequencies discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
+    \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($r_s = 2.0$, $\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). Figs.~\ref{fig:t0-re-2d} and~\ref{fig:t0-im-2d} show the causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. A black dashed vertical guide marks the $\bar{q} = 1.0$ slice used in Fig.~\ref{fig:t0-1d-slice}. In Fig.~\ref{fig:t0-1d-slice}, the top panel extracts the 1D slice at $r_s = 2.0$, $\bar{q} = 1.0$, and $T \approx 11\,\mathrm{K}$, comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} ($\Re \tilde{\chi}_{T=0}$ solid, $\Im \tilde{\chi}_{T=0}$ dashed) against the MosaiQ-Lindhard engine (open markers); the bottom panel shows $|\Delta \Re|$ (solid) and $|\Delta \Im|$ (dashed) on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of standard contour integration over Matsubara frequencies discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
 
     \item \textbf{FIG. 7.} The anatomy of thermal sharpening for the real part of the electron susceptibility $\Re\chi_e^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$.
     Figs.~\ref{fig:thermal-anatomy-a} and~\ref{fig:thermal-anatomy-b} display the thermal sharpening ladder of $|\Re\chi_e^L|$ at intermediate ($T=1\,000\,\mathrm{K}$) and moderately degenerate ($T=70\,\mathrm{K}$) conditions on the electron-scale rectangle $\bar{q}\in[0,4]$ and $\bar{\omega}\in[0,3]$, using the same base-10 logarithmic rainbow convention as Fig.~\ref{fig:bare-lindhard}; the $T=70\,\mathrm{K}$ panel fills the display frame on a numerically stable grid.
-    Fig.~\ref{fig:thermal-anatomy-c} extracts a high-resolution 1D cross-section at $\bar{q}=1.0$, overlaying $T=70\,\mathrm{K}$, $1\,000\,\mathrm{K}$, and $10\,000\,\mathrm{K}$ (thermodynamically indistinguishable at this $r_s$) against the strict $T=0$ real susceptibility to isolate the genuine low-temperature sharpening of the logarithmic singularities.
+    Fig.~\ref{fig:thermal-anatomy-c} extracts a high-resolution 1D cross-section at $\bar{q}=1.0$, overlaying $T=70\,\mathrm{K}$ (solid with $\circ$), $1\,000\,\mathrm{K}$ (dashed with $\square$), and $10\,000\,\mathrm{K}$ (dash-dotted with $\triangle$)---thermodynamically coincident at this $r_s$ and distinguished only by linestyle and staggered markers---against the strict $T=0$ analytic real susceptibility (solid black) to isolate the genuine low-temperature sharpening of the logarithmic singularities.
     Fig.~\ref{fig:thermal-anatomy-d} maps the bare-vs-RPA interaction contrast ratio $S_{ee}/|\Re\chi_e^L|$ at $T=10\,000\,\mathrm{K}$, demonstrating that diffuse single-particle weight is confined to the bare baseline while collective ridges emerge only after screening.
 
-    \item \textbf{FIG. 8.} Static structure factors: Fig.~\ref{fig:Sq-gamma-ee} ($S_{ee}(\bar{q})$), Fig.~\ref{fig:Sq-gamma-ii} ($S_{ii}(\bar{q})$), and Fig.~\ref{fig:Sq-gamma-ei} ($S_{ei}(\bar{q})$) obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$. The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: Fig.~\ref{fig:Sq-gamma-ee} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while Figs.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
+    \item \textbf{FIG. 8.} Static structure factors: Fig.~\ref{fig:Sq-gamma-ee} ($S_{ee}(\bar{q})$), Fig.~\ref{fig:Sq-gamma-ii} ($S_{ii}(\bar{q})$), and Fig.~\ref{fig:Sq-gamma-ei} ($S_{ei}(\bar{q})$) obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$, with color denoting the coupling strength and linestyles progressing from dot-dot-dashed ($\Gamma = 10$) and dot-dashed ($\Gamma = 50$) through dashed ($\Gamma = 100$) to solid ($\Gamma = 150$). The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: Fig.~\ref{fig:Sq-gamma-ee} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while Figs.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
 \end{itemize}
 
 \clearpage
@@ -3619,38 +3624,38 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \figurepaneltag{Fig.~\thesubmitfig}
 \end{figure}
 
-\panelpagefigure[fig:bare-lindhard]{../output/chi_e_re.pdf}{fig:chi_e_re}
-\panelpagefigure{../output/chi_e_im.pdf}{fig:chi_e_im}
-\panelpagefigure{../output/chi_i_re.pdf}{fig:chi_i_re}
-\panelpagefigure{../output/chi_i_im.pdf}{fig:chi_i_im}
-\panelpagefigure{../output/chi_ei_re.pdf}{fig:chi_ei_re}
-\panelpagefigure{../output/chi_ei_im.pdf}{fig:chi_ei_im}
+\panelpagefigure[fig:bare-lindhard]{figures/chi_e_re.pdf}{fig:chi_e_re}
+\panelpagefigure{figures/chi_e_im.pdf}{fig:chi_e_im}
+\panelpagefigure{figures/chi_i_re.pdf}{fig:chi_i_re}
+\panelpagefigure{figures/chi_i_im.pdf}{fig:chi_i_im}
+\panelpagefigure{figures/chi_ei_re.pdf}{fig:chi_ei_re}
+\panelpagefigure{figures/chi_ei_im.pdf}{fig:chi_ei_im}
 
-\panelpagefigure[fig:structure-factors]{../output/S_ee_contour.pdf}{fig:S_ee}
-\panelpagefigure{../output/S_ii_contour.pdf}{fig:S_ii}
-\panelpagefigure{../output/S_ei_contour.pdf}{fig:S_ei}
+\panelpagefigure[fig:structure-factors]{figures/S_ee_contour.pdf}{fig:S_ee}
+\panelpagefigure{figures/S_ii_contour.pdf}{fig:S_ii}
+\panelpagefigure{figures/S_ei_contour.pdf}{fig:S_ei}
 
 \clearpage
 \begin{figure}[p]
 \centering
 \vfill
-\includegraphics[width=\textwidth]{../output/plasmon_dispersion.pdf}
+\includegraphics[width=\textwidth]{figures/plasmon_dispersion.pdf}
 \vfill
 \registerstandalonefigurelabel{fig:plasmon-dispersion}
 \figurepaneltag{Fig.~\thesubmitfig}
 \end{figure}
 
-\panelpagefigure[fig:t0-limit-validation]{../output/t0_analytic_re_contour.pdf}{fig:t0-re-2d}
-\panelpagefigure{../output/t0_analytic_im_contour.pdf}{fig:t0-im-2d}
-\panelpagefigure{../output/t0_limit_validation.pdf}{fig:t0-1d-slice}
+\panelpagefigure[fig:t0-limit-validation]{figures/t0_analytic_re_contour.pdf}{fig:t0-re-2d}
+\panelpagefigure{figures/t0_analytic_im_contour.pdf}{fig:t0-im-2d}
+\panelpagefigure{figures/t0_limit_validation.pdf}{fig:t0-1d-slice}
 
-\panelpagefigure[fig:thermal-anatomy]{../output/thermal_anatomy_a.pdf}{fig:thermal-anatomy-a}
-\panelpagefigure{../output/thermal_anatomy_b.pdf}{fig:thermal-anatomy-b}
-\panelpagefigure{../output/thermal_anatomy_c.pdf}{fig:thermal-anatomy-c}
-\panelpagefigure{../output/thermal_anatomy_d.pdf}{fig:thermal-anatomy-d}
+\panelpagefigure[fig:thermal-anatomy]{figures/thermal_anatomy_a.pdf}{fig:thermal-anatomy-a}
+\panelpagefigure{figures/thermal_anatomy_b.pdf}{fig:thermal-anatomy-b}
+\panelpagefigure{figures/thermal_anatomy_c.pdf}{fig:thermal-anatomy-c}
+\panelpagefigure{figures/thermal_anatomy_d.pdf}{fig:thermal-anatomy-d}
 
-\panelpagefigure[fig:Sq-gamma]{../output/Sq_gamma_ee.pdf}{fig:Sq-gamma-ee}
-\panelpagefigure{../output/Sq_gamma_ii.pdf}{fig:Sq-gamma-ii}
-\panelpagefigure{../output/Sq_gamma_ei.pdf}{fig:Sq-gamma-ei}
+\panelpagefigure[fig:Sq-gamma]{figures/Sq_gamma_ee.pdf}{fig:Sq-gamma-ee}
+\panelpagefigure{figures/Sq_gamma_ii.pdf}{fig:Sq-gamma-ii}
+\panelpagefigure{figures/Sq_gamma_ei.pdf}{fig:Sq-gamma-ei}
 
 \end{document}

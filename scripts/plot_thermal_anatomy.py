@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
@@ -64,6 +65,8 @@ LADDER_PANELS: tuple[tuple[int, str], ...] = (
 
 PANEL_C_STEM = "thermal_anatomy_c"
 PANEL_D_STEM = "thermal_anatomy_d"
+SLICE_MARK_EVERY = 32
+SLICE_LEGEND_FONTSIZE = 10.5
 
 SIMULATOR = Path(__file__).resolve().parent.parent / "simulator" / "build" / "mosaiq_simulator"
 
@@ -197,6 +200,43 @@ def plot_log_segments(
         ax.plot(w_axis[start:], values[start:], zorder=zorder, **plot_kwargs)
 
 
+def plot_log_segments_with_markers(
+    ax: plt.Axes,
+    w_axis: np.ndarray,
+    values: np.ndarray,
+    *,
+    markevery: tuple[int, int],
+    marker: str,
+    zorder: int = 3,
+    **plot_kwargs,
+) -> plt.Line2D | None:
+    """Plot one labeled artist with linestyle and staggered markers for the legend."""
+    mask = np.isfinite(values) & (values > 0.0)
+    if not np.any(mask):
+        return None
+
+    y_plot = np.where(mask, values, np.nan)
+    linewidth = float(plot_kwargs.get("linewidth", 1.5))
+    (line,) = ax.plot(
+        w_axis,
+        y_plot,
+        marker=marker,
+        markevery=markevery,
+        markersize=6.0,
+        markerfacecolor="white",
+        markeredgewidth=1.4,
+        zorder=zorder,
+        **plot_kwargs,
+    )
+    line.set_path_effects(
+        [
+            pe.Stroke(linewidth=linewidth + 1.8, foreground="white", alpha=0.95),
+            pe.Normal(),
+        ]
+    )
+    return line
+
+
 def render_log_rainbow_field(
     ax: plt.Axes,
     q_grid: np.ndarray,
@@ -285,18 +325,20 @@ def render_slice_panel(ax: plt.Axes) -> None:
     ax.axvline(omega_lo, color="0.35", linestyle=":", linewidth=1.0, alpha=0.7, zorder=1)
     ax.axvline(omega_hi, color="0.35", linestyle=":", linewidth=1.0, alpha=0.7, zorder=1)
 
-    finite_styles: tuple[tuple[int, str, str, float], ...] = (
-        (10000, "#b22222", "dashdot", 1.7),
-        (1000, "#8b4513", "dashed", 1.7),
-        (COLD_LADDER_T_K, "#1f3b73", "solid", 1.8),
+    finite_styles: tuple[tuple[int, str, str, float, str, tuple[int, int]], ...] = (
+        (10000, "#b22222", (0, (5, 2, 1, 2)), 2.0, "^", (0, SLICE_MARK_EVERY)),
+        (1000, "#8b4513", (0, (4, 2)), 2.0, "s", (11, SLICE_MARK_EVERY)),
+        (COLD_LADDER_T_K, "#1f3b73", "solid", 2.2, "o", (22, SLICE_MARK_EVERY)),
     )
-    for t_kelvin, color, linestyle, linewidth in finite_styles:
+    for t_kelvin, color, linestyle, linewidth, marker, markevery in finite_styles:
         path = ensure_lindhard_data(t_kelvin)
         w_axis, values = slice_re_chi_at_q(path, Q_SLICE)
-        plot_log_segments(
+        plot_log_segments_with_markers(
             ax,
             w_axis,
             values,
+            markevery=markevery,
+            marker=marker,
             color=color,
             linestyle=linestyle,
             linewidth=linewidth,
@@ -321,7 +363,12 @@ def render_slice_panel(ax: plt.Axes) -> None:
     ax.set_xlabel(r"$\bar{\omega}$ at $\bar{q}=1.0$")
     ax.set_ylabel(r"$|\Re \tilde{\chi}_e^L|$")
     ax.set_title(r"Real-part sharpening at $\bar{q}=1.0$", fontweight="bold")
-    ax.legend(loc="lower right", fontsize=8, framealpha=0.95, edgecolor="0.75")
+    ax.legend(
+        loc="lower right",
+        fontsize=SLICE_LEGEND_FONTSIZE,
+        framealpha=0.95,
+        edgecolor="0.75",
+    )
     ax.grid(True, alpha=0.25, linewidth=0.6)
 
 

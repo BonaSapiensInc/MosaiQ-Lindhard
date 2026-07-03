@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -32,6 +33,9 @@ COLOR_RE = "#1f3b73"
 COLOR_IM = "#8b1e1e"
 COLOR_ERR_RE = "#1f3b73"
 COLOR_ERR_IM = "#8b1e1e"
+
+RS_HEADER = re.compile(r"r_s\s*=\s*([^\s]+)")
+T_HEADER = re.compile(r"equivalent\s+T_K\s*~\s*([^\s]+)")
 
 
 def load_t0_limit(path: Path) -> dict[str, np.ndarray]:
@@ -65,7 +69,24 @@ def parse_metadata(path: Path) -> dict[str, str]:
                     if "=" in token:
                         key, value = token.split("=", 1)
                         metadata[key.strip()] = value.strip()
+            if match := RS_HEADER.search(line):
+                metadata["r_s"] = match.group(1)
+            if match := T_HEADER.search(line):
+                metadata["T_K"] = match.group(1)
     return metadata
+
+
+def format_rs_label(r_s_raw: str | None) -> str:
+    """Format r_s for figure titles (Fig. 6 uses r_s = 2.0 at tau = 10^{-4})."""
+    if r_s_raw is None:
+        return "2.0"
+    return f"{float(r_s_raw):.1f}"
+
+
+def format_temperature_label(t_k_raw: str | None) -> str:
+    if t_k_raw is None:
+        return r"11\,\mathrm{K}"
+    return rf"{round(float(t_k_raw)):g}\,\mathrm{{K}}"
 
 
 def configure_matplotlib() -> None:
@@ -85,7 +106,9 @@ def configure_matplotlib() -> None:
     )
 
 
-def plot_t0_validation(data: dict[str, np.ndarray], q_label: str) -> Figure:
+def plot_t0_validation(
+    data: dict[str, np.ndarray], rs_label: str, q_label: str, t_label: str
+) -> Figure:
     configure_matplotlib()
 
     omega = data["omega"]
@@ -110,6 +133,8 @@ def plot_t0_validation(data: dict[str, np.ndarray], q_label: str) -> Figure:
         data["im_exact"],
         color=COLOR_IM,
         linewidth=1.8,
+        linestyle="--",
+        dashes=(5, 3),
         label=r"$\Im\tilde{\chi}_{T=0}$ (exact)",
     )
     ax_top.scatter(
@@ -136,7 +161,10 @@ def plot_t0_validation(data: dict[str, np.ndarray], q_label: str) -> Figure:
     )
 
     ax_top.set_ylabel(r"$\tilde{\chi}(\bar{q}, \bar{\omega})$ [$D(\epsilon_\mathrm{F})$ units]")
-    ax_top.set_title(rf"Highly degenerate limit at $\bar{{q}} = {q_label}$", fontsize=11)
+    ax_top.set_title(
+        rf"Highly degenerate limit ($r_s = {rs_label}$) at $\bar{{q}} = {q_label}$ at $T = {t_label}$",
+        fontsize=11,
+    )
     ax_top.grid(True, which="both", linestyle=":", linewidth=0.5, alpha=0.35)
     ax_top.legend(loc="upper right", frameon=True, framealpha=0.92, edgecolor="0.75")
 
@@ -181,8 +209,10 @@ def main() -> None:
             f"Error: expected a single q_bar in {DATA_FILE}, found {q_values.size} values."
         )
 
+    rs_label = format_rs_label(metadata.get("r_s"))
     q_label = metadata.get("q_bar", f"{q_values[0]:g}")
-    fig = plot_t0_validation(data, q_label)
+    t_label = format_temperature_label(metadata.get("T_K"))
+    fig = plot_t0_validation(data, rs_label, q_label, t_label)
 
     finite_re_errors = data["error_re"][np.isfinite(data["error_re"])]
     finite_im_errors = data["error_im"][np.isfinite(data["error_im"])]

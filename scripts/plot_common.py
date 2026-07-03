@@ -20,7 +20,32 @@ from matplotlib.figure import Figure
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "output"
 OUTPUT_MISC_DIR = OUTPUT_DIR / "misc"
+MANUSCRIPT_FIGURES_DIR = PROJECT_ROOT / "manuscript" / "figures"
 DEFAULT_FIG_FORMAT = "pdf"
+
+# PDFs referenced by manuscript/two-fermi.tex (APS submission bundle).
+MANUSCRIPT_FIGURE_NAMES: tuple[str, ...] = (
+    "chi_e_re",
+    "chi_e_im",
+    "chi_i_re",
+    "chi_i_im",
+    "chi_ei_re",
+    "chi_ei_im",
+    "S_ee_contour",
+    "S_ii_contour",
+    "S_ei_contour",
+    "plasmon_dispersion",
+    "t0_analytic_re_contour",
+    "t0_analytic_im_contour",
+    "t0_limit_validation",
+    "thermal_anatomy_a",
+    "thermal_anatomy_b",
+    "thermal_anatomy_c",
+    "thermal_anatomy_d",
+    "Sq_gamma_ee",
+    "Sq_gamma_ii",
+    "Sq_gamma_ei",
+)
 
 PDF_RCPARAMS: dict[str, object] = {
     "savefig.format": DEFAULT_FIG_FORMAT,
@@ -59,6 +84,33 @@ def misc_output_path(name: str) -> Path:
     return OUTPUT_MISC_DIR / f"{Path(name).stem}.{DEFAULT_FIG_FORMAT}"
 
 
+def publish_manuscript_figure(source: Path) -> Path:
+    """Copy a generated figure into manuscript/figures/ for LaTeX and APS submission."""
+    MANUSCRIPT_FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    destination = MANUSCRIPT_FIGURES_DIR / source.name
+    if source.resolve() != destination.resolve():
+        destination.write_bytes(source.read_bytes())
+    return destination
+
+
+def sync_manuscript_figures() -> list[Path]:
+    """Copy all manuscript figure PDFs from output/ into manuscript/figures/."""
+    synced: list[Path] = []
+    missing: list[str] = []
+    for stem in MANUSCRIPT_FIGURE_NAMES:
+        source = OUTPUT_DIR / f"{stem}.{DEFAULT_FIG_FORMAT}"
+        if not source.is_file():
+            missing.append(source.name)
+            continue
+        synced.append(publish_manuscript_figure(source))
+    if missing:
+        missing_list = ", ".join(missing)
+        raise FileNotFoundError(
+            f"Missing manuscript figure(s) in {OUTPUT_DIR}: {missing_list}"
+        )
+    return synced
+
+
 def save_figure(fig: Figure, name: str, **kwargs: object) -> Path:
     path = output_path(name)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -69,4 +121,5 @@ def save_figure(fig: Figure, name: str, **kwargs: object) -> Path:
     }
     save_kwargs.update(kwargs)
     fig.savefig(path, **save_kwargs)
+    publish_manuscript_figure(path)
     return path

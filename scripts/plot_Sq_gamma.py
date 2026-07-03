@@ -38,6 +38,19 @@ S_EE_INSET_TOP_LEFT = (0.20, 0.86)
 S_EE_INSET_SIZE = (0.56, 0.44)
 S_EI_YSCALE = 1.0e3
 
+# Highest Gamma gets the plainest linestyle; weaker coupling adds dash complexity.
+GAMMA_LINE_STYLES: tuple[str | tuple[int, tuple[int, ...]], ...] = (
+    "solid",
+    "dashed",
+    (0, (4, 2, 1, 2)),  # dot-dashed
+    (0, (1, 2, 3, 2, 1, 2)),  # dot-dot-dashed
+)
+
+
+def gamma_linestyle(gamma: float, gammas: list[float]) -> str | tuple[int, tuple[int, ...]]:
+    rank = sorted(gammas, reverse=True).index(gamma)
+    return GAMMA_LINE_STYLES[min(rank, len(GAMMA_LINE_STYLES) - 1)]
+
 
 def channel_yvalues(channel: str, values: np.ndarray) -> np.ndarray:
     if channel == "S_ei":
@@ -147,6 +160,7 @@ def add_low_q_inset(
             s_val[mask],
             color=colors[idx],
             linewidth=1.5,
+            linestyle=gamma_linestyle(gamma, gammas),
         )
         inset_vals.extend(s_val[mask].tolist())
 
@@ -187,6 +201,7 @@ def render_channel_plot(
             s_val,
             color=colors[idx],
             linewidth=2.0,
+            linestyle=gamma_linestyle(gamma, gammas),
             label=rf"$\Gamma = {gamma:g}$",
         )
 

@@ -33,6 +33,7 @@ manuscript/two-fermiNotes.bib
 *.pdf
 !output/chi_*.pdf
 !output/thermal_anatomy_*.pdf
+!manuscript/figures/*.pdf
 
 # CMake / C++ build
 simulator/build/

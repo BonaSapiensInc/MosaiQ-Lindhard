@@ -33,6 +33,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`simulator/`](simulator/) | C++20 engine (`mosaiq_simulator` CLI) and CTest suite |
 | [`scripts/`](scripts/) | Python figure generators (matplotlib / seaborn) |
 | [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
+| [`manuscript/figures/`](manuscript/figures/) | APS submission figure PDFs (synced from `output/`) |
 | [`docs/`](docs/) | Architecture notes and reference extracts |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
@@ -76,7 +77,7 @@ ctest --test-dir simulator/build --output-on-failure
 
 ### Regenerate figures
 
-**Version control:** Manuscript figure PDFs under `output/` (for example `chi_*.pdf`, `S_*_contour.pdf`, `thermal_anatomy_*.pdf`) are tracked in git. **`output/*.dat` simulator grids are not** — they are listed in [`.gitignore`](.gitignore) and must be generated locally after clone. Plotting scripts call `mosaiq_simulator` automatically when a required `.dat` file is missing.
+**Version control:** Manuscript figure PDFs under `output/` and `manuscript/figures/` (for example `chi_*.pdf`, `S_*_contour.pdf`, `thermal_anatomy_*.pdf`) are tracked in git. Plot scripts write to `output/` and mirror each manuscript figure into `manuscript/figures/` automatically. To refresh the submission bundle without re-rendering, run `python3 scripts/sync_manuscript_figures.py`. **`output/*.dat` simulator grids are not** — they are listed in [`.gitignore`](.gitignore) and must be generated locally after clone. Plotting scripts call `mosaiq_simulator` automatically when a required `.dat` file is missing.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -121,11 +122,21 @@ python3 scripts/plot_Sq_gamma.py
 
 ### Compile the manuscript
 
-From `manuscript/`, after all referenced `output/*.pdf` figures exist:
+From `manuscript/`, after all referenced `figures/*.pdf` exist (run `python3 scripts/sync_manuscript_figures.py` if needed):
 
 ```bash
 cd manuscript && pdflatex two-fermi.tex && pdflatex two-fermi.tex
 ```
+
+### Submit to APS
+
+Upload a self-contained bundle from `manuscript/`:
+
+- `two-fermi.tex` (and `two-fermi.bib` if used)
+- `figures/` — all PDFs referenced by `\includegraphics`
+- optional local `cover-letter.pdf`
+
+Do not rely on `../output/` paths; the submission server expects figures beside the main `.tex` file.
 
 ---
 
