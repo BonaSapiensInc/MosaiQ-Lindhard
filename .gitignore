@@ -9,6 +9,9 @@
 *.swp
 *~
 
+# Editor correspondence (local only; not for public GitHub sync)
+manuscript/cover-letter.*
+
 # LaTeX build artifacts
 *.aux
 *.log

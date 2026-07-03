@@ -32,7 +32,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 |------|---------|
 | [`simulator/`](simulator/) | C++20 engine (`mosaiq_simulator` CLI) and CTest suite |
 | [`scripts/`](scripts/) | Python figure generators (matplotlib / seaborn) |
-| [`manuscript/`](manuscript/) | LaTeX source and cover letter |
+| [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
 | [`docs/`](docs/) | Architecture notes and reference extracts |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |

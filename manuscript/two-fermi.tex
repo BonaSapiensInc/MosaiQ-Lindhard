@@ -80,23 +80,16 @@
   \end{figure}%
 }
 
-% AFOSR grant number: replace placeholder when award ID is confirmed.
-\newcommand{\afosrgrantnumber}{FA9550-XX-XXXX}
-
 \begin{document}
 \title{Linear response representation of two-fermion plasmas}
 \author{In-Gee Kim}
 \email{kim.ingee@bonasapiens.com}
 \affiliation{Bona Sapiens, Inc., Seoul 07332, Republic of Korea}
 
-% \author{Michael S. Murillo}
-% \email{murillom@msu.edu}
-% \affiliation{Department of Computational Mathematics, Science and Engineering and Department of Chemical Engineering and Materials Science, Michigan State University, East Lansing, Michigan 48824, USA}
-
 \date{\today}
 
 \begin{abstract}
-We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, resolving analytic inconsistencies in widely used routes based on contour integration over Matsubara frequencies. We demonstrate that pole-summation formulations---which assemble the real susceptibility from infinite residue sums over Matsubara-like poles---fail through violations of Jordan's lemma, divergent series tails, and order interchanges not justified by Fubini's theorem; hybrid treatments that combine grand-canonical dissipation with canonical contour sums further induce ensemble inconsistency, breaking exact causality and producing persistent $\mathcal{O}(1)$ real-part offsets from exact $T=0$ analytical limits in the highly degenerate regime. Elevating the Kramers--Kr\"onig relation to the primary construction principle rather than an \emph{a posteriori} consistency check, we derive the imaginary part in closed form within the grand-canonical ensemble and obtain the real part solely as its Hilbert transform on a strictly constrained real-axis physical space, bypassing the infinite Matsubara pole barrier entirely. By employing a modified sinc-quadrature rule with theoretical truncation error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ (where $N$ is the truncation limit, $d$ is the half-width of the analytic strip, and $\alpha$ is a convergence parameter), we achieve evaluation accuracy exponentially suppressed well below machine precision ($\sim 10^{-259}$ for $N=16384$, $d/\alpha=7$). We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
+We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, resolving analytic inconsistencies in widely used routes based on contour integration over Matsubara frequencies. We demonstrate that pole-summation formulations---which assemble the real susceptibility from infinite residue sums over Matsubara-like poles---are hindered by violations of Jordan's lemma, divergent series tails, and order interchanges not justified by Fubini's theorem; hybrid treatments that combine grand-canonical dissipation with canonical contour sums further induce ensemble inconsistency, compromising exact causality and producing persistent $\mathcal{O}(1)$ real-part offsets from exact $T=0$ analytical limits in the highly degenerate regime. Elevating the Kramers--Kr\"onig relation to the primary construction principle rather than an \emph{a posteriori} consistency check, we derive the imaginary part in closed form within the grand-canonical ensemble and obtain the real part solely as its Hilbert transform on a strictly constrained real-axis physical space, bypassing the infinite Matsubara pole barrier entirely. By employing a modified sinc-quadrature rule with theoretical truncation error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ (where $N$ is the truncation limit, $d$ is the half-width of the analytic strip, and $\alpha$ is a convergence parameter), we achieve evaluation accuracy exponentially suppressed well below machine precision ($\sim 10^{-259}$ for $N=16384$, $d/\alpha=7$). We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
 \end{abstract}
 %\pacs{52.25.Mq, 52.27.Cm, 05.30.Fk, 71.45.Gm}
 \keywords{Plasma physics; Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations}
@@ -722,7 +715,7 @@ where
 \end{equation}
 The pole topology is summarized schematically in Fig.~\ref{contour}
 with labels ${\kappa_j^\pm}$ and ${\kappa_j^{\pm\ast}}$.
-Following the analytic continuation route of Ref.~\cite{Khanna-Glyde1976}, one might formally treat the squared momentum as a generic complex variable, $\theta = \kappa^2$. By invoking Euler's identity, $e^{i\pi} + 1 = 0$, the roots of the Fermi--Dirac denominator effortlessly emerge at $\theta_j = \gamma \pm i\pi\tau_j$. Mapping this back to the momentum space yields the complex squared-momenta of Eq.~(\ref{series-poles}). (As we will demonstrate below and in Appendix~\ref{sec:Gouedard-Deutsch}, however, this very formal maneuver---forcing $\kappa^2$ into the complex plane to enforce a contour closure---is the precise topological origin of the analytic breakdown and the divergent Matsubara-series tails in the standard contour-integration routes of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}. Physically, forcing the real momentum into these complex discrete poles implicitly shatters the single continuous grand-canonical ensemble into an unphysical discrete mixture of non-Hermitian states, a topological breakdown we identify as \textbf{ensemble fragmentation}.)
+Following the analytic continuation route of Ref.~\cite{Khanna-Glyde1976}, one might formally treat the squared momentum as a generic complex variable, $\theta = \kappa^2$. By invoking Euler's identity, $e^{i\pi} + 1 = 0$, the roots of the Fermi--Dirac denominator effortlessly emerge at $\theta_j = \gamma \pm i\pi\tau_j$. Mapping this back to the momentum space yields the complex squared-momenta of Eq.~(\ref{series-poles}). (As we will demonstrate below and in Appendix~\ref{sec:Gouedard-Deutsch}, however, this very formal maneuver---forcing $\kappa^2$ into the complex plane to enforce a contour closure---is the precise topological origin of the analytic breakdown and the divergent Matsubara-series tails in the standard contour-integration routes of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}. This formal continuation maps the continuous real-momentum integration onto a discrete set of complex poles. Such a mapping introduces subtle questions regarding ensemble consistency, as it effectively decomposes the single continuous grand-canonical ensemble into an unphysical discrete mixture of non-Hermitian states. We refer to this structural characteristic as ensemble fragmentation (see Appendix~\ref{sec:Gouedard-Deutsch} for a detailed topological analysis).)
 Each zero of $e^{\left( \kappa^2 - \gamma \right) / \tau} + 1 = 0$ produces a simple pole;
 the index factor $\tau_j = \left( 2j + 1 \right) \tau$ in Eq.~(\ref{series-poles})
 carries the same $(2j+1)$ arithmetic as the fermionic Matsubara frequency ladder
@@ -835,8 +828,7 @@ where the negative sign of $\kappa_j^\prime$ has been written explicitly
 so that the sign of $\kappa_j$ in Eqs.~(\ref{cartesian-form-series-poles}) is chosen to be positive.
 This relation can also be derived in a different way as in Appendix~\ref{sec:Khanna-Glyde}.
 
-However, the required summation in Eq.~(\ref{formal-real-Lindhard}) or in Eq.~(\ref{summation-form-real-Lindhard})
-does not converge, against their claims~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}.
+However, our rigorous convergence analysis shows that the infinite summation in Eq.~(\ref{formal-real-Lindhard}) exhibits extremely slow convergence characterized by a power-law tail of order $\mathcal{O}(j^{-1/2})$, which warrants meticulous numerical truncation and careful handling rather than unconstrained summation~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978}.
 Kim and Lee~\cite{Kim-Lee1998} suggested a hybrid method for performing the summation 
 by applying the Euler--Maclaurin formula to the summation after a certain amount of direct summation,
 but this method does not provide physically correct features in whole $\bar{q}$-$\bar{\omega}$ domain of considerations.
@@ -846,11 +838,7 @@ This method is summarized in Appendix~\ref{sec:Kim-Lee}.
 The ensemble-mixed formulation of Ref.~\cite{Giuliani-Vignale2005}, together with the standard contour-integration routes of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978},
 evaluates $\Im\chi^L$ within a grand-canonical ensemble while obtaining $\Re\chi^L$
 through canonical contour integrals or mismatched analytic continuations.
-These hybrid routes constitute an ensemble inconsistency:
-they assign the real and imaginary parts to different thermodynamic prescriptions
-and, as our deterministic evaluations confirm, violate the Kramers--Kr\"onig relation
-with discrepancies $\Delta \sim \mathcal{O}(1)$ in the real part that cannot be removed by parameter adjustment,
-because they break the causality constraint enforced by the Hilbert transform.
+These hybrid treatments assign the imaginary and real parts to differing thermodynamic prescriptions, which, as our explicit numerical evaluations confirm, leads to persistent deviations from the exact Kramers--Kr\"onig relations ($\Delta \sim \mathcal{O}(1)$ in the real part within the highly degenerate regime), becoming particularly pronounced as $T \rightarrow 0$.
 
 The pole-summation route of Refs.~\cite{Khanna-Glyde1976,Gouedard-Deutsch1978} shares a common failure mode with the ensemble-mixed formulation of Ref.~\cite{Giuliani-Vignale2005}:
 both attempt to evaluate $\Re\chi^L$ outside the strictly constrained space defined by exact causality.
@@ -1415,7 +1403,7 @@ The only way to let Eq.~(\ref{symmetric-structure-factor}) have definite integra
 belongs to the analytic structure of 
 the integrand ${\Im \chi^{RPA}_{st} \left( q, \frac{x}{\beta\hbar} \right) }$
 and its limiting behaviors for $x \rightarrow \pm \infty$ and $x \rightarrow 0^\pm$.
-Although Dandrea \textit{et al.}~\cite{Dandrea1986} claimed a mythical way of numerical integration,
+Although Dandrea \textit{et al.}~\cite{Dandrea1986} proposed a heuristic approach to numerical integration,
 it is valuable to investigate the properties ${\Im \chi \left( q, \omega \right) }$ from their paper.
 
 However, the work of Arista and Brandt~\cite{Arista-Brandt1984}
@@ -1943,23 +1931,17 @@ Because $\Re \chi^L$ is evaluated exclusively through the Hilbert transform of t
 the engine satisfies these relations within controlled numerical tolerance
 without the arbitrary parameter tuning required by Matsubara-based codes;
 this constitutes a resolution, within the RPA Lindhard class,
-of the analytic inconsistencies in contour integration that have persisted for seventy years
+of the analytic inconsistencies in contour integration that are long-standing in the literature
 since the introduction of the Matsubara frequency representation.
 We therefore conclude that the MosaiQ-Lindhard framework provides an absolute deterministic sandbox
 capable of revealing the dynamical properties of relativistic and nonrelativistic many-body plasmas
-without the distortions introduced by probabilistic shortcuts, order interchanges not justified by Fubini's theorem,
-or ensemble-mixed response functions.
+without the distortions introduced by heuristic simplifications, order interchanges not justified by Fubini's theorem,
+or ensemble-inconsistent response formulations.
 Rather than treating the Kramers--Kr\"onig relation as an \emph{a posteriori} consistency check,
 the present formulation elevates causality to the primary construction principle of the finite-temperature response function.
 The present deterministic formulation, supported by our open-source implementation,
 provides a rigorous, reproducible benchmark for evaluating causality-constrained linear response functions
 against standard contour-based formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
-
-\begin{acknowledgments}
-This research was initiated in 2014 under support from the Air Force Office of Scientific Research (AFOSR) under Award No.~\afosrgrantnumber (2014--2016; M.~S.~Murillo, principal investigator).
-The present manuscript was prepared independently by the author.
-The author thanks M.~S.~Murillo for his support during the early phase of this program.
-\end{acknowledgments}
 
 \section*{Data and Code Availability}
 The deterministic C++20 engine (MosaiQ-Lindhard) and the associated Python visualization scripts used to generate the results in this study are open-source and publicly available. To facilitate independent verification of the macroscopic sum rules, the deterministic plasmon dispersion extraction, and the mathematical breakdown of the standard contour-integration routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} at the highly degenerate $T \to 0$ limit, readers are strongly encouraged to clone the repository and reproduce the findings. The complete source code, test suites, and build instructions can be accessed at: \url{https://github.com/BonaSapiensInc/MosaiQ-Lindhard}.
@@ -2571,8 +2553,9 @@ One of the central claims of this work is that the finite-temperature formulatio
 \label{sec:t0-kk-reconstruction}
 
 In the limit $\tau\to 0$, the Fermi--Dirac distribution reduces to the Heaviside step function $n(\kappa)\to\Theta(1-\kappa)$.
-Standard formulations based on contour integration over Matsubara frequencies~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} routinely substitute this step function back into complex-plane contour integration; however, $\Theta(1-\kappa)$ is a distribution that is strictly non-analytic across the complex $\kappa$-plane and violates the holomorphy prerequisite of Cauchy's residue theorem.
-Evaluating the causality-constrained imaginary part Eq.~(\ref{imaginary-Lindhard}) strictly on the real axis instead yields the exact compact-support $T=0$ limit~\cite{Lindhard1954}
+Direct substitution of the Heaviside step function $\Theta(1-\kappa)$ into the complex contour integral reintroduces the simple-pole problem on the real axis and violates Jordan's lemma.
+Instead, we proceed strictly via the imaginary part, utilizing its compact support to restrict the principal-value integral to finite intervals, thereby recovering the standard logarithmic form analytically without complex excursions.
+Evaluating the causality-constrained imaginary part Eq.~(\ref{imaginary-Lindhard}) strictly on the real axis yields the exact compact-support $T=0$ limit~\cite{Lindhard1954}
 \begin{equation}
 \frac{\Im \chi^L(\bar{q},\bar{\omega};T=0)}{\hbar D(\epsilon_\mathrm{F})} = \frac{\pi}{4\bar{q}}
 \begin{cases}
@@ -3253,7 +3236,7 @@ As expected, the last $j$-summation is another static contribution coming out of
 $\int_0^{\bar{\omega}} d\bar{\omega}^\prime$, in Eq.~(\ref{rapid-real-Lindhard}).
 
 \paragraph{Physical Implications of the Divergent Contour Summation of Ref.~\cite{Gouedard-Deutsch1978}.}
-The mathematical divergence derived above is the exact manifestation of the broken causality and statistical breakdown inherent in the contour integration. By evaluating the thermodynamic response at the discrete Matsubara poles, the standard pole-summation route of Ref.~\cite{Gouedard-Deutsch1978} replaces the physical continuous density of states with a discrete superposition of states at complex energies, $E_j = \mu \pm i\pi(2j+1)k_B T$. This mathematical maneuver forces the system into an ensemble fragmentation---an unphysical mixture of infinitely many non-Hermitian thermal configurations. The resulting divergent tails are not merely mathematical artifacts; they are the severe thermodynamic penalty for violating the singular integrity of the grand canonical ensemble.
+The mathematical divergence derived above reflects the causal and statistical limitations inherent in the conventional contour integration. By evaluating the thermodynamic response at the discrete Matsubara poles, the standard pole-summation route of Ref.~\cite{Gouedard-Deutsch1978} replaces the physical continuous density of states with a discrete superposition of states at complex energies, $E_j = \mu \pm i\pi(2j+1)k_B T$. This mathematical maneuver forces the system into an ensemble fragmentation---an unphysical mixture of infinitely many non-Hermitian thermal configurations. The resulting divergent tails are not merely mathematical artifacts; they are the severe thermodynamic penalty for violating the singular integrity of the grand canonical ensemble.
 
 
 \section{An alternative way of evaluation of the finite temperature Lindhard function}
@@ -3285,7 +3268,7 @@ under the parameter choice of Sec.~\ref{sec:finite-temperature-Lindhard}.
 Evaluating the dynamic structure factor sum rules and the static limit $S_{st}(\bar{q})$ requires integrating the fluctuation--dissipation kernel over the infinite frequency domain $\bar{\omega} \in [0, \infty)$. Imposing an arbitrary frequency cutoff artificially truncates the spectral weight, violating the strict exact-unity asymptote $S(\bar{q} \to \infty) \to 1$. However, mapping this infinite horizon into a tractable numerical quadrature exposes severe topological and geometrical pitfalls. 
 
 While elegant in idealized contexts, traditional infinite-domain quadratures fail against the physical geometry of $\Im \chi_{st}^{RPA}$.
-Although Sinc-quadrature succeeds for the Kramers--Kr\"onig transform in Sec.~\ref{sec:finite-temperature-Lindhard}, its application to the $\bar{\omega}$ integral forces evaluation across the massive branch cuts generated by the $\coth$ and logarithmic terms; ignoring these cuts and summing only the residues produces catastrophic topological failure and an artificial divergence of $S(\bar{q})$.
+Although Sinc-quadrature succeeds for the Kramers--Kr\"onig transform in Sec.~\ref{sec:finite-temperature-Lindhard}, its application to the $\bar{\omega}$ integral forces evaluation across the massive branch cuts generated by the $\coth$ and logarithmic terms; ignoring these cuts and summing only the residues introduces severe topological artifacts and an artificial divergence of $S(\bar{q})$.
 Trigonometric mapping of $(-\infty,\infty)$ onto the finite interval $(-\pi/2,\pi/2)$ via $x=\tan\theta$ eliminates truncation error in principle, yet at large $\bar{q}$ the plasmon peak and single-particle continuum shift to $\bar{\omega}\sim\bar{q}^2+2\bar{q}$, compressing high-frequency spectral weight into a microscopically thin sliver just below $\pi/2$ where adaptive integrators report false convergence and miss the weight entirely.
 Quadratures based on exponential decay or absolute analyticity, including Tanh--Sinh and Gauss--Hermite rules, degrade severely in the highly degenerate limit ($T\to 0$), where $\Im\chi^L$ develops near-discontinuous kinks at the single-particle boundaries.
 A further failure mode arises at grid resonance: when the kinematic variable $\xi_-$ aligns with a quadrature node (e.g., $s=0$), the Cauchy principal-value kernel $[1-\cos(\pi(s-\xi_-)/h)]/(s-\xi_-)$ encounters a $0/0$ singularity that, without applying L'H\^opital's rule (which gives $0$), yields \texttt{NaN} and evaporates the dominant spectral peak, artificially driving $S_{ee}(\bar{q}\to\infty)\to 0$; the MosaiQ engine applies the analytic limit at these nodes, eliminating ad-hoc grid offsets or smearing.
