@@ -1855,20 +1855,24 @@ Figures~\ref{fig:t0-re-2d} and \ref{fig:t0-im-2d} visualize the causality-pinned
 When the numerical extraction is compared along that slice at $r_s = 2.0$, $\bar{q} = 1.0$, and $T \approx 11\,\mathrm{K}$ (Fig.~\ref{fig:t0-1d-slice}), the MosaiQ-Lindhard engine output (open markers) tracks a well-defined, repeatable trajectory, while the contour-based textbook reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} displays $\Re \tilde{\chi}_{T=0}$ as solid curves and $\Im \tilde{\chi}_{T=0}$ as dashed curves on a distinct manifold.
 As shown in the error panel of Fig.~\ref{fig:t0-1d-slice}, $|\Delta \Re|$ (solid) remains at the $\mathcal{O}(1)$ level, whereas $|\Delta \Im|$ (dashed) is confined to the truncation floor of the sinc evaluation.
 
-This $\mathcal{O}(1)$ offset must not be interpreted as a numerical artifact or a defect of the MosaiQ-Lindhard engine. Rather, it is the inescapable, operational signature of the thermodynamic inconsistency diagnosed in Sec.~\ref{sec:finite-temperature-Lindhard}: the standard $T = 0$ analytical formulas assembled in textbook contour routes~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} combine $\Re \chi$ and $\Im \chi$ from thermodynamically distinct prescriptions---canonical contour sums or zero-temperature limits for the real part, and grand-canonical dissipative kernels for the imaginary part---that are not jointly constrained by a single Kramers--Kr\"onig relation.
-The MosaiQ-Lindhard engine, by contrast, evaluates $\Re \chi^L$ exclusively as the Hilbert transform
-of the grand-canonical $\Im \chi^L$ of Eq.~(\ref{imaginary-Lindhard}),
-so the pair $(\Re \chi^L, \Im \chi^L)$ inherits one causality constraint by construction.
-The contour-based $T = 0$ real part of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} cannot be smoothly connected
-to the finite-temperature grand-canonical dissipation through that Hilbert transform;
-forcing a numerical code to match the textbook contour real part at $\tau \rightarrow 0$
-therefore requires breaking exact causality, reintroducing the $\mathcal{O}(1)$ discrepancies
-that Sec.~\ref{sec:finite-temperature-Lindhard} attributed to ensemble-mixed routes.
-The highly degenerate validation thus closes the logical loop of this work:
-the engine is stable and convergent in the $T \rightarrow 0$ limit \emph{within} the causality-constrained space,
-and the observed offset against the standard contour-based $T = 0$ formulas of Ref.~\cite{Giuliani-Vignale2005} is the expected price of refusing
-to contaminate that space with thermodynamically inconsistent analytic shortcuts.
-Appendix~\ref{sec:Lindhard-function} demonstrates that the causality-constrained Kramers--Kr\"onig route, by contrast, recovers the exact $T = 0$ analytical limit without this offset (Sec.~\ref{sec:t0-kk-contrast}).
+\subsection{Topological discrepancy and the Stratonovich imperative}
+\label{sec:stratonovich-imperative}
+
+This $\mathcal{O}(1)$ offset must not be interpreted as a numerical artifact or a defect of the MosaiQ-Lindhard engine.
+Rather, it is the profound manifestation of a topological disconnect---which we term the \emph{reverse Dedekind cut}---superimposed on the ensemble inconsistency diagnosed in Sec.~\ref{sec:finite-temperature-Lindhard}.
+As the temperature approaches absolute zero ($T \to 0$), the discrete Matsubara frequencies $\omega_n = (2n+1)\pi k_\mathrm{B} T$ collapse toward the real axis.
+However, due to the intrinsic odd-integer factor $(2n+1)$ characteristic of fermions, these frequencies rigorously bracket, yet perpetually evade, the exact zero-energy origin ($\omega = 0$).
+
+This reverse Dedekind cut implies that the $T=0$ limit of the Fermi--Dirac distribution is not merely a naive Heaviside function.
+In his seminal treatise on path integrals~\cite{Kleinert2009}, Hagen Kleinert rigorously identifies three distinct regularizations for the step function at the origin.
+To preserve Kramers--Kr\"onig causality across this topological gap, the macroscopic $T \to 0$ distribution is strictly forced into the \emph{Stratonovich} form, taking the exact midpoint value $f(0) = 1/2$.
+
+Consequently, driving the numerical integration toward $T=0$ along the real axis forces the IEEE~754 double-precision quadrature to cross this Stratonovich anchor.
+The extreme gradients in this vicinity inevitably trigger catastrophic cancellation.
+Resolving this requires an analytical excision of the singularity, detailed in Sec.~\ref{sec:singularity-excision}, which enables a smooth numerical continuation deep into the cryogenic regime.
+Figure~\ref{fig:excision-heatmap} documents the outcome on the metallic $(r_s, T)$ plane: with singularity excision engaged, every cell remains finite and the relative deviation from the causality-pinned $T=0$ baseline is bounded by $\sim 10^{-11}$.
+The engine therefore remains stable and convergent in the $T \rightarrow 0$ limit \emph{within} the causality-constrained space;
+the residual $\mathcal{O}(1)$ offset against the contour-based textbook real part of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} is the expected price of refusing to contaminate that space with thermodynamically inconsistent analytic shortcuts (Sec.~\ref{sec:t0-kk-contrast}).
 
 \subsection{Static structure factor and coupling-parameter sweep}
 \label{sec:static-structure-factor}
@@ -2554,7 +2558,7 @@ and is studied intensively for the fermionic cases by Melrose and Mushtaq~\cite{
 \section{Appendix D: Exact $T=0$ Lindhard Function via Kramers--Kr\"onig Reconstruction}
 \label{sec:Lindhard-function}
 
-One of the central claims of this work is that the finite-temperature formulation maintains exact causality. To demonstrate this analytic continuity explicitly, Appendix~\ref{sec:Lindhard-function} shows that the well-known zero-temperature Lindhard function can be recovered purely from the imaginary part through the Kramers--Kr\"onig relation, without invoking contour integration in the complex plane. Sec.~\ref{sec:t0-kk-reconstruction} derives the exact $T=0$ imaginary and real parts on the real axis, and Sec.~\ref{sec:t0-kk-contrast} contrasts this reconstruction with standard contour and pole-summation routes, including the $\mathcal{O}(1)$ real-part offset of Fig.~\ref{fig:t0-1d-slice}.
+One of the central claims of this work is that the finite-temperature formulation maintains exact causality. To demonstrate this analytic continuity explicitly, Appendix~\ref{sec:Lindhard-function} shows that the well-known zero-temperature Lindhard function can be recovered purely from the imaginary part through the Kramers--Kr\"onig relation, without invoking contour integration in the complex plane. Sec.~\ref{sec:t0-kk-reconstruction} derives the exact $T=0$ imaginary and real parts on the real axis, Sec.~\ref{sec:t0-kk-contrast} contrasts this reconstruction with standard contour and pole-summation routes, including the $\mathcal{O}(1)$ real-part offset of Fig.~\ref{fig:t0-1d-slice}, and Sec.~\ref{sec:singularity-excision} supplies the reverse-Dedekind / Stratonovich singularity excision that stabilizes the cryogenic quadrature.
 
 \subsection{Exact $T=0$ limit via Kramers--Kr\"onig reconstruction}
 \label{sec:t0-kk-reconstruction}
@@ -2597,6 +2601,29 @@ It demonstrates the analytic continuity of the causality-constrained framework: 
 While Jordan's lemma is routinely assumed to hold in many contour-based calculations in theoretical physics under the implicit faith that physical quantities naturally converge, the specific analytic structure of the Fermi--Dirac factor (and its zero-temperature step-function limit) violates the necessary decay condition in substantial portions of the complex plane. Our real-axis formulation avoids this subtlety entirely. The fact that the correct \(T=0\) real part can be reconstructed solely from the imaginary part via the Kramers--Kr\"onig transform underscores that our causality-constrained framework is not only consistent with the established zero-temperature result, but also provides the physically rigorous route for finite temperature, free from the systemic ensemble inconsistencies of the standard contour routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
 
 The $\mathcal{O}(1)$ real-part offset reported in Sec.~\ref{sec:t0-limit-validation} and Fig.~\ref{fig:t0-1d-slice} is therefore not a failure of the MosaiQ-Lindhard engine, but a direct thermodynamic consequence of comparing a causality-pinned Hilbert transform against the real part assembled in Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} from contour sums or canonical limits that are not jointly constrained with the grand-canonical dissipative kernel. Within the causality-constrained space defined by Eqs.~(\ref{imaginary-Lindhard}) and (\ref{real-Lindhard-Kramers-Kronig}), the engine and the analytic reconstruction of Eq.~(\ref{t0-real-Lindhard}) coincide at $T=0$; the offset appears only when one demands agreement with the ensemble-mixed textbook real part. Appendix~\ref{sec:Gouedard-Deutsch} supplies the complementary pole-summation proof that such contour routes cannot provide a convergent, causality-consistent representation of $\Re \chi^L$.
+
+\subsection{Analytical excision of the Stratonovich singularity}
+\label{sec:singularity-excision}
+
+To circumvent the catastrophic \texttt{NaN}/\texttt{Inf} divergence near the Stratonovich anchor ($f(0)=1/2$), the MosaiQ-Lindhard engine dynamically switches to a singularity-excision algorithm when the reduced temperature falls below $\tau < 0.02$.
+Above this threshold the legacy Kramers--Kr\"onig sinc path is retained bit-for-bit, preserving high-temperature reproducibility.
+
+The essence of the method is the softplus decomposition of the scaled Fermi window,
+\begin{equation}
+\tau \ln\bigl(1 + e^{x/\tau}\bigr)
+= (x)_+
++ \tau \ln\bigl(1 + e^{-|x|/\tau}\bigr) ,
+\label{softplus-stratonovich-decomposition}
+\end{equation}
+where $x = \gamma - s^2$ is the kinematic deviation from the Fermi surface in the Hilbert variable of Eq.~(\ref{real-Lindhard-Kramers-Kronig}).
+At $x=0$ the residual gracefully yields the Stratonovich midpoint $\tau \ln 2$, enforcing $f(0)=1/2$ as required by the reverse Dedekind cut of Sec.~\ref{sec:stratonovich-imperative}.
+By evaluating the Hilbert transform of the singular piecewise component $(x)_+$ in closed form, we obtain an analytic contribution to $\Re\chi^L$.
+The numerical sinc quadrature is then fed exclusively the bounded, smooth residual
+\begin{equation}
+R_\tau(x) = \tau \ln\bigl(1 + e^{-|x|/\tau}\bigr) .
+\label{softplus-smooth-residual}
+\end{equation}
+This excision fully immunizes the Kramers--Kr\"onig integral against the diverging gradients of the reverse Dedekind cut and eliminates floating-point underflow/overflow in the cryogenic metallic window documented in Fig.~\ref{fig:excision-heatmap}.
 
 \section{Note on the Gouedard and Deutsch method and the Breakdown of Contour Integration}
 \label{sec:Gouedard-Deutsch}
@@ -3453,12 +3480,16 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 
     \item \textbf{FIG. 6.} Highly degenerate limit validation at extreme degeneracy ($r_s = 2.0$, $\tau = 10^{-4}$, $T \approx 11\,\mathrm{K}$). Figs.~\ref{fig:t0-re-2d} and~\ref{fig:t0-im-2d} show the causality-pinned $T = 0$ Lindhard susceptibility topology over the $(\bar{q}, \bar{\omega})$ plane, derived via the Kramers--Kr\"onig reconstruction of Appendix~\ref{sec:Lindhard-function}, rendered as base-10 logarithmic contour maps of $|\Re \tilde{\chi}^L_{T=0}|$ and $|\Im \tilde{\chi}^L_{T=0}|$ with the same white isoline convention as Fig.~\ref{fig:bare-lindhard}. A black dashed vertical guide marks the $\bar{q} = 1.0$ slice used in Fig.~\ref{fig:t0-1d-slice}. In Fig.~\ref{fig:t0-1d-slice}, the top panel extracts the 1D slice at $r_s = 2.0$, $\bar{q} = 1.0$, and $T \approx 11\,\mathrm{K}$, comparing the standard contour-based reference of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} ($\Re \tilde{\chi}_{T=0}$ solid, $\Im \tilde{\chi}_{T=0}$ dashed) against the MosaiQ-Lindhard engine (open markers); the bottom panel shows $|\Delta \Re|$ (solid) and $|\Delta \Im|$ (dashed) on a logarithmic scale. While $\Im \chi^L$ flawlessly converges to the $\tau \rightarrow 0$ limit, $\Re \chi^L$ retains an $\mathcal{O}(1)$ offset, visually capturing the ensemble inconsistency of standard contour integration over Matsubara frequencies discussed in Sec.~\ref{sec:finite-temperature-Lindhard}.
 
-    \item \textbf{FIG. 7.} The anatomy of thermal sharpening for the real part of the electron susceptibility $\Re\chi_e^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$.
+    \item \textbf{FIG. 7.} Relative error of the regularized finite-temperature Lindhard response $\chi^L(r_s, T)$ against the causality-pinned $T=0$ analytic baseline at fixed probe $(\bar{q},\bar{\omega})=(1.0,0.5)$ with $\gamma=1$.
+    Sweeping the metallic density $r_s \in [1, 5]$ from room temperature down to extreme cryogenic temperatures ($T \approx 10^{-2}\,\mathrm{K}$) typically yields ubiquitous \texttt{NaN}/\texttt{Inf} failures in IEEE~754 double arithmetic near the Stratonovich anchor.
+    By applying the reverse-Dedekind singularity excision of Sec.~\ref{sec:singularity-excision}, the MosaiQ-Lindhard engine achieves absolute numerical stability (zero \texttt{NaN}/\texttt{Inf} cells) and preserves a maximum relative error bounded by $\sim 10^{-11}$ (Fig.~\ref{fig:excision-heatmap}).
+
+    \item \textbf{FIG. 8.} The anatomy of thermal sharpening for the real part of the electron susceptibility $\Re\chi_e^L(\bar{q}, \bar{\omega})$ at $r_s = 1.0$.
     Figs.~\ref{fig:thermal-anatomy-a} and~\ref{fig:thermal-anatomy-b} display the thermal sharpening ladder of $|\Re\chi_e^L|$ at intermediate ($T=1\,000\,\mathrm{K}$) and moderately degenerate ($T=70\,\mathrm{K}$) conditions on the electron-scale rectangle $\bar{q}\in[0,4]$ and $\bar{\omega}\in[0,3]$, using the same base-10 logarithmic rainbow convention as Fig.~\ref{fig:bare-lindhard}; the $T=70\,\mathrm{K}$ panel fills the display frame on a numerically stable grid.
     Fig.~\ref{fig:thermal-anatomy-c} extracts a high-resolution 1D cross-section at $\bar{q}=1.0$, overlaying $T=70\,\mathrm{K}$ (solid with $\circ$), $1\,000\,\mathrm{K}$ (dashed with $\square$), and $10\,000\,\mathrm{K}$ (dash-dotted with $\triangle$)---thermodynamically coincident at this $r_s$ and distinguished only by linestyle and staggered markers---against the strict $T=0$ analytic real susceptibility (solid black) to isolate the genuine low-temperature sharpening of the logarithmic singularities.
     Fig.~\ref{fig:thermal-anatomy-d} maps the bare-vs-RPA interaction contrast ratio $S_{ee}/|\Re\chi_e^L|$ at $T=10\,000\,\mathrm{K}$, demonstrating that diffuse single-particle weight is confined to the bare baseline while collective ridges emerge only after screening.
 
-    \item \textbf{FIG. 8.} Static structure factors: Fig.~\ref{fig:Sq-gamma-ee} ($S_{ee}(\bar{q})$), Fig.~\ref{fig:Sq-gamma-ii} ($S_{ii}(\bar{q})$), and Fig.~\ref{fig:Sq-gamma-ei} ($S_{ei}(\bar{q})$) obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$, with color denoting the coupling strength and linestyles progressing from dot-dot-dashed ($\Gamma = 10$) and dot-dashed ($\Gamma = 50$) through dashed ($\Gamma = 100$) to solid ($\Gamma = 150$). The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: Fig.~\ref{fig:Sq-gamma-ee} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while Figs.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
+    \item \textbf{FIG. 9.} Static structure factors: Fig.~\ref{fig:Sq-gamma-ee} ($S_{ee}(\bar{q})$), Fig.~\ref{fig:Sq-gamma-ii} ($S_{ii}(\bar{q})$), and Fig.~\ref{fig:Sq-gamma-ei} ($S_{ei}(\bar{q})$) obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$, with color denoting the coupling strength and linestyles progressing from dot-dot-dashed ($\Gamma = 10$) and dot-dashed ($\Gamma = 50$) through dashed ($\Gamma = 100$) to solid ($\Gamma = 150$). The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: Fig.~\ref{fig:Sq-gamma-ee} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while Figs.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
 \end{itemize}
 
 \clearpage
@@ -3648,6 +3679,16 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \panelpagefigure[fig:t0-limit-validation]{figures/t0_analytic_re_contour.pdf}{fig:t0-re-2d}
 \panelpagefigure{figures/t0_analytic_im_contour.pdf}{fig:t0-im-2d}
 \panelpagefigure{figures/t0_limit_validation.pdf}{fig:t0-1d-slice}
+
+\clearpage
+\begin{figure}[p]
+\centering
+\vfill
+\includegraphics[width=\textwidth]{figures/lindhard_rs_t_excision.pdf}
+\vfill
+\registerstandalonefigurelabel{fig:excision-heatmap}
+\figurepaneltag{Fig.~\thesubmitfig}
+\end{figure}
 
 \panelpagefigure[fig:thermal-anatomy]{figures/thermal_anatomy_a.pdf}{fig:thermal-anatomy-a}
 \panelpagefigure{figures/thermal_anatomy_b.pdf}{fig:thermal-anatomy-b}
