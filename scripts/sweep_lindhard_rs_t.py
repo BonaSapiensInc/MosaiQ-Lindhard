@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import LogNorm
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
 from plot_common import OUTPUT_DIR, apply_pdf_rcparams, output_path, save_figure
 
@@ -108,73 +109,58 @@ def configure_matplotlib() -> None:
     )
 
 
-def render_heatmap(data: dict[str, np.ndarray], destination: Path) -> None:
+def render_contour(data: dict[str, np.ndarray], destination: Path) -> None:
+    """Colored contour lines of relative error on a clean white background (Fig. 7)."""
     configure_matplotlib()
 
     rs_u, t_u, err_re = pivot_grid(data["r_s"], data["T_K"], data["rel_err_re"])
     _, _, finite = pivot_grid(data["r_s"], data["T_K"], data["finite"])
 
-    # Floor for log color scale; zero error cells stay visible as the deep end.
-    plot_err = np.where(np.isfinite(err_re), np.maximum(err_re, 1.0e-16), np.nan)
+    # Preserve true zeros / underflow as empty white space — do not floor-fill the plane.
+    plot_err = np.where(np.isfinite(err_re), err_re, np.nan)
     nan_mask = ~np.isfinite(finite) | (finite < 0.5) | ~np.isfinite(err_re)
+    plot_err = np.ma.masked_where(nan_mask | ~(plot_err > 0.0), plot_err)
+
+    finite_positive = np.asarray(plot_err.compressed(), dtype=float)
+    if finite_positive.size == 0:
+        raise SystemExit("No finite positive relative-error samples to contour.")
 
     fig, ax = plt.subplots(figsize=(8.2, 5.8), layout="constrained")
-    rs_mesh, t_mesh = np.meshgrid(rs_u, t_u)
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
 
-    finite_vals = plot_err[~nan_mask]
-    if finite_vals.size == 0:
-        raise SystemExit("No finite cells to plot — excision failed across the sweep.")
+    level_min, level_max = 1.0e-16, 10.0
+    levels = np.logspace(np.log10(level_min), np.log10(level_max), num=21)
+    norm = LogNorm(vmin=level_min, vmax=level_max)
+    # Use the mid-to-bright magma segment so isolines remain vivid on white paper.
+    magma = plt.get_cmap("magma")
+    bright = magma(np.linspace(0.38, 0.92, 256))
+    line_cmap = LinearSegmentedColormap.from_list("magma_bright_lines", bright)
 
-    norm = LogNorm(vmin=max(finite_vals.min(), 1.0e-16), vmax=max(finite_vals.max(), 1.0e-8))
-    cmap = plt.get_cmap("magma").copy()
-    cmap.set_bad("#3d0000")
-
-    mesh = ax.pcolormesh(
-        rs_mesh,
-        t_mesh,
-        np.ma.masked_where(nan_mask, plot_err),
-        shading="auto",
-        cmap=cmap,
-        norm=norm,
-    )
-    contours = ax.contour(
+    ax.contour(
         rs_u,
         t_u,
-        np.ma.masked_where(nan_mask, plot_err),
-        levels=np.logspace(-12, -1, 8),
-        colors="white",
-        linewidths=0.45,
-        alpha=0.55,
+        plot_err,
+        levels=levels,
+        cmap=line_cmap,
+        norm=norm,
+        linewidths=1.15,
+        alpha=0.95,
     )
-    ax.clabel(contours, fmt=lambda v: f"{v:.0e}", fontsize=7, colors="white")
 
     ax.set_yscale("log")
     ax.set_xlabel(r"$r_s$")
     ax.set_ylabel(r"$T\,[\mathrm{K}]$")
-    ax.set_title(
-        r"Reverse-Dedekind singularity excision: "
-        r"$|\Re\chi^L(T)-\Re\chi^L_{T=0}|/|\Re\chi^L_{T=0}|$"
-        "\n"
-        r"$(\bar{q},\bar{\omega})=(1.0,0.5),\ \gamma=1$"
-    )
     ax.set_xlim(rs_u.min(), rs_u.max())
     ax.set_ylim(t_u.min(), t_u.max())
+    ax.grid(True, which="both", linestyle=":", linewidth=0.55, color="0.75", alpha=0.85)
+    ax.set_axisbelow(True)
+    for spine in ax.spines.values():
+        spine.set_color("0.35")
 
-    cbar = fig.colorbar(mesh, ax=ax, pad=0.02)
-    cbar.set_label(r"relative error vs causality-pinned $T=0$")
-
-    n_nan = int(np.count_nonzero(nan_mask))
-    ax.text(
-        0.02,
-        0.02,
-        f"NaN/Inf cells: {n_nan}",
-        transform=ax.transAxes,
-        ha="left",
-        va="bottom",
-        fontsize=9,
-        color="white",
-        bbox={"facecolor": "black", "alpha": 0.35, "pad": 3, "edgecolor": "none"},
-    )
+    mappable = ScalarMappable(norm=norm, cmap=line_cmap)
+    mappable.set_array([])
+    fig.colorbar(mappable, ax=ax, pad=0.02)
 
     save_figure(fig, destination)
     plt.close(fig)
@@ -206,7 +192,7 @@ def main() -> None:
         f"NaN/Inf={n_nan}, "
         f"max rel_err_re={np.nanmax(data['rel_err_re']):.3e}"
     )
-    render_heatmap(data, OUTPUT_FIG)
+    render_contour(data, OUTPUT_FIG)
 
 
 if __name__ == "__main__":

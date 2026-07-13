@@ -10,7 +10,7 @@
 # * Contact: kim.ingee@bonasapiens.com
 # ==========================================================================
 
-"""Figure 7: thermal anatomy of bare electron Lindhard real-part sharpening (four panel PDFs)."""
+"""Figure 8: thermal anatomy of bare electron Lindhard real-part sharpening (four panel PDFs)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ import numpy as np
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import LogNorm
 
-from plot_common import OUTPUT_DIR, save_figure
+from plot_common import OUTPUT_DIR, format_temperature_k, save_figure
 from plot_lindhard_t0_2d import calc_t0_lindhard
 from plot_Sqw import (
     ELECTRON_DISPLAY_BOUNDS,
@@ -55,11 +55,11 @@ COLORBAR_PAD = 0.04
 LADDER_CBAR_LABEL = r"$|\Re \tilde{\chi}_e^L|$"
 RATIO_CBAR_LABEL = r"$S_{ee}\,/\,|\Re \tilde{\chi}_e^L|$"
 SINGLE_PANEL_FIGSIZE = (10, 7)
-COLD_LADDER_T_K = 70
+COLD_LADDER_T_K = 0.01
 COLD_LADDER_Q_POINTS = 79
 
-LADDER_PANELS: tuple[tuple[int, str], ...] = (
-    (1000, "thermal_anatomy_a"),
+LADDER_PANELS: tuple[tuple[float, str], ...] = (
+    (1000.0, "thermal_anatomy_a"),
     (COLD_LADDER_T_K, "thermal_anatomy_b"),
 )
 
@@ -71,12 +71,28 @@ SLICE_LEGEND_FONTSIZE = 10.5
 SIMULATOR = Path(__file__).resolve().parent.parent / "simulator" / "build" / "mosaiq_simulator"
 
 
-def lindhard_dat_path(t_kelvin: int) -> Path:
-    if t_kelvin == 10000:
+def temperature_tag(t_kelvin: float) -> str:
+    """Filesystem-safe temperature tag used in output_lindhard_base_T*.dat names."""
+    if float(t_kelvin).is_integer():
+        return str(int(t_kelvin))
+    return f"{t_kelvin:g}"
+
+
+def format_t_math(t_kelvin: float) -> str:
+    """Compact mathtext temperature for titles/legends."""
+    if t_kelvin >= 1000.0 and float(t_kelvin).is_integer():
+        return format_temperature_k(t_kelvin)
+    if t_kelvin >= 1.0 and float(t_kelvin).is_integer():
+        return rf"$T = {int(t_kelvin)}\,\mathrm{{K}}$"
+    return rf"$T = {t_kelvin:g}\,\mathrm{{K}}$"
+
+
+def lindhard_dat_path(t_kelvin: float) -> Path:
+    if abs(t_kelvin - 10000.0) < 1.0e-12:
         primary = OUTPUT_DIR / "output_lindhard_base.dat"
         tagged = OUTPUT_DIR / "output_lindhard_base_T10000.dat"
         return tagged if tagged.is_file() else primary
-    return OUTPUT_DIR / f"output_lindhard_base_T{t_kelvin}.dat"
+    return OUTPUT_DIR / f"output_lindhard_base_T{temperature_tag(t_kelvin)}.dat"
 
 
 def structure_factor_dat_path() -> Path:
@@ -85,7 +101,7 @@ def structure_factor_dat_path() -> Path:
     return tagged if tagged.is_file() else primary
 
 
-def ensure_lindhard_data(t_kelvin: int) -> Path:
+def ensure_lindhard_data(t_kelvin: float) -> Path:
     path = lindhard_dat_path(t_kelvin)
     if path.is_file():
         return path
@@ -98,7 +114,7 @@ def ensure_lindhard_data(t_kelvin: int) -> Path:
         )
     subprocess.run([str(SIMULATOR), str(RS), str(float(t_kelvin))], check=True)
     generated = OUTPUT_DIR / "output_lindhard_base.dat"
-    if t_kelvin != 10000:
+    if abs(t_kelvin - 10000.0) >= 1.0e-12:
         path.write_bytes(generated.read_bytes())
     else:
         path = generated
@@ -299,7 +315,7 @@ def attach_log_colorbar(
     )
 
 
-def ladder_shared_norm(temperatures: tuple[int, ...]) -> LogNorm:
+def ladder_shared_norm(temperatures: tuple[float, ...]) -> LogNorm:
     maxima: list[float] = []
     minima: list[float] = []
     for t_kelvin in temperatures:
@@ -325,9 +341,9 @@ def render_slice_panel(ax: plt.Axes) -> None:
     ax.axvline(omega_lo, color="0.35", linestyle=":", linewidth=1.0, alpha=0.7, zorder=1)
     ax.axvline(omega_hi, color="0.35", linestyle=":", linewidth=1.0, alpha=0.7, zorder=1)
 
-    finite_styles: tuple[tuple[int, str, str, float, str, tuple[int, int]], ...] = (
-        (10000, "#b22222", (0, (5, 2, 1, 2)), 2.0, "^", (0, SLICE_MARK_EVERY)),
-        (1000, "#8b4513", (0, (4, 2)), 2.0, "s", (11, SLICE_MARK_EVERY)),
+    finite_styles: tuple[tuple[float, str, tuple | str, float, str, tuple[int, int]], ...] = (
+        (10000.0, "#b22222", (0, (5, 2, 1, 2)), 2.0, "^", (0, SLICE_MARK_EVERY)),
+        (1000.0, "#8b4513", (0, (4, 2)), 2.0, "s", (11, SLICE_MARK_EVERY)),
         (COLD_LADDER_T_K, "#1f3b73", "solid", 2.2, "o", (22, SLICE_MARK_EVERY)),
     )
     for t_kelvin, color, linestyle, linewidth, marker, markevery in finite_styles:
@@ -342,7 +358,7 @@ def render_slice_panel(ax: plt.Axes) -> None:
             color=color,
             linestyle=linestyle,
             linewidth=linewidth,
-            label=rf"$T={t_kelvin:,}\,\mathrm{{K}}$",
+            label=format_t_math(t_kelvin),
             zorder=4,
         )
 
@@ -373,7 +389,7 @@ def render_slice_panel(ax: plt.Axes) -> None:
 
 
 def load_rpa_bare_ratio() -> tuple[np.ndarray, np.ndarray, np.ndarray, LogNorm]:
-    chi_path = ensure_lindhard_data(10000)
+    chi_path = ensure_lindhard_data(10000.0)
     sf_path = structure_factor_dat_path()
     if not sf_path.is_file():
         raise SystemExit(
@@ -420,7 +436,7 @@ def render_bare_rpa_panel(ax: plt.Axes) -> ScalarMappable:
 
 
 def save_ladder_panel(
-    t_kelvin: int,
+    t_kelvin: float,
     stem: str,
     shared_norm: LogNorm,
 ) -> Path:
@@ -433,8 +449,8 @@ def save_ladder_panel(
         w_grid,
         z_grid,
         shared_norm,
-        title=rf"$|\Re \tilde{{\chi}}_e^L|$, $T={t_kelvin:,}\,\mathrm{{K}}$",
-        fill_border=(t_kelvin == COLD_LADDER_T_K),
+        title=rf"$|\Re \tilde{{\chi}}_e^L|$, $T = {temperature_tag(t_kelvin)}\,\mathrm{{K}}$",
+        fill_border=abs(t_kelvin - COLD_LADDER_T_K) < 1.0e-12,
     )
     attach_log_colorbar(fig, ax, mesh, LADDER_CBAR_LABEL)
     saved = save_figure(fig, stem)

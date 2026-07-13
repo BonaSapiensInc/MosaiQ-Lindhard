@@ -97,9 +97,9 @@ inline constexpr const char* output_filename = "output_lindhard_rs_t_sweep.dat";
 
 int main()
 {
-    // Metallic density window r_s ∈ [1, 5]; T from room temperature to extreme cold.
+    // Metallic density window r_s ∈ [1, 5]; T from cryogenic floor to 10^6 K.
     const auto rs_grid = linspace(1.0, 5.0, 17);
-    const auto t_grid = logspace(0.01, 300.0, 49);
+    const auto t_grid = logspace(0.01, 1.0e6, 65);
 
     const std::filesystem::path output_path = resolve_output_path();
     std::ofstream output(output_path);
