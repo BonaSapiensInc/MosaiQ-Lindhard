@@ -194,7 +194,7 @@ If you use MosaiQ-Lindhard in academic work, please cite the accompanying *Physi
 
 Until the PRE manuscript DOI is available, please cite the Zenodo archive:
 
-> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v1.0.1-publish-release). Zenodo. https://doi.org/10.5281/zenodo.21152718
+> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v1.0.2-stratonovich-update). Zenodo. https://doi.org/10.5281/zenodo.21331277
 
 Repository: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
 
@@ -206,7 +206,7 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
-**Zenodo archive:** [https://doi.org/10.5281/zenodo.21152718](https://doi.org/10.5281/zenodo.21152718) (release `v1.0.1-publish-release`)
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.21331277](https://doi.org/10.5281/zenodo.21331277) (release `v1.0.2-stratonovich-update`)
 
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 
