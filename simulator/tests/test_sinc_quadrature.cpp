@@ -107,11 +107,29 @@ void test_cauchy_principal_value_kernel_lhopital()
     assert(std::isfinite(mosaiq::cauchy_principal_value_kernel(0.25, pi_over_h)));
 }
 
+void test_stratonovich_softplus_and_occupation()
+{
+    // Softplus identity and Stratonovich midpoint residual τ ln 2 at x = 0.
+    constexpr double tau = 0.05;
+    const double at_cut = mosaiq::softplus_smooth_residual(0.0, tau);
+    assert(std::abs(at_cut - tau * std::log(2.0)) < 1.0e-15);
+
+    const double x = 0.3;
+    const double full = mosaiq::softplus_scaled(x, tau);
+    const double rebuilt = std::max(x, 0.0) + mosaiq::softplus_smooth_residual(x, tau);
+    assert(std::abs(full - rebuilt) < 1.0e-15);
+
+    assert(std::abs(mosaiq::fermi_dirac_occupation_stable(0.0) - 0.5) < 1.0e-15);
+    assert(mosaiq::fermi_dirac_occupation_stable(40.0) < 1.0e-15);
+    assert(std::abs(mosaiq::fermi_dirac_occupation_stable(-40.0) - 1.0) < 1.0e-15);
+}
+
 }  // namespace
 
 int main()
 {
     test_cauchy_principal_value_kernel_lhopital();
+    test_stratonovich_softplus_and_occupation();
     test_sample_pipeline();
     test_gv_real_lindhard_finite_domain();
     test_gv_real_lindhard_low_temperature();

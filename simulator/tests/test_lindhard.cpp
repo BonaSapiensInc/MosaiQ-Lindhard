@@ -129,6 +129,33 @@ void test_kk_vs_gv_real_isomorphism()
     std::cout << "|Δ Re| (KK vs GV direct) = " << delta_cross << " (distinct legacy routes)\n";
 }
 
+void test_singularity_excision_extreme_cold()
+{
+    // Below 100 K (and down to 0.01 K-class τ) the reverse-Dedekind excision must stay finite.
+    const WaveVector<> q{1.0};
+    const Frequency<> omega{0.5};
+    const ReducedChemicalPotential<> gamma{1.0};
+
+    for (double tau_raw : {1.0e-2, 1.0e-4, 1.0e-6, 1.0e-8, 1.0e-12, 1.0e-20, 0.0}) {
+        const LindhardResult<> chi = evaluate_lindhard(
+            q, omega, ReducedTemperature<>{tau_raw}, gamma);
+        assert(std::isfinite(chi.real()));
+        assert(std::isfinite(chi.imag()));
+        assert(!std::isnan(chi.real()));
+        assert(!std::isnan(chi.imag()));
+    }
+
+    const LindhardResult<> chi_t0 =
+        evaluate_lindhard(q, omega, ReducedTemperature<>{0.0}, gamma);
+    const LindhardResult<> chi_cold =
+        evaluate_lindhard(q, omega, ReducedTemperature<>{1.0e-12}, gamma);
+    assert(std::abs(chi_cold.real() - chi_t0.real()) < 1.0e-8);
+    assert(std::abs(chi_cold.imag() - chi_t0.imag()) < 1.0e-8);
+
+    std::cout << "Singularity excision extreme-cold Re = " << chi_cold.real()
+              << ", Im = " << chi_cold.imag() << '\n';
+}
+
 }  // namespace
 
 int main()
@@ -136,6 +163,7 @@ int main()
     test_imaginary_lindhard_finite();
     test_evaluate_lindhard_bundle();
     test_kk_vs_gv_real_isomorphism();
+    test_singularity_excision_extreme_cold();
 
     std::cout << "All Lindhard tests passed.\n";
     return 0;

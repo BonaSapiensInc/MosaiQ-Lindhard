@@ -57,3 +57,15 @@ add_test(
     COMMAND test_t0_limit
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
 )
+
+add_executable(sweep_lindhard_rs_t sweep_lindhard_rs_t.cpp)
+
+target_link_libraries(sweep_lindhard_rs_t PRIVATE mosaiq::mosaiq)
+
+target_compile_options(sweep_lindhard_rs_t PRIVATE -UNDEBUG)
+
+add_test(
+    NAME LindhardRsTSweep
+    COMMAND sweep_lindhard_rs_t
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+)

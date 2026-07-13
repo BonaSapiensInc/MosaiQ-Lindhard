@@ -50,7 +50,8 @@ GvLindhardIntegrand<T> make_gv_lindhard_integrand()
         argp = std::sqrt(argp * argp);
 
         T flog = std::log(argn) - std::log(argp);
-        flog /= (std::exp((x * x - gamma) / tau) + T{1});
+        // Stratonovich-stable Fermi–Dirac occupation (f(0) = 1/2); avoids exp overflow as τ → 0.
+        flog *= fermi_dirac_occupation_stable((x * x - gamma) / tau);
         flog *= x;
 
         return sample.weight * flog;

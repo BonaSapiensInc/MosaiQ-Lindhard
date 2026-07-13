@@ -15,8 +15,6 @@
 
 #include <cmath>
 #include <functional>
-#include <ranges>
-#include <type_traits>
 #include <vector>
 
 namespace mosaiq {
@@ -111,6 +109,86 @@ template<ScalarPhysical T>
     }
     const T argument = pi_over_h * diff;
     return (T{1} - std::cos(argument)) / argument;
+}
+
+/// Softplus identity: τ ln(1 + e^{x/τ}) = (x)_+ + τ ln(1 + e^{-|x|/τ}).
+/// At x = 0 the residual is τ ln 2, enforcing the Stratonovich midpoint f(0) = 1/2
+/// of the reverse-Dedekind (T → 0) Fermi–Dirac cut.
+template<ScalarPhysical T>
+[[nodiscard]] T softplus_scaled(T x, T tau) noexcept
+{
+    if (!(tau > T{0})) {
+        return (x > T{0}) ? x : T{0};
+    }
+    const T abs_x = std::abs(x);
+    const T singular = (x > T{0}) ? x : T{0};
+    // Beyond ~40 τ the residual is smaller than double underflow relative to O(1).
+    constexpr T residual_cutoff = T{40};
+    if (abs_x > residual_cutoff * tau) {
+        return singular;
+    }
+    return singular + tau * std::log1p(std::exp(-abs_x / tau));
+}
+
+/// Smooth residual alone: R_τ(x) = τ ln(1 + e^{-|x|/τ}) (Stratonovich value τ ln 2 at x = 0).
+template<ScalarPhysical T>
+[[nodiscard]] T softplus_smooth_residual(T x, T tau) noexcept
+{
+    if (!(tau > T{0})) {
+        return T{0};
+    }
+    const T abs_x = std::abs(x);
+    constexpr T residual_cutoff = T{40};
+    if (abs_x > residual_cutoff * tau) {
+        return T{0};
+    }
+    return tau * std::log1p(std::exp(-abs_x / tau));
+}
+
+/// Continuum Hilbert content of the Stratonovich step kernel g(s) = (γ − s²)_+:
+/// Ĩ(ξ) = P∫_{-a}^{a} (γ − s²)/(ξ − s) ds with a = √γ (sinc-compatible sign).
+template<ScalarPhysical T>
+[[nodiscard]] T stratonovich_step_hilbert_kernel(T xi, T gamma) noexcept
+{
+    if (!(gamma > T{0})) {
+        return T{0};
+    }
+    const T a = std::sqrt(gamma);
+    const T diff_minus = a - xi;
+    const T diff_plus = a + xi;
+    // Removable edge singularity: (γ − ξ²) ln|(a − ξ)/(a + ξ)| → 0 as ξ → ±a,
+    // since γ − ξ² = (a − ξ)(a + ξ) and u ln|u| → 0.
+    constexpr T edge_tolerance = T{1.0e-14};
+    if (std::abs(diff_minus) <= edge_tolerance || std::abs(diff_plus) <= edge_tolerance) {
+        return T{2} * a * xi;
+    }
+    const T log_ratio = std::log(std::abs(diff_minus) / std::abs(diff_plus));
+    // Ĩ(ξ) = −[(γ − ξ²) ln|(a − ξ)/(a + ξ)| − 2 a ξ]
+    return -((gamma - xi * xi) * log_ratio - T{2} * a * xi);
+}
+
+/// Analytic singular contribution to Re χ̃^L from the reverse-Dedekind step:
+/// (π/4q) [H̃[g](ξ_−) − H̃[g](ξ_+)] with H̃ the sinc-compatible Hilbert transform.
+template<ScalarPhysical T>
+[[nodiscard]] T analytic_stratonovich_re_contribution(T xi_minus,
+                                                      T xi_plus,
+                                                      T gamma,
+                                                      T q) noexcept
+{
+    const T i_minus = stratonovich_step_hilbert_kernel(xi_minus, gamma);
+    const T i_plus = stratonovich_step_hilbert_kernel(xi_plus, gamma);
+    return (i_minus - i_plus) / (T{4} * q);
+}
+
+/// Stable Fermi–Dirac occupation 1/(e^y + 1) with Stratonovich value 1/2 at y = 0.
+template<ScalarPhysical T>
+[[nodiscard]] T fermi_dirac_occupation_stable(T y) noexcept
+{
+    if (y >= T{0}) {
+        const T e = std::exp(-y);
+        return e / (T{1} + e);
+    }
+    return T{1} / (T{1} + std::exp(y));
 }
 
 }  // namespace mosaiq

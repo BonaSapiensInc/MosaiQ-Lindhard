@@ -46,6 +46,11 @@ inline constexpr std::size_t default_gv_sinc_nodes = 256;
 /// Default KK / plasma-dispersion sinc node count (legacy: `get_KKrealLindhard`, N = 128).
 inline constexpr std::size_t default_kk_sinc_nodes = 128;
 
+/// Below this reduced temperature, Kramers–Krönig Re χ^L uses reverse-Dedekind
+/// singularity excision (analytic Stratonovich step + smooth residual sinc).
+/// Above it, the legacy bit-reproducible softplus/log path is retained.
+inline constexpr double singularity_excision_tau_threshold = 2.0e-2;
+
 /// (9 pi / 4)^(1/3) — legacy FermionComponent fermi wavevector prefactor.
 inline constexpr double nine_pi_over_four_cbrt = 1.7044777697860926;
 

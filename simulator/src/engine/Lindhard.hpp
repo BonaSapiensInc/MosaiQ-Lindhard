@@ -22,6 +22,8 @@ template<ScalarPhysical T = double>
                                    ReducedChemicalPotential<T> gamma);
 
 /// Canonical real part via Kramers–Krönig / Hilbert sinc-quadrature (legacy `get_KKrealLindhard`).
+/// For τ < singularity_excision_tau_threshold, uses reverse-Dedekind singularity excision:
+/// analytic Stratonovich step Hilbert transform + smooth softplus residual only in the sinc sum.
 template<ScalarPhysical T = double>
 [[nodiscard]] T real_lindhard_kk(WaveVector<T> q,
                                  Frequency<T> omega,

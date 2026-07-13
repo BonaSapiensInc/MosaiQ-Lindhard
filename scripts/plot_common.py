@@ -45,6 +45,7 @@ MANUSCRIPT_FIGURE_NAMES: tuple[str, ...] = (
     "Sq_gamma_ee",
     "Sq_gamma_ii",
     "Sq_gamma_ei",
+    "lindhard_rs_t_excision",
 )
 
 PDF_RCPARAMS: dict[str, object] = {

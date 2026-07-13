@@ -45,6 +45,7 @@ template<ScalarPhysical T>
     return stable_fermi_log(arg);
 }
 
+/// Legacy high-T path: Σ f(kh) K with f = ln(1+e^{(γ−s²)/τ}), then × πτ/(4q).
 template<ScalarPhysical T>
 [[nodiscard]] T accumulate_cauchy_principal_value(T xi,
                                                    ReducedChemicalPotential<T> gamma,
@@ -66,43 +67,35 @@ template<ScalarPhysical T>
         });
 }
 
-}  // namespace
-
+/// Smooth residual only: Σ R_τ(γ − kh²) K(ξ − kh), with R_τ the Stratonovich softplus remainder.
 template<ScalarPhysical T>
-T imaginary_lindhard(WaveVector<T> q,
-                     Frequency<T> omega,
-                     ReducedTemperature<T> tau,
-                     ReducedChemicalPotential<T> gamma)
+[[nodiscard]] T accumulate_smooth_residual_cpv(T xi,
+                                               ReducedChemicalPotential<T> gamma,
+                                               ReducedTemperature<T> tau,
+                                               T h,
+                                               T pi_over_h,
+                                               long half_nodes) noexcept
 {
-    const T q_raw = q.raw();
-    const T tau_raw = tau.raw();
     const T gamma_raw = gamma.raw();
-
-    const T nu_p = branch_xi(omega, q, T{1});
-    const T nu_n = branch_xi(omega, q, T{-1});
-
-    const long double nu_p_sq = static_cast<long double>(nu_p) * static_cast<long double>(nu_p);
-    const long double nu_n_sq = static_cast<long double>(nu_n) * static_cast<long double>(nu_n);
-    const long double gamma_ld = static_cast<long double>(gamma_raw);
-    const long double tau_ld = static_cast<long double>(tau_raw);
-
-    const long double arg_exp_n = (nu_n_sq - gamma_ld) / tau_ld;
-    const long double arg_exp_p = (nu_p_sq - gamma_ld) / tau_ld;
-
-    const long double numerator = 1.0L + std::exp(-arg_exp_n);
-    const long double denominator = 1.0L + std::exp(-arg_exp_p);
-    const long double the_log = std::log(numerator / denominator);
-
-    T imag = static_cast<T>(tau_ld * static_cast<long double>(the_log));
-    imag *= -(constants::pi / q_raw);
-    return imag;
+    const T tau_raw = tau.raw();
+    const auto indices = std::views::iota(-half_nodes, half_nodes + 1);
+    return std::transform_reduce(
+        std::ranges::begin(indices),
+        std::ranges::end(indices),
+        T{0},
+        std::plus{},
+        [&](long k) {
+            const T kh = static_cast<T>(k) * h;
+            const T residual = softplus_smooth_residual(gamma_raw - kh * kh, tau_raw);
+            return residual * cauchy_principal_value_kernel(xi - kh, pi_over_h);
+        });
 }
 
 template<ScalarPhysical T>
-T real_lindhard_kk(WaveVector<T> q,
-                   Frequency<T> omega,
-                   ReducedTemperature<T> tau,
-                   ReducedChemicalPotential<T> gamma)
+[[nodiscard]] T real_lindhard_kk_legacy(WaveVector<T> q,
+                                        Frequency<T> omega,
+                                        ReducedTemperature<T> tau,
+                                        ReducedChemicalPotential<T> gamma) noexcept
 {
     const T q_raw = q.raw();
     const T tau_raw = tau.raw();
@@ -120,6 +113,71 @@ T real_lindhard_kk(WaveVector<T> q,
         xi_p, gamma, tau, h, pi_over_h, half_nodes);
 
     return (cpv_n - cpv_p) * (constants::pi * tau_raw) / (T{4} * q_raw);
+}
+
+/// Reverse-Dedekind singularity excision: analytic Stratonovich step + smooth residual sinc.
+template<ScalarPhysical T>
+[[nodiscard]] T real_lindhard_kk_excised(WaveVector<T> q,
+                                         Frequency<T> omega,
+                                         ReducedTemperature<T> tau,
+                                         ReducedChemicalPotential<T> gamma) noexcept
+{
+    const T q_raw = q.raw();
+    const T gamma_raw = gamma.raw();
+
+    constexpr long half_nodes = static_cast<long>(constants::default_kk_sinc_nodes);
+    const T h = std::sqrt(constants::sinc_strip_factor * constants::pi / static_cast<T>(half_nodes));
+    const T pi_over_h = constants::pi / h;
+
+    const T xi_n = branch_xi(omega, q, T{-1});
+    const T xi_p = branch_xi(omega, q, T{1});
+
+    const T singular = analytic_stratonovich_re_contribution(xi_n, xi_p, gamma_raw, q_raw);
+
+    if (!(tau.raw() > T{0})) {
+        return singular;
+    }
+
+    const T residual_n = accumulate_smooth_residual_cpv(
+        xi_n, gamma, tau, h, pi_over_h, half_nodes);
+    const T residual_p = accumulate_smooth_residual_cpv(
+        xi_p, gamma, tau, h, pi_over_h, half_nodes);
+
+    return singular + (residual_n - residual_p) * constants::pi / (T{4} * q_raw);
+}
+
+}  // namespace
+
+template<ScalarPhysical T>
+T imaginary_lindhard(WaveVector<T> q,
+                     Frequency<T> omega,
+                     ReducedTemperature<T> tau,
+                     ReducedChemicalPotential<T> gamma)
+{
+    const T q_raw = q.raw();
+    const T tau_raw = tau.raw();
+    const T gamma_raw = gamma.raw();
+
+    const T nu_p = branch_xi(omega, q, T{1});
+    const T nu_n = branch_xi(omega, q, T{-1});
+
+    // τ ln(1 + e^{(γ − ν²)/τ}) via softplus: removes Inf/Inf NaN for τ ≲ 10^{-6}.
+    const T soft_n = softplus_scaled(gamma_raw - nu_n * nu_n, tau_raw);
+    const T soft_p = softplus_scaled(gamma_raw - nu_p * nu_p, tau_raw);
+
+    return -(constants::pi / q_raw) * (soft_n - soft_p);
+}
+
+template<ScalarPhysical T>
+T real_lindhard_kk(WaveVector<T> q,
+                   Frequency<T> omega,
+                   ReducedTemperature<T> tau,
+                   ReducedChemicalPotential<T> gamma)
+{
+    if (tau.raw() < static_cast<T>(constants::singularity_excision_tau_threshold)) {
+        return real_lindhard_kk_excised(q, omega, tau, gamma);
+    }
+    return real_lindhard_kk_legacy(q, omega, tau, gamma);
 }
 
 template<ScalarPhysical T>
