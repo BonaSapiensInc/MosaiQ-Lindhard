@@ -18,6 +18,7 @@ CITED=(
   chi_e_re chi_e_im chi_i_re chi_i_im chi_ei_re chi_ei_im
   S_ee_contour S_ii_contour S_ei_contour
   plasmon_dispersion
+  zeta_rpa_dispersion
   t0_analytic_re_contour t0_analytic_im_contour t0_limit_validation
   thermal_anatomy_a thermal_anatomy_b thermal_anatomy_c thermal_anatomy_d
   Sq_gamma_ee Sq_gamma_ii Sq_gamma_ei

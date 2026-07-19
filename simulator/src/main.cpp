@@ -39,6 +39,7 @@ inline constexpr const char* lindhard_base_filename = "output_lindhard_base.dat"
 inline constexpr const char* dispersion_filename = "output_plasmon_dispersion.dat";
 inline constexpr const char* static_sq_gamma_filename = "output_Sq_gamma.dat";
 inline constexpr const char* zeta_scalar_filename = "output_zeta_rpa_scalar.dat";
+inline constexpr const char* zeta_dispersion_filename = "output_zeta_rpa_dispersion.dat";
 
 [[nodiscard]] const char* pathway_label(ResponsePathway pathway) noexcept
 {
@@ -78,6 +79,7 @@ void print_usage(const char* program)
               << "  --pathway standard-rpa | zeta-rpa | zeta-rpa-experimental\n"
               << "            (default: standard-rpa — manuscript two-component pipeline)\n"
               << "  --gamma   plasma coupling Gamma for Zeta-RPA scalar diagnostic (optional)\n"
+              << "  Zeta pathways write scalar response + plasmon comparison grids\n"
               << "  gamma     plasma coupling parameter Gamma (Eq. plasma-coupling-parameter-Hartree)\n";
 }
 
@@ -478,6 +480,13 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
         return EXIT_FAILURE;
     }
 
+    const std::filesystem::path dispersion_path = output_dir / zeta_dispersion_filename;
+    std::ofstream dispersion_out(dispersion_path);
+    if (!dispersion_out) {
+        std::cerr << "Error: cannot open " << dispersion_path << " for writing.\n";
+        return EXIT_FAILURE;
+    }
+
     out << "# MosaiQ-Lindhard CLI — scalar Zeta-RPA diagnostic (manuscript pipelines untouched)\n";
     out << "# ResponsePathway = " << pathway_label(selected) << '\n';
     write_run_header(out, rs, T_kelvin, plasma);
@@ -485,8 +494,72 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
     out << "# columns: q omega ReChiL ImChiL ReChiRPA ImChiRPA ReChiZeta ImChiZeta Wzeta "
            "ReEps ImEps\n";
 
+    PlasmonPolePolicy<> pole_policy{};
+    pole_policy.bracket.scan_ceiling_factor = 8.0;
+
+    dispersion_out
+        << "# MosaiQ-Lindhard CLI — scalar Zeta-RPA vs RPA plasmon comparison (Phase Z2)\n";
+    dispersion_out << "# ResponsePathway = " << pathway_label(selected) << '\n';
+    write_run_header(dispersion_out, rs, T_kelvin, plasma);
+    dispersion_out << "# Gamma_plasma = " << std::scientific << std::setprecision(12)
+                    << gamma_plasma << '\n';
+    dispersion_out << "# omega columns: electron reduced units [E_F/hbar]\n";
+    dispersion_out << "# ImEps evaluated at each pathway's extracted pole (NaN if no root)\n";
+    dispersion_out << "# bohm_gross_estimate: long-wavelength Bohm-Gross anchor (same units)\n";
+    dispersion_out << "# columns: q omega_p_RPA omega_p_zeta ImEps_RPA ImEps_zeta "
+                      "bohm_gross_estimate\n";
+
+    const double nan = std::numeric_limits<double>::quiet_NaN();
     std::size_t rows = 0;
     std::size_t finite_ok = 0;
+    std::size_t zeta_roots = 0;
+    std::size_t rpa_roots = 0;
+    const std::size_t total_q = grid_node_count(default_q_min, default_q_max, default_q_step);
+
+    std::cerr << "Tracing scalar RPA / Zeta plasmon comparison over " << total_q
+              << " q points...\n";
+
+    for (double q = default_q_min; q <= default_q_max + 0.5 * default_q_step; q += default_q_step) {
+        const double v = coulomb_potentials_rational(q).v_ee;
+        const double bohm_gross = PlasmonPoleExtractor::bohm_gross_frequency(
+            WaveVector<>{q}, plasma.electron.tau, rs);
+
+        PlasmonPoleZetaInputs<> zeta_pole{
+            .q = WaveVector<>{q},
+            .tau = plasma.electron.tau,
+            .gamma = plasma.electron.gamma,
+            .bare_potential = v,
+            .wigner_seitz_radius = rs,
+            .regime = regime,
+            .pathway = selected,
+            .force_pathway = force,
+        };
+        PlasmonPoleZetaInputs<> rpa_pole = zeta_pole;
+        rpa_pole.pathway = ResponsePathway::StandardRPA;
+        rpa_pole.force_pathway = true;
+
+        const auto zeta_state = PlasmonPoleExtractor::extract(zeta_pole, pole_policy);
+        const auto rpa_state = PlasmonPoleExtractor::extract(rpa_pole, pole_policy);
+
+        const double omega_rpa = rpa_state ? rpa_state->omega_raw() : nan;
+        const double omega_zeta = zeta_state ? zeta_state->omega_raw() : nan;
+        const double im_rpa = rpa_state ? rpa_state->landau_damping : nan;
+        const double im_zeta = zeta_state ? zeta_state->landau_damping : nan;
+
+        if (rpa_state) {
+            ++rpa_roots;
+        }
+        if (zeta_state) {
+            ++zeta_roots;
+        }
+
+        dispersion_out << q << ' ' << omega_rpa << ' ' << omega_zeta << ' ' << im_rpa << ' '
+                       << im_zeta << ' ' << bohm_gross << '\n';
+    }
+
+    std::cerr << "  Scalar RPA roots: " << rpa_roots << " / " << total_q << '\n';
+    std::cerr << "  Zeta roots:       " << zeta_roots << " / " << total_q << '\n';
+
     for (double q = default_q_min; q <= 4.0 + 0.5 * default_q_step; q += default_q_step) {
         const double v = coulomb_potentials_rational(q).v_ee;
         for (double omega = default_omega_min; omega <= default_omega_max + 0.5 * default_omega_step;
@@ -530,8 +603,14 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
         return EXIT_FAILURE;
     }
 
+    if (zeta_roots == 0) {
+        std::cerr << "Warning: no scalar Zeta plasmon roots were extracted on the q grid.\n";
+    }
+
     std::cout << "Wrote " << rows << " rows to " << out_path << " (" << finite_ok
               << " fully finite)\n";
+    std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
+              << rpa_roots << " RPA / " << zeta_roots << " Zeta roots)\n";
     std::cout << "  ResponsePathway = " << pathway_label(selected) << '\n';
     std::cout << "  r_s = " << rs << "  T = " << T_kelvin << " K  Gamma = " << gamma_plasma
               << '\n';

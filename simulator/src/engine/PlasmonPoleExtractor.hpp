@@ -14,12 +14,14 @@
 #include "core/Concepts.hpp"
 #include "engine/Lindhard.hpp"
 #include "engine/RPA.hpp"
+#include "engine/ZetaRPA.hpp"
 #include "physics/Constants.hpp"
 
 #include <cmath>
 #include <complex>
 #include <concepts>
 #include <cstddef>
+#include <limits>
 #include <optional>
 
 namespace mosaiq {
@@ -59,7 +61,7 @@ struct PlasmonSpeciesParams {
     T mass{constants::electron_mass_amu};
 };
 
-/// Inputs for deterministic plasmon-pole extraction at fixed q.
+/// Inputs for deterministic plasmon-pole extraction at fixed q (StandardRPA / two-component).
 template<ScalarPhysical T = double>
 struct PlasmonPoleInputs {
     WaveVector<T> q{};
@@ -67,6 +69,22 @@ struct PlasmonPoleInputs {
     PlasmonSpeciesParams<T> ion{};
     BarePotentials<T> potentials{};
     T wigner_seitz_radius{};  ///< r_s [a_0] — Bohm–Gross bracket anchor
+};
+
+/// Opt-in **scalar** dielectric root inputs (Phase Z2 diagnostic; isolated from manuscript
+/// two-component RPA). Supports `StandardRPA` (ε = 1 − v χ^L) and Zeta pathways (ε^ζ).
+template<ScalarPhysical T = double>
+struct PlasmonPoleZetaInputs {
+    WaveVector<T> q{};
+    ReducedTemperature<T> tau{};
+    ReducedChemicalPotential<T> gamma{};  ///< chemical potential γ = μ/E_F
+    T bare_potential{};                   ///< scalar v(q)
+    T wigner_seitz_radius{};
+    CouplingRegime<T> regime{};
+    ResponsePathway pathway{ResponsePathway::ZetaRPA};
+    bool force_pathway{true};
+    BorweinPolicy borwein{};
+    ZetaWeightParameters weight_params{};
 };
 
 template<ScalarPhysical T = double>
@@ -86,7 +104,7 @@ struct PlasmonPolePolicy {
     PlasmonBracketPolicy<T> bracket{};
 };
 
-/// Stateless, deterministic plasmon-pole engine (MosaiQ-Lindhard Phase 6).
+/// Stateless, deterministic plasmon-pole engine (MosaiQ-Lindhard Phase 6 + Phase Z2 scalar Zeta).
 struct PlasmonPoleExtractor final {
     PlasmonPoleExtractor() = delete;
 
@@ -108,16 +126,33 @@ struct PlasmonPoleExtractor final {
         DielectricFunction auto epsilon_real,
         PlasmonBracketPolicy<T> policy = {}) noexcept;
 
-    /// Locate ω_p such that Re[ε(q, ω_p)] = 0; returns Im[ε] as Landau damping.
+    /// Locate ω_p such that Re[ε(q, ω_p)] = 0 for **two-component StandardRPA**.
+    /// Bit-stable manuscript pathway — do not alter semantics.
     template<ScalarPhysical T>
     [[nodiscard]] static std::optional<PlasmonState<T>> extract(
         PlasmonPoleInputs<T> inputs,
+        PlasmonPolePolicy<T> policy = {}) noexcept;
+
+    /// Locate ω_p such that Re[ε_scalar(q, ω_p)] = 0 (StandardRPA or Zeta; opt-in diagnostic).
+    template<ScalarPhysical T>
+    [[nodiscard]] static std::optional<PlasmonState<T>> extract(
+        PlasmonPoleZetaInputs<T> inputs,
         PlasmonPolePolicy<T> policy = {}) noexcept;
 
     /// Evaluate ε(q, ω) for the two-component RPA stack at electron frequency ω_e.
     template<ScalarPhysical T>
     [[nodiscard]] static std::complex<T> evaluate_epsilon(PlasmonPoleInputs<T> inputs,
                                                           Frequency<T> omega_e) noexcept;
+
+    /// Evaluate scalar dielectric: StandardRPA → 1 − v χ^L; Zeta → ε^ζ via locked W_ζ.
+    template<ScalarPhysical T>
+    [[nodiscard]] static std::complex<T> evaluate_epsilon_scalar(PlasmonPoleZetaInputs<T> inputs,
+                                                                 Frequency<T> omega) noexcept;
+
+    /// Evaluate scalar ε^ζ(q, ω) via locked W_ζ Lindhard dressing (Zeta pathways only).
+    template<ScalarPhysical T>
+    [[nodiscard]] static std::complex<T> evaluate_epsilon_zeta(PlasmonPoleZetaInputs<T> inputs,
+                                                               Frequency<T> omega) noexcept;
 };
 
 // --- template definitions (header-only hot path) ---
@@ -215,6 +250,59 @@ std::complex<T> PlasmonPoleExtractor::evaluate_epsilon(PlasmonPoleInputs<T> inpu
 }
 
 template<ScalarPhysical T>
+std::complex<T> PlasmonPoleExtractor::evaluate_epsilon_scalar(PlasmonPoleZetaInputs<T> inputs,
+                                                              Frequency<T> omega) noexcept
+{
+    if (inputs.pathway == ResponsePathway::StandardRPA) {
+        const LindhardResult<T> chi_l =
+            evaluate_lindhard(inputs.q, omega, inputs.tau, inputs.gamma);
+        const std::complex<T> one{T{1}, T{0}};
+        return one - inputs.bare_potential * as_complex(chi_l);
+    }
+    return evaluate_epsilon_zeta(inputs, omega);
+}
+
+template<ScalarPhysical T>
+std::complex<T> PlasmonPoleExtractor::evaluate_epsilon_zeta(PlasmonPoleZetaInputs<T> inputs,
+                                                            Frequency<T> omega) noexcept
+{
+    if (inputs.pathway != ResponsePathway::ZetaRPA &&
+        inputs.pathway != ResponsePathway::ZetaRPA_Experimental) {
+        return {std::numeric_limits<T>::quiet_NaN(), std::numeric_limits<T>::quiet_NaN()};
+    }
+
+    const LindhardResult<T> chi_l =
+        evaluate_lindhard(inputs.q, omega, inputs.tau, inputs.gamma);
+
+    ZetaRpaInputs<double> zeta_in{
+        .q = WaveVector<double>{static_cast<double>(inputs.q.raw())},
+        .omega = Frequency<double>{static_cast<double>(omega.raw())},
+        .chi_lindhard =
+            LindhardResult<double>{
+                static_cast<double>(chi_l.real()),
+                static_cast<double>(chi_l.imag()),
+            },
+        .bare_potential = static_cast<double>(inputs.bare_potential),
+        .regime =
+            CouplingRegime<double>{
+                static_cast<double>(inputs.regime.rs),
+                static_cast<double>(inputs.regime.gamma_plasma),
+                static_cast<double>(inputs.regime.tau),
+            },
+        .borwein = inputs.borwein,
+        .pathway = inputs.pathway,
+        .force_pathway = inputs.force_pathway,
+        .weight_params = inputs.weight_params,
+    };
+
+    const auto zeta = evaluate_zeta_rpa(zeta_in);
+    if (!zeta) {
+        return {std::numeric_limits<T>::quiet_NaN(), std::numeric_limits<T>::quiet_NaN()};
+    }
+    return {static_cast<T>(zeta->epsilon.real()), static_cast<T>(zeta->epsilon.imag())};
+}
+
+template<ScalarPhysical T>
 std::optional<PlasmonState<T>> PlasmonPoleExtractor::extract(
     PlasmonPoleInputs<T> inputs,
     PlasmonPolePolicy<T> policy) noexcept
@@ -252,6 +340,95 @@ std::optional<PlasmonState<T>> PlasmonPoleExtractor::extract(
     return PlasmonState<T>{
         inputs.q,
         Frequency<T>{*omega_root},
+        epsilon_at_root.imag(),
+    };
+}
+
+template<ScalarPhysical T>
+std::optional<PlasmonState<T>> PlasmonPoleExtractor::extract(
+    PlasmonPoleZetaInputs<T> inputs,
+    PlasmonPolePolicy<T> policy) noexcept
+{
+    const auto epsilon_real = [inputs](double omega) noexcept -> double {
+        const auto epsilon = PlasmonPoleExtractor::evaluate_epsilon_scalar(
+            inputs, Frequency<T>{static_cast<T>(omega)});
+        return epsilon.real();
+    };
+
+    const auto bracket = compute_initial_bracket(
+        inputs.q,
+        inputs.tau,
+        inputs.wigner_seitz_radius,
+        epsilon_real,
+        policy.bracket);
+
+    if (!bracket) {
+        return std::nullopt;
+    }
+
+    // Scale the bracketed objective so Brent's absolute tolerance / IQI path remains
+    // well-conditioned when |Re ε| ≫ 1 (strong-coupling / amplified-v scalar diagnostics).
+    // Two-component StandardRPA extract is intentionally untouched.
+    const T f_low = static_cast<T>(epsilon_real(static_cast<double>(bracket->low.raw())));
+    const T f_high = static_cast<T>(epsilon_real(static_cast<double>(bracket->high.raw())));
+    const T scale = std::max(std::abs(f_low), std::abs(f_high));
+    if (!(scale > T{0}) || !std::isfinite(scale)) {
+        return std::nullopt;
+    }
+
+    const auto epsilon_scaled = [epsilon_real, scale](double omega) noexcept -> double {
+        return epsilon_real(omega) / static_cast<double>(scale);
+    };
+
+    const auto omega_root = brent_root<T>(
+        epsilon_scaled,
+        bracket->low.raw(),
+        bracket->high.raw(),
+        policy.root_finder);
+
+    if (!omega_root) {
+        return std::nullopt;
+    }
+
+    // Unscaled bisection polish: steep strong-coupling crossings can leave
+    // |Re ε| ≳ 10^{-8} even when the scaled Brent abscissa has converged.
+    T lo = bracket->low.raw();
+    T hi = bracket->high.raw();
+    T f_lo = f_low;
+    T f_hi = f_high;
+    T omega = *omega_root;
+    for (std::size_t polish = 0; polish < 64; ++polish) {
+        const T re = static_cast<T>(epsilon_real(static_cast<double>(omega)));
+        if (std::abs(re) <= T{1.0e-8}) {
+            break;
+        }
+        const T mid = (lo + hi) / T{2};
+        const T f_mid = static_cast<T>(epsilon_real(static_cast<double>(mid)));
+        if (f_lo * f_mid <= T{0}) {
+            hi = mid;
+            f_hi = f_mid;
+        } else {
+            lo = mid;
+            f_lo = f_mid;
+        }
+        omega = (lo + hi) / T{2};
+        if (!(std::abs(hi - lo) > T{0})) {
+            break;
+        }
+    }
+
+    const std::complex<T> epsilon_at_root =
+        evaluate_epsilon_scalar(inputs, Frequency<T>{omega});
+    if (!std::isfinite(epsilon_at_root.real()) || !std::isfinite(epsilon_at_root.imag())) {
+        return std::nullopt;
+    }
+    if (std::abs(epsilon_at_root.real()) > T{1.0e-8}) {
+        return std::nullopt;
+    }
+
+    return PlasmonState<T>{
+        inputs.q,
+        Frequency<T>{omega},
         epsilon_at_root.imag(),
     };
 }

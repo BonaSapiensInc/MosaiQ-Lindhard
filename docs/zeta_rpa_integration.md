@@ -1,6 +1,6 @@
 # MosaiQ-Lindhard: Zeta-RPA Integration Blueprint
 
-**Status:** Architecture Blueprint — Phase Z1 implemented & scalar-verified  
+**Status:** Architecture Blueprint — Phase Z1 complete; Phase Z2 dielectric roots implemented (plot deferred)  
 **Protocol:** Pontifex — *Arx Axiomatis* under Imperator  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Parent Blueprint:** `docs/simulator_architecture.md`  
@@ -9,6 +9,8 @@
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
 
 **Implementation status (Phase Z1).** Library + CTest + CLI `--pathway` + scalar verifier are live. Production `ZetaRPA` uses the **locked** $W_\zeta(\Gamma,r_s,\tau)$ (Laurent-regularized $\zeta(1+f)/\zeta(1)$). `ZetaRPA_Experimental` keeps a provisional A/B dress. Manuscript two-component pipelines remain on `StandardRPA`.
+
+**Implementation status (Phase Z2 — dielectric roots).** `PlasmonPoleExtractor` gains an opt-in scalar overload `extract(PlasmonPoleZetaInputs)` / `evaluate_epsilon_zeta` / `evaluate_epsilon_scalar`. The two-component `extract(PlasmonPoleInputs)` path is unchanged (manuscript bit-identical). Zeta CLI modes additionally write `output/output_zeta_rpa_dispersion.dat` with columns $q$, $\omega_p^{\mathrm{RPA}}$, $\omega_p^\zeta$, $\Im\varepsilon^{\mathrm{RPA}}$, $\Im\varepsilon^\zeta$, Bohm–Gross. Full Python “Figure X: Zeta-RPA Rescue” plot is deferred pending Imperator approval of this C++ architecture.
 
 ### CLI usage (Phase Z1 complete)
 
@@ -20,13 +22,18 @@
 # Scalar Zeta-RPA diagnostic (does NOT overwrite manuscript structure-factor .dat)
 ./simulator/build/mosaiq_simulator --pathway zeta-rpa --gamma 50 1.0 1000
 ./simulator/build/mosaiq_simulator --pathway zeta-rpa-experimental --gamma 200 1.0 1000
+# → output/output_zeta_rpa_scalar.dat
+# → output/output_zeta_rpa_dispersion.dat  (Phase Z2: ω_p^RPA vs ω_p^ζ comparison)
+# Plot rescue figure:
+#   python3 scripts/plot_zeta_rpa_dispersion.py
+#   → output/zeta_rpa_dispersion.pdf
 
 # Static S(q) Gamma sweep (always StandardRPA)
 ./simulator/build/mosaiq_simulator --gamma-sweep 1 10,50,100,150
 ```
 
 Stderr prints a pathway header, e.g. `ResponsePathway: ZetaRPA (strong-coupling bypass enabled; scalar diagnostic)`.
-Zeta pathways write `output/output_zeta_rpa_scalar.dat` only.
+Zeta pathways write `output/output_zeta_rpa_scalar.dat` and `output/output_zeta_rpa_dispersion.dat`.
 
 Strong-coupling exploration: `verify_zeta_rpa_scalar` → `output/zeta_rpa_strong_coupling_{sweep,rescue}.dat`;
 plot with `scripts/plot_zeta_rpa_strong_coupling.py`.
@@ -364,7 +371,7 @@ flowchart LR
 | `evaluate_rpa_susceptibility` | **Untouched** production API; used as comparison oracle in tests. |
 | `evaluate_rpa_response` (`StructureFactor`) | Gains an optional pathway argument or a parallel `evaluate_zeta_rpa_response` for scalar OCP-like runs. |
 | `dynamic_structure_factor` | Remains FDT wrapper $S \propto -\Im\chi\,(1+n_B)$; accepts $\chi$ from either pathway. |
-| `PlasmonPoleExtractor` | Phase Z1: no change. Phase Z2: objective `Re ε^ζ(q,ω)=0` via the same Brent contract. |
+| `PlasmonPoleExtractor` | Phase Z2: scalar overload `extract(PlasmonPoleZetaInputs)` with objective `Re ε^ζ(q,ω)=0` (and scalar `StandardRPA` comparison); two-component path unchanged. |
 | `main.cpp` | `--pathway standard-rpa|zeta-rpa|zeta-rpa-experimental` (default StandardRPA). Zeta pathways run **scalar diagnostic only** and write `output_zeta_rpa_scalar.dat`; manuscript two-component exports untouched. |
 
 ### 6.3 CMake
@@ -444,10 +451,14 @@ sequenceDiagram
 
 **Deliverables**
 
-- Feed $\varepsilon^\zeta$ into `PlasmonPoleExtractor` under an explicit pathway switch
+- Feed $\varepsilon^\zeta$ into `PlasmonPoleExtractor` under an explicit pathway switch (`PlasmonPoleZetaInputs`)
 - Landau damping from $\Im\varepsilon^\zeta$ at the Brent root
+- CTest `test_zeta_rpa_dielectric` (Γ ≥ 100 root + amplified-$v$ rescue)
+- CLI comparison grid `output_zeta_rpa_dispersion.dat`
 
-**Exit gate:** $|{\rm Re}\,\varepsilon^\zeta(q,\omega_p)|\le 10^{-8}$ at documented reference states.
+**Exit gate:** $|{\rm Re}\,\varepsilon^\zeta(q,\omega_p)|\le 10^{-8}$ at documented reference states; two-component `StandardRPA` extract API unchanged.
+
+**Plotting:** `scripts/plot_zeta_rpa_dispersion.py` — two-panel Bohm–Gross / scalar RPA / Zeta-RPA rescue figure from `output_zeta_rpa_dispersion.dat` (candidate “Figure X”).
 
 ### Phase Z3 — Multi-component promotion
 
@@ -455,8 +466,13 @@ See Section 9.
 
 ### Phase Z4 — Manuscript coupling
 
-- Stealth / formal RPA–Zeta mapping section in `two-fermi.tex` (or successor)
-- Figure regeneration scripts under `scripts/` with deterministic manifests
+**Deliverables**
+
+- New section in `manuscript/two-fermi.tex` after finite-$T$ Lindhard: *Analytic continuation of the RPA kernel in the strong-coupling regime* (`sec:zeta-rpa`)
+- Appendix C coefficients for $W_\zeta$ (`sec:zeta-weight-coefficients`)
+- Figure 10: `zeta_rpa_dispersion.pdf` registered in `MANUSCRIPT_FIGURE_NAMES` and `package_aps_submission.sh`
+
+**Exit gate:** Figure present under `manuscript/figures/`; APS zip includes the stem.
 
 ---
 

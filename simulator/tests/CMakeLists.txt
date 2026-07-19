@@ -66,6 +66,14 @@ target_compile_options(test_plasmon_pole_extractor PRIVATE -UNDEBUG)
 
 add_test(NAME PlasmonPoleExtractorTest COMMAND test_plasmon_pole_extractor)
 
+add_executable(test_zeta_rpa_dielectric test_zeta_rpa_dielectric.cpp)
+
+target_link_libraries(test_zeta_rpa_dielectric PRIVATE mosaiq::mosaiq)
+
+target_compile_options(test_zeta_rpa_dielectric PRIVATE -UNDEBUG)
+
+add_test(NAME ZetaRPADielectricTest COMMAND test_zeta_rpa_dielectric)
+
 add_executable(test_sum_rules test_sum_rules.cpp)
 
 target_link_libraries(test_sum_rules PRIVATE mosaiq::mosaiq)

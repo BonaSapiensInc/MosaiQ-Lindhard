@@ -35,6 +35,7 @@ MANUSCRIPT_FIGURE_NAMES: tuple[str, ...] = (
     "S_ii_contour",
     "S_ei_contour",
     "plasmon_dispersion",
+    "zeta_rpa_dispersion",
     "t0_analytic_re_contour",
     "t0_analytic_im_contour",
     "t0_limit_validation",

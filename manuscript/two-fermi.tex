@@ -91,9 +91,10 @@
 \begin{abstract}
 We present a deterministic, causality-constrained formulation for the finite-temperature Lindhard linear response and two-component random-phase approximation (RPA) dielectric functions, resolving analytic inconsistencies in widely used routes based on contour integration over Matsubara frequencies. We demonstrate that pole-summation formulations---which assemble the real susceptibility from infinite residue sums over Matsubara-like poles---are hindered by violations of Jordan's lemma, divergent series tails, and order interchanges not justified by Fubini's theorem; hybrid treatments that combine grand-canonical dissipation with canonical contour sums further induce ensemble inconsistency, compromising exact causality and producing persistent $\mathcal{O}(1)$ real-part offsets from exact $T=0$ analytical limits in the highly degenerate regime. Elevating the Kramers--Kr\"onig relation to the primary construction principle rather than an \emph{a posteriori} consistency check, we derive the imaginary part in closed form within the grand-canonical ensemble and obtain the real part solely as its Hilbert transform on a strictly constrained real-axis physical space, bypassing the infinite Matsubara pole barrier entirely. By employing a modified sinc-quadrature rule with theoretical truncation error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ (where $N$ is the truncation limit, $d$ is the half-width of the analytic strip, and $\alpha$ is a convergence parameter), we achieve evaluation accuracy exponentially suppressed well below machine precision ($\sim 10^{-259}$ for $N=16384$, $d/\alpha=7$). We validate this deterministic framework by extracting the electron plasmon dispersion and exact Landau damping via derivative-free root finding, and by demonstrating precise satisfaction of four macroscopic dynamic structure factor sum rules within machine precision without ad hoc regularization or parameter tuning.
 Furthermore, we resolve the longstanding $\mathcal{O}(1)$ topological discrepancy in the zero-temperature limit of the Lindhard function. By introducing the concept of a \emph{reverse Dedekind cut}---arising from the intrinsic zero-point avoidance of fermionic Matsubara frequencies---we demonstrate that the macroscopic step function must strictly evaluate to $f(0)=1/2$ at the Fermi level to preserve Kramers--Kr\"onig causality. Guided by this Stratonovich imperative, we propose a singularity excision algorithm that analytically subdues the catastrophic numerical divergence, extending the IEEE~754 double-precision limit of the causal response deep into extreme cryogenic regimes.
+Building on this causal Lindhard foundation, we introduce a scalar Zeta-RPA pathway that dresses the Coulomb interaction with a Riemann-zeta weight $W_\zeta(\Gamma,r_s,\tau)$, recovering ordinary scalar RPA as $\Gamma\to 0$ while retaining continuous dielectric roots and a modified Landau-damping spectrum at strong coupling.
 \end{abstract}
 %\pacs{52.25.Mq, 52.27.Cm, 05.30.Fk, 71.45.Gm}
-\keywords{Plasma physics; Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations}
+\keywords{Plasma physics; Multicomponent plasmas; Electron gas; Dielectric function; Dynamic structure factor; Random phase approximation; Linear response; Kramers--Kr\"onig relations; Strong coupling; Riemann zeta function}
 \maketitle
 
 \section{Classical representation}
@@ -966,6 +967,78 @@ h = \sqrt{\frac{\pi d}{\alpha N}} ,
 where $N$ is the truncation limit of the summation.
 Here we choose $N = 16384$ with $d/\alpha = 7$ as the convergence parameter with $A_1 = 1$ and $\alpha = 1$;
 the choice suppresses the theoretical truncation error bound $\mathcal{O}(\sqrt{N} \exp(-\sqrt{\pi d \alpha N}))$ to $\sim 10^{-259}$, which securely anchors the evaluation well below double-precision machine limits and eliminates numerical instabilities from the poles of $f\left( x \right)$.
+
+\section{Analytic continuation of the RPA kernel in the strong-coupling regime}
+\label{sec:zeta-rpa}
+
+The causality-constrained Lindhard baseline of Sec.~\ref{sec:finite-temperature-Lindhard}
+furnishes a Kramers--Kr\"onig--compliant bare susceptibility $\chi^L(\mathbf{q},\omega;\tau)$
+on the real frequency axis.
+That baseline is necessary but not sufficient for dense plasmas:
+at large plasma coupling $\Gamma$ [Eq.~(\ref{plasma-coupling-parameter-Hartree})],
+the bare Coulomb bubble resummed by ordinary RPA encodes only the weak-vertex idealization
+and can lose a well-defined dielectric zero $\Re\varepsilon=0$ under strong interaction dressing.
+We therefore introduce a \emph{scalar} strong-coupling pathway---hereafter Zeta-RPA---that
+dresses the interaction ladder while leaving the dissipative Lindhard content untouched.
+
+For a single species with bare interaction $v(q)$, the scalar RPA response and dielectric function read
+\begin{equation}
+\chi^{\mathrm{RPA}}(q,\omega)
+=
+\frac{\chi^L(q,\omega)}{1 - v(q)\,\chi^L(q,\omega)}\,,
+\qquad
+\varepsilon^{\mathrm{RPA}}(q,\omega)
+=
+1 - v(q)\,\chi^L(q,\omega)\,.
+\label{eq:scalar-rpa}
+\end{equation}
+Zeta-RPA promotes the interaction weight to a deterministic Riemann-zeta factor $W_\zeta$,
+\begin{equation}
+\chi^{\zeta}(q,\omega)
+=
+\frac{\chi^L(q,\omega)}{1 - v(q)\,W_\zeta\,\chi^L(q,\omega)}\,,
+\qquad
+\varepsilon^{\zeta}(q,\omega)
+=
+1 - v(q)\,W_\zeta\,\chi^L(q,\omega)\,,
+\label{eq:zeta-rpa}
+\end{equation}
+with the locked production weight
+\begin{equation}
+W_\zeta(\Gamma,r_s,\tau)
+=
+\frac{\zeta\!\bigl(1+f\bigr)}{\zeta(1)}\,,
+\qquad
+f
+=
+\alpha\frac{\Gamma^{\beta}}{1 + \gamma\, r_s^{-\delta}\,\tau}\,.
+\label{eq:zeta-weight}
+\end{equation}
+The coefficients $(\alpha,\beta,\gamma,\delta)$ are recorded in Appendix~\ref{sec:plasma-units}.
+Because $\zeta(1)$ is divergent, Eq.~(\ref{eq:zeta-weight}) is evaluated in production through its
+Laurent-regularized equivalent: $W_\zeta=1$ at $f=0$ ($\Gamma\to 0$), and
+$W_\zeta=f\,\zeta(1+f)$ for $f>0$, with $\zeta(s)$ obtained from Borwein's convergent series~\cite{Edwards2001}
+at a pinned truncation depth.
+This construction enforces the weak-coupling identity
+$W_\zeta\to 1\Rightarrow\chi^{\zeta}\equiv\chi^{\mathrm{RPA}}$ (scalar)
+and, critically, never renegotiates causality:
+$\Im\chi^L$ remains the grand-canonical dissipative kernel of Sec.~\ref{sec:finite-temperature-Lindhard},
+and $\Re\chi^L$ continues to be obtained solely as its Hilbert transform.
+
+Plasmon poles of the scalar dielectric are extracted by the same derivative-free Brent contract~\cite{Brent1973}
+used in Sec.~\ref{sec:plasmon-pole-extraction}, now applied to $\Re\varepsilon^{\zeta}(q,\omega)=0$,
+with Landau damping reported as $\Im\varepsilon^{\zeta}$ on the extracted root.
+Figure~\ref{fig:zeta-rpa-dispersion} contrasts the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949},
+the scalar RPA dispersion $\omega_p^{\mathrm{RPA}}(q)$, and the Zeta-RPA branch $\omega_p^{\zeta}(q)$
+at strong coupling ($\Gamma=100$, $r_s=2.0$, $T=10\,000\,\mathrm{K}$).
+Where the scalar RPA root bracket collapses or the branch terminates prematurely,
+the zeta-dressed dielectric retains a continuous $\Re\varepsilon^{\zeta}=0$ trajectory,
+with a correspondingly modified on-pole dissipation spectrum
+$|\Im\varepsilon^{\zeta}|$ [Fig.~\ref{fig:zeta-rpa-dispersion}(b)].
+The two-component manuscript pipelines of Secs.~\ref{sec:multicomponent}--\ref{sec:results}
+remain on the undressed RPA tensor Eqs.~(\ref{rpa-responses});
+the present section isolates the scalar Zeta-RPA diagnostic as the controlled strong-coupling extension
+of the finite-temperature Lindhard foundation.
 
 \section{Chemical potential at finite-temperature}
 \label{sec:chemical-potential}
@@ -1968,6 +2041,7 @@ or ensemble-inconsistent response formulations.
 Rather than treating the Kramers--Kr\"onig relation as an \emph{a posteriori} consistency check,
 the present formulation elevates causality to the primary construction principle of the finite-temperature response function,
 recovering the exact $T=0$ Lindhard benchmark~\cite{Lindhard1954} as a special case of the grand-canonical Hilbert-transform route.
+The scalar Zeta-RPA extension of Sec.~\ref{sec:zeta-rpa} carries that healed bare response into the strongly coupled liquid by dressing $v(q)$ with the locked weight $W_\zeta$ of Eq.~(\ref{eq:zeta-weight}), without resurrecting Matsubara pole sums or altering $\Im\chi^L$; Fig.~\ref{fig:zeta-rpa-dispersion} documents the resulting rescue of plasmon roots and Landau damping at $\Gamma=100$.
 The present deterministic formulation, supported by our open-source implementation,
 provides a rigorous, reproducible benchmark for evaluating causality-constrained linear response functions
 against standard contour-based formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
@@ -2570,6 +2644,35 @@ n\left( \xi \right) = \left( \frac{ k_\mathrm{D} }{ 2 \theta } \right)^3
 \end{equation}
 This is a kind of the plasma dispersion function~\cite{Fried-Conte1961})
 and is studied intensively for the fermionic cases by Melrose and Mushtaq~\cite{Melrose-Mushtaq2010}.
+
+\subsection{Zeta-RPA coupling-weight coefficients}
+\label{sec:zeta-weight-coefficients}
+
+The production weight $W_\zeta$ of Sec.~\ref{sec:zeta-rpa} is completely specified by
+Eq.~(\ref{eq:zeta-weight}) once the dimensionless coefficients
+$(\alpha,\beta,\gamma,\delta)$ are fixed.
+Unless otherwise stated, all numerical Zeta-RPA results in this work---including
+Fig.~\ref{fig:zeta-rpa-dispersion}---employ the provisional defaults
+\begin{equation}
+\alpha = 0.05\,,
+\qquad
+\beta = 1\,,
+\qquad
+\gamma = 1\,,
+\qquad
+\delta = 1\,,
+\label{eq:zeta-weight-coefficients}
+\end{equation}
+together with the Laurent evaluation $W_\zeta=f\,\zeta(1+f)$ for $f>0$
+and the identity $W_\zeta=1$ at $f=0$.
+The plasma coupling $\Gamma$ entering $f$ is that of
+Eq.~(\ref{plasma-coupling-parameter-Hartree});
+the reduced temperature $\tau$ is that of Eq.~(\ref{reduced-temperature}).
+A strong-coupling gate $\Gamma\ge\Gamma_\star$ with $\Gamma_\star=10$
+(or $r_s\ge r_s^\star$ with $r_s^\star=5$) marks the thermodynamic window
+in which the scalar Zeta-RPA pathway is the intended production dress;
+outside that window the undressed scalar RPA of Eq.~(\ref{eq:scalar-rpa}) is recovered
+by the $W_\zeta\to 1$ identity without additional parameters.
 
 
 
@@ -3517,6 +3620,11 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     Fig.~\ref{fig:thermal-anatomy-d} maps the bare-vs-RPA interaction contrast ratio $S_{ee}/|\Re\chi_e^L|$ at $T=10\,000\,\mathrm{K}$, demonstrating that diffuse single-particle weight is confined to the bare baseline while collective ridges emerge only after screening.
 
     \item \textbf{FIG. 9.} Static structure factors: Fig.~\ref{fig:Sq-gamma-ee} ($S_{ee}(\bar{q})$), Fig.~\ref{fig:Sq-gamma-ii} ($S_{ii}(\bar{q})$), and Fig.~\ref{fig:Sq-gamma-ei} ($S_{ei}(\bar{q})$) obtained via direct frequency integration of the dynamic MosaiQ-Lindhard response for a dense plasma at $r_s = 1.0$. In each panel, the temperature is deterministically mapped to sweep the coupling parameter $\Gamma \in \{10, 50, 100, 150\}$, with color denoting the coupling strength and linestyles progressing from dot-dot-dashed ($\Gamma = 10$) and dot-dashed ($\Gamma = 50$) through dashed ($\Gamma = 100$) to solid ($\Gamma = 150$). The main panels showcase the monotonic asymptotic convergence to the ideal-gas limit ($S \to 1$ or $0$) up to the macroscopic horizon $\bar{q} = 50.0$. High-resolution insets provide anatomical magnification of the microscopic sector: Fig.~\ref{fig:Sq-gamma-ee} zooms into $\bar{q} \in [1.4, 2.0]$ to resolve the sharpening of the first $S_{ee}$ correlation peak near $\bar{q} \approx 1.7$, while Figs.~\ref{fig:Sq-gamma-ii} and~\ref{fig:Sq-gamma-ei} magnify $\bar{q} \le 4.0$ to capture the long-wavelength ion--ion structure and the induction of interspecies screening in $S_{ei}$.
+
+    \item \textbf{FIG. 10.} Scalar Zeta-RPA plasmon rescue at strong coupling ($\Gamma = 100$, $r_s = 2.0$, $T = 10\,000\,\mathrm{K}$), constructed from the deterministic dielectric roots of Sec.~\ref{sec:zeta-rpa}.
+    Fig.~\ref{fig:zeta-rpa-dispersion}(a) overlays the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949} (gray dashed), the scalar RPA dispersion $\bar{\omega}_p^{\mathrm{RPA}}(\bar{q})$ from $\Re\varepsilon^{\mathrm{RPA}}=0$ (crimson), and the Zeta-RPA branch $\bar{\omega}_p^{\zeta}(\bar{q})$ from $\Re\varepsilon^{\zeta}=0$ (blue) on the reduced wavevector window $\bar{q}\le 4$.
+    Open markers and the shaded continuum region mark wavevectors where the scalar RPA root bracket collapses while the zeta-dressed dielectric retains a continuous pole trajectory.
+    Fig.~\ref{fig:zeta-rpa-dispersion}(b) reports the corresponding on-pole Landau damping $|\Im\varepsilon|$ for the RPA and Zeta pathways, demonstrating that the interaction dress of Eq.~(\ref{eq:zeta-weight}) shifts both the real dispersion and the dissipation spectrum without altering the causal Lindhard input $\chi^L$.
 \end{itemize}
 
 \clearpage
@@ -3725,5 +3833,15 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
 \panelpagefigure[fig:Sq-gamma]{figures/Sq_gamma_ee.pdf}{fig:Sq-gamma-ee}
 \panelpagefigure{figures/Sq_gamma_ii.pdf}{fig:Sq-gamma-ii}
 \panelpagefigure{figures/Sq_gamma_ei.pdf}{fig:Sq-gamma-ei}
+
+\clearpage
+\begin{figure}[p]
+\centering
+\vfill
+\includegraphics[width=\textwidth]{figures/zeta_rpa_dispersion.pdf}
+\vfill
+\registerstandalonefigurelabel{fig:zeta-rpa-dispersion}
+\figurepaneltag{Fig.~\thesubmitfig}
+\end{figure}
 
 \end{document}

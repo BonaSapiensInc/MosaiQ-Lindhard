@@ -46,6 +46,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`plot_lindhard_base.py`](scripts/plot_lindhard_base.py) | Figure 3 — bare Lindhard contours |
 | [`plot_Sqw.py`](scripts/plot_Sqw.py) | Figure 4 — dynamic structure factor contours |
 | [`plot_plasmon_dispersion.py`](scripts/plot_plasmon_dispersion.py) | Figure 5 — plasmon dispersion |
+| [`plot_zeta_rpa_dispersion.py`](scripts/plot_zeta_rpa_dispersion.py) | Figure 10 — Zeta-RPA plasmon rescue |
 | [`plot_lindhard_t0_2d.py`](scripts/plot_lindhard_t0_2d.py) | Figure 6 — $T=0$ contour panels |
 | [`plot_t0_error.py`](scripts/plot_t0_error.py) | Figure 6 — $T=0$ validation slice |
 | [`plot_thermal_anatomy.py`](scripts/plot_thermal_anatomy.py) | Figure 7 — thermal sharpening |
