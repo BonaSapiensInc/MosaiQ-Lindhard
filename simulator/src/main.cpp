@@ -13,16 +13,21 @@
 #include "engine/PlasmonPoleExtractor.hpp"
 #include "engine/RPA.hpp"
 #include "engine/StructureFactor.hpp"
+#include "engine/ZetaRPA.hpp"
+#include "physics/Constants.hpp"
 
 #include <cmath>
+#include <complex>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace {
 
@@ -33,16 +38,59 @@ inline constexpr const char* structure_factor_filename = "output_structure_facto
 inline constexpr const char* lindhard_base_filename = "output_lindhard_base.dat";
 inline constexpr const char* dispersion_filename = "output_plasmon_dispersion.dat";
 inline constexpr const char* static_sq_gamma_filename = "output_Sq_gamma.dat";
+inline constexpr const char* zeta_scalar_filename = "output_zeta_rpa_scalar.dat";
+
+[[nodiscard]] const char* pathway_label(ResponsePathway pathway) noexcept
+{
+    switch (pathway) {
+    case ResponsePathway::StandardRPA:
+        return "StandardRPA";
+    case ResponsePathway::ZetaRPA:
+        return "ZetaRPA";
+    case ResponsePathway::ZetaRPA_Experimental:
+        return "ZetaRPA_Experimental";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] std::optional<ResponsePathway> parse_pathway_token(std::string_view token) noexcept
+{
+    if (token == "standard-rpa" || token == "rpa") {
+        return ResponsePathway::StandardRPA;
+    }
+    if (token == "zeta-rpa") {
+        return ResponsePathway::ZetaRPA;
+    }
+    if (token == "zeta-rpa-experimental") {
+        return ResponsePathway::ZetaRPA_Experimental;
+    }
+    return std::nullopt;
+}
 
 void print_usage(const char* program)
 {
     std::cerr << "Usage:\n"
-              << "  " << program << " <r_s> <T_kelvin>\n"
+              << "  " << program << " [--pathway NAME] [--gamma GAMMA] <r_s> <T_kelvin>\n"
               << "  " << program << " --gamma-sweep <r_s> <gamma_1>,<gamma_2>,...\n"
               << "\n"
               << "  r_s       Wigner-Seitz radius in Bohr radii (e.g. 1.0)\n"
               << "  T_kelvin  temperature in kelvin (e.g. 10000.0)\n"
+              << "  --pathway standard-rpa | zeta-rpa | zeta-rpa-experimental\n"
+              << "            (default: standard-rpa — manuscript two-component pipeline)\n"
+              << "  --gamma   plasma coupling Gamma for Zeta-RPA scalar diagnostic (optional)\n"
               << "  gamma     plasma coupling parameter Gamma (Eq. plasma-coupling-parameter-Hartree)\n";
+}
+
+void print_pathway_header(ResponsePathway pathway, bool strong_coupling) noexcept
+{
+    std::cerr << "ResponsePathway: " << pathway_label(pathway);
+    if (pathway == ResponsePathway::StandardRPA) {
+        std::cerr << " (manuscript default; two-component RPA export)\n";
+    } else if (strong_coupling) {
+        std::cerr << " (strong-coupling bypass enabled; scalar diagnostic)\n";
+    } else {
+        std::cerr << " (scalar diagnostic; force_pathway for weak-coupling probe)\n";
+    }
 }
 
 [[nodiscard]] std::size_t grid_node_count(double min_val, double max_val, double step) noexcept
@@ -384,49 +432,224 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
     return EXIT_SUCCESS;
 }
 
+/// Scalar Zeta-RPA diagnostic export (does not rewrite manuscript two-component .dat files).
+[[nodiscard]] int run_zeta_scalar_mode(double rs,
+                                       double T_kelvin,
+                                       double gamma_plasma,
+                                       ResponsePathway requested)
+{
+    PlasmaContext plasma{};
+    if (!build_plasma_context(rs, T_kelvin, plasma)) {
+        std::cerr << "Error: failed to initialize plasma state.\n";
+        return EXIT_FAILURE;
+    }
+
+    const CouplingRegime<> regime{
+        .rs = rs,
+        .gamma_plasma = gamma_plasma,
+        .tau = plasma.electron.tau.raw(),
+    };
+    const bool strong = is_strong_coupling(regime);
+    const bool force = !strong;
+    const ResponsePathway selected =
+        select_response_pathway(regime, requested, force, /*auto_bypass=*/false);
+
+    print_pathway_header(selected, strong);
+    if (selected == ResponsePathway::StandardRPA) {
+        std::cerr << "Error: pathway selection resolved to StandardRPA; refusing silent fallback.\n"
+                  << "  Hint: raise --gamma above Gamma★=" << constants::zeta_rpa_gamma_star
+                  << " or use a Zeta pathway with force in the scalar verifier.\n";
+        return EXIT_FAILURE;
+    }
+
+    const std::filesystem::path output_dir{output_directory};
+    std::error_code ec;
+    std::filesystem::create_directories(output_dir, ec);
+    if (ec) {
+        std::cerr << "Error: cannot create output directory '" << output_dir << "': "
+                  << ec.message() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    const std::filesystem::path out_path = output_dir / zeta_scalar_filename;
+    std::ofstream out(out_path);
+    if (!out) {
+        std::cerr << "Error: cannot open " << out_path << " for writing.\n";
+        return EXIT_FAILURE;
+    }
+
+    out << "# MosaiQ-Lindhard CLI — scalar Zeta-RPA diagnostic (manuscript pipelines untouched)\n";
+    out << "# ResponsePathway = " << pathway_label(selected) << '\n';
+    write_run_header(out, rs, T_kelvin, plasma);
+    out << "# Gamma_plasma = " << std::scientific << std::setprecision(12) << gamma_plasma << '\n';
+    out << "# columns: q omega ReChiL ImChiL ReChiRPA ImChiRPA ReChiZeta ImChiZeta Wzeta "
+           "ReEps ImEps\n";
+
+    std::size_t rows = 0;
+    std::size_t finite_ok = 0;
+    for (double q = default_q_min; q <= 4.0 + 0.5 * default_q_step; q += default_q_step) {
+        const double v = coulomb_potentials_rational(q).v_ee;
+        for (double omega = default_omega_min; omega <= default_omega_max + 0.5 * default_omega_step;
+             omega += default_omega_step) {
+            const LindhardResult<> chi_l = evaluate_lindhard(
+                WaveVector<>{q},
+                Frequency<>{omega},
+                plasma.electron.tau,
+                plasma.electron.gamma);
+            const std::complex<double> chi_c = as_complex(chi_l);
+            const std::complex<double> chi_rpa = evaluate_scalar_rpa(chi_c, v);
+
+            ZetaRpaInputs<> inputs{
+                .q = WaveVector<>{q},
+                .omega = Frequency<>{omega},
+                .chi_lindhard = chi_l,
+                .bare_potential = v,
+                .regime = regime,
+                .pathway = selected,
+                .force_pathway = force,
+            };
+            const auto zeta = evaluate_zeta_rpa(inputs);
+            if (!zeta) {
+                continue;
+            }
+
+            out << q << ' ' << omega << ' ' << chi_c.real() << ' ' << chi_c.imag() << ' '
+                << chi_rpa.real() << ' ' << chi_rpa.imag() << ' ' << zeta->chi.real() << ' '
+                << zeta->chi.imag() << ' ' << zeta->zeta_weight << ' ' << zeta->epsilon.real()
+                << ' ' << zeta->epsilon.imag() << '\n';
+            ++rows;
+            if (std::isfinite(chi_rpa.real()) && std::isfinite(chi_rpa.imag()) &&
+                std::isfinite(zeta->chi.real()) && std::isfinite(zeta->chi.imag())) {
+                ++finite_ok;
+            }
+        }
+    }
+
+    if (rows == 0) {
+        std::cerr << "Error: no scalar Zeta-RPA rows written.\n";
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Wrote " << rows << " rows to " << out_path << " (" << finite_ok
+              << " fully finite)\n";
+    std::cout << "  ResponsePathway = " << pathway_label(selected) << '\n';
+    std::cout << "  r_s = " << rs << "  T = " << T_kelvin << " K  Gamma = " << gamma_plasma
+              << '\n';
+    return EXIT_SUCCESS;
+}
+
+struct CliOptions {
+    ResponsePathway pathway{ResponsePathway::StandardRPA};
+    bool pathway_explicit{false};
+    std::optional<double> gamma_plasma{};
+    std::vector<std::string_view> positionals{};
+};
+
+[[nodiscard]] std::optional<CliOptions> parse_cli(int argc, char* argv[])
+{
+    CliOptions opts;
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg{argv[i]};
+        if (arg == "--pathway") {
+            if (i + 1 >= argc) {
+                return std::nullopt;
+            }
+            const auto pathway = parse_pathway_token(argv[++i]);
+            if (!pathway) {
+                return std::nullopt;
+            }
+            opts.pathway = *pathway;
+            opts.pathway_explicit = true;
+            continue;
+        }
+        if (arg == "--gamma") {
+            if (i + 1 >= argc) {
+                return std::nullopt;
+            }
+            char* end = nullptr;
+            const double g = std::strtod(argv[++i], &end);
+            if (end == argv[i] || !std::isfinite(g) || g <= 0.0) {
+                return std::nullopt;
+            }
+            opts.gamma_plasma = g;
+            continue;
+        }
+        if (arg == "--gamma-sweep") {
+            // Handled as a dedicated mode; stash token for caller.
+            opts.positionals.push_back(arg);
+            for (++i; i < argc; ++i) {
+                opts.positionals.push_back(argv[i]);
+            }
+            return opts;
+        }
+        if (!arg.empty() && arg.front() == '-') {
+            return std::nullopt;
+        }
+        opts.positionals.push_back(arg);
+    }
+    return opts;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[])
 {
-    if (argc == 3) {
-        char* end = nullptr;
-        const double rs = std::strtod(argv[1], &end);
-        if (end == argv[1] || !std::isfinite(rs) || rs <= 0.0) {
-            std::cerr << "Error: invalid r_s value.\n";
-            print_usage(argv[0]);
-            return EXIT_FAILURE;
-        }
-
-        end = nullptr;
-        const double T_kelvin = std::strtod(argv[2], &end);
-        if (end == argv[2] || !std::isfinite(T_kelvin) || T_kelvin <= 0.0) {
-            std::cerr << "Error: invalid temperature value.\n";
-            print_usage(argv[0]);
-            return EXIT_FAILURE;
-        }
-
-        return run_standard_mode(rs, T_kelvin);
+    const auto parsed = parse_cli(argc, argv);
+    if (!parsed) {
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
     }
 
-    if (argc == 4 && std::string_view{argv[1]} == "--gamma-sweep") {
+    if (!parsed->positionals.empty() && parsed->positionals[0] == "--gamma-sweep") {
+        if (parsed->positionals.size() != 3) {
+            print_usage(argv[0]);
+            return EXIT_FAILURE;
+        }
         char* end = nullptr;
-        const double rs = std::strtod(argv[2], &end);
-        if (end == argv[2] || !std::isfinite(rs) || rs <= 0.0) {
+        const double rs = std::strtod(std::string(parsed->positionals[1]).c_str(), &end);
+        if (end == std::string(parsed->positionals[1]).c_str() || !std::isfinite(rs) || rs <= 0.0) {
             std::cerr << "Error: invalid r_s value.\n";
             print_usage(argv[0]);
             return EXIT_FAILURE;
         }
-
-        const auto gammas = parse_gamma_list(argv[3]);
+        const auto gammas = parse_gamma_list(std::string(parsed->positionals[2]));
         if (!gammas) {
             std::cerr << "Error: invalid Gamma list. Expected comma-separated positive values.\n";
             print_usage(argv[0]);
             return EXIT_FAILURE;
         }
-
+        std::cerr << "ResponsePathway: StandardRPA (gamma-sweep manuscript static S(q))\n";
         return run_gamma_sweep_mode(rs, *gammas);
     }
 
-    print_usage(argv[0]);
-    return EXIT_FAILURE;
+    if (parsed->positionals.size() != 2) {
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    char* end = nullptr;
+    const std::string rs_token{parsed->positionals[0]};
+    const double rs = std::strtod(rs_token.c_str(), &end);
+    if (end == rs_token.c_str() || !std::isfinite(rs) || rs <= 0.0) {
+        std::cerr << "Error: invalid r_s value.\n";
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    end = nullptr;
+    const std::string t_token{parsed->positionals[1]};
+    const double T_kelvin = std::strtod(t_token.c_str(), &end);
+    if (end == t_token.c_str() || !std::isfinite(T_kelvin) || T_kelvin <= 0.0) {
+        std::cerr << "Error: invalid temperature value.\n";
+        print_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if (parsed->pathway == ResponsePathway::StandardRPA) {
+        print_pathway_header(ResponsePathway::StandardRPA, false);
+        return run_standard_mode(rs, T_kelvin);
+    }
+
+    const double gamma = parsed->gamma_plasma.value_or(constants::zeta_rpa_gamma_star);
+    return run_zeta_scalar_mode(rs, T_kelvin, gamma, parsed->pathway);
 }

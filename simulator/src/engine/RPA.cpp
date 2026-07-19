@@ -10,6 +10,10 @@
 
 #include "engine/RPA.hpp"
 
+#include "core/Concepts.hpp"
+
+#include <complex>
+
 namespace mosaiq {
 
 namespace {

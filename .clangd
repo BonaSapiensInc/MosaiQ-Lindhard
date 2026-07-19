@@ -9,8 +9,11 @@ CompileFlags:
 Diagnostics:
   Suppress:
     - pragma-once-outside-header
-  UnusedIncludes: Strict
-  MissingIncludes: Strict
+  # Translation units include their matching public header (umbrella style).
+  # Strict IWYU MissingIncludes/UnusedIncludes floods Problems without catching
+  # real build failures (-Werror already guards the compiler).
+  UnusedIncludes: None
+  MissingIncludes: None
 
 Index:
   Background: Build

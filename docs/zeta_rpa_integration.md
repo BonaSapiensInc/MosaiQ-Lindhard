@@ -1,12 +1,37 @@
 # MosaiQ-Lindhard: Zeta-RPA Integration Blueprint
 
-**Status:** Architecture Blueprint — Phase Z1 authorized  
+**Status:** Architecture Blueprint — Phase Z1 implemented & scalar-verified  
 **Protocol:** Pontifex — *Arx Axiomatis* under Imperator  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Parent Blueprint:** `docs/simulator_architecture.md`  
 **Purpose:** Define the deterministic insertion of a **Zeta-RPA** pathway that extends the causality-constrained Lindhard baseline into the strong-coupling regime, without contaminating the audited weak-coupling RPA stack already validated in Phases 3–6.
 
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
+
+**Implementation status (Phase Z1).** Library + CTest + scalar strong-coupling verifier are live. Production `ZetaRPA` ships $W_\zeta\equiv 1$ (weak-coupling identity). `ZetaRPA_Experimental` applies the provisional dress.
+
+### CLI usage (Phase Z1 complete)
+
+```bash
+# Manuscript default — two-component StandardRPA (unchanged figure pipelines)
+./simulator/build/mosaiq_simulator 1.0 10000
+./simulator/build/mosaiq_simulator --pathway standard-rpa 1.0 10000
+
+# Scalar Zeta-RPA diagnostic (does NOT overwrite manuscript structure-factor .dat)
+./simulator/build/mosaiq_simulator --pathway zeta-rpa --gamma 50 1.0 1000
+./simulator/build/mosaiq_simulator --pathway zeta-rpa-experimental --gamma 200 1.0 1000
+
+# Static S(q) Gamma sweep (always StandardRPA)
+./simulator/build/mosaiq_simulator --gamma-sweep 1 10,50,100,150
+```
+
+Stderr prints a pathway header, e.g. `ResponsePathway: ZetaRPA (strong-coupling bypass enabled; scalar diagnostic)`.
+Zeta pathways write `output/output_zeta_rpa_scalar.dat` only.
+
+Strong-coupling exploration: `verify_zeta_rpa_scalar` → `output/zeta_rpa_strong_coupling_{sweep,rescue}.dat`;
+plot with `scripts/plot_zeta_rpa_strong_coupling.py`.
+
+**Strongest divergence-rescue observed (Phase Z1 stress test):** parking the scalar interaction on the RPA pole $v\approx 1/\Re\chi^L$ (and Coulomb amplifications up to $200\times$), scalar RPA yields $\mathrm{Inf}/\mathrm{NaN}$ or $|\chi|\gtrsim 10^{14}$ while `ZetaRPA_Experimental` remains finite. Strongest logged rescue block: **$r_s=4$, $\Gamma=200$** (also rescues from $\Gamma=10$ upward). Production `ZetaRPA` ($W_\zeta\equiv 1$) cannot rescue poles — as designed until the manuscript locks $W_\zeta$.
 
 ---
 
@@ -311,7 +336,7 @@ flowchart LR
 | `evaluate_rpa_response` (`StructureFactor`) | Gains an optional pathway argument or a parallel `evaluate_zeta_rpa_response` for scalar OCP-like runs. |
 | `dynamic_structure_factor` | Remains FDT wrapper $S \propto -\Im\chi\,(1+n_B)$; accepts $\chi$ from either pathway. |
 | `PlasmonPoleExtractor` | Phase Z1: no change. Phase Z2: objective `Re ε^ζ(q,ω)=0` via the same Brent contract. |
-| `main.cpp` | New mode or flags; default remains current two-component RPA export for reproducibility of published figures. |
+| `main.cpp` | `--pathway standard-rpa|zeta-rpa|zeta-rpa-experimental` (default StandardRPA). Zeta pathways run **scalar diagnostic only** and write `output_zeta_rpa_scalar.dat`; manuscript two-component exports untouched. |
 
 ### 6.3 CMake
 
@@ -480,4 +505,4 @@ Matrix Zeta-RPA may call scalar helpers; scalar Zeta-RPA must never depend on ma
 
 ---
 
-*Document version: 1.1 — Pontifex Protocol; Imperator amendments (`ZetaRPA_Experimental`, $W_\zeta$ manuscript lock, scalar-only Z1 fence, causality doctrine). Phase Z1 implementation authorized.*
+*Document version: 1.3 — Phase Z1 CLI `--pathway` live; strong-coupling pole-parking rescues documented ($r_s=4$, $\Gamma=200$ strongest).*

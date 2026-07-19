@@ -46,6 +46,18 @@ target_compile_options(test_zeta_rpa PRIVATE -UNDEBUG)
 
 add_test(NAME ZetaRPATest COMMAND test_zeta_rpa)
 
+add_executable(verify_zeta_rpa_scalar verify_zeta_rpa_scalar.cpp)
+
+target_link_libraries(verify_zeta_rpa_scalar PRIVATE mosaiq::mosaiq)
+
+target_compile_options(verify_zeta_rpa_scalar PRIVATE -UNDEBUG)
+
+add_test(
+    NAME ZetaRPAScalarStrongCouplingVerify
+    COMMAND verify_zeta_rpa_scalar
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+)
+
 add_executable(test_plasmon_pole_extractor test_plasmon_pole_extractor.cpp)
 
 target_link_libraries(test_plasmon_pole_extractor PRIVATE mosaiq::mosaiq)
