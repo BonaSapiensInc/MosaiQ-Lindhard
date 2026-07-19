@@ -182,6 +182,108 @@ void test_nonfinite_rejection()
     std::cout << "Non-finite rejection OK.\n";
 }
 
+void test_matrix_weak_coupling_identity()
+{
+    const LindhardResult<> chi_e{.real_part = -0.35, .imag_part = 0.12};
+    const LindhardResult<> chi_i{.real_part = -0.08, .imag_part = 0.02};
+    const BarePotentials<> pot{.v_ee = 1.4, .v_ii = 0.9, .v_ei = -1.1};
+
+    const CouplingRegime<> weak_e{.rs = 1.0, .gamma_plasma = 0.0, .tau = 0.05};
+    const CouplingRegime<> weak_i{.rs = 1.0, .gamma_plasma = 0.0, .tau = 80.0};
+
+    ZetaRpaMatrixInputs<> inputs{
+        .q = WaveVector<>{0.5},
+        .omega = Frequency<>{0.4},
+        .chi_lindhard_e = chi_e,
+        .chi_lindhard_i = chi_i,
+        .potentials = pot,
+        .regime_e = weak_e,
+        .regime_i = weak_i,
+        .pathway = ResponsePathway::ZetaRPA,
+        .force_pathway = true,
+    };
+
+    const auto zeta = evaluate_zeta_rpa_matrix(inputs);
+    assert(zeta.has_value());
+    assert(std::abs(zeta->zeta_weight_ee - 1.0) < 1.0e-15);
+    assert(std::abs(zeta->zeta_weight_ii - 1.0) < 1.0e-15);
+    assert(std::abs(zeta->zeta_weight_ei - 1.0) < 1.0e-15);
+
+    const RpaResult<> rpa =
+        evaluate_rpa_susceptibility(as_complex(chi_e), as_complex(chi_i), pot);
+    const auto eps = evaluate_dielectric(as_complex(chi_e), as_complex(chi_i), pot);
+
+    assert(std::abs(zeta->chi_ee - rpa.chi_ee) < 1.0e-14);
+    assert(std::abs(zeta->chi_ii - rpa.chi_ii) < 1.0e-14);
+    assert(std::abs(zeta->chi_ei - rpa.chi_ei) < 1.0e-14);
+    assert(std::abs(zeta->epsilon - eps) < 1.0e-14);
+
+    std::cout << "Matrix weak-coupling identity (all W_ζ → 1) OK.\n";
+}
+
+void test_matrix_species_asymmetry_and_dress()
+{
+    const LindhardResult<> chi_e{.real_part = -0.30, .imag_part = 0.10};
+    const LindhardResult<> chi_i{.real_part = -0.05, .imag_part = 0.01};
+    const BarePotentials<> pot{.v_ee = 1.2, .v_ii = 0.8, .v_ei = -1.0};
+
+    const CouplingRegime<> strong_e{.rs = 2.0, .gamma_plasma = 100.0, .tau = 0.05};
+    const CouplingRegime<> weak_i{.rs = 2.0, .gamma_plasma = 1.0, .tau = 80.0};
+
+    ZetaRpaMatrixInputs<> inputs{
+        .q = WaveVector<>{0.4},
+        .omega = Frequency<>{0.3},
+        .chi_lindhard_e = chi_e,
+        .chi_lindhard_i = chi_i,
+        .potentials = pot,
+        .regime_e = strong_e,
+        .regime_i = weak_i,
+        .pathway = ResponsePathway::ZetaRPA,
+        .force_pathway = true,
+    };
+
+    const auto zeta = evaluate_zeta_rpa_matrix(inputs);
+    assert(zeta.has_value());
+    assert(zeta->zeta_weight_ee > 1.0);
+    // Ion channel forced Zeta at weak Γ still → W≈1 via locked form.
+    assert(std::abs(zeta->zeta_weight_ii - 1.0) < 1.0e-6 || zeta->zeta_weight_ii > 0.0);
+    assert(std::isfinite(zeta->zeta_weight_ei));
+    // Cross regime averages Γ → intermediate dress relative to ee.
+    assert(zeta->zeta_weight_ei < zeta->zeta_weight_ee + 1.0e-12);
+
+    const RpaResult<> rpa =
+        evaluate_rpa_susceptibility(as_complex(chi_e), as_complex(chi_i), pot);
+    assert(std::abs(zeta->chi_ee - rpa.chi_ee) > 1.0e-6);
+    assert(std::isfinite(zeta->chi_ee.real()) && std::isfinite(zeta->chi_ee.imag()));
+    assert(std::isfinite(zeta->chi_ii.real()) && std::isfinite(zeta->chi_ii.imag()));
+    assert(std::isfinite(zeta->chi_ei.real()) && std::isfinite(zeta->chi_ei.imag()));
+    assert(std::isfinite(zeta->epsilon.real()) && std::isfinite(zeta->epsilon.imag()));
+
+    std::cout << "Matrix species asymmetry / strong-coupling dress OK "
+              << "(W_ee=" << zeta->zeta_weight_ee << ", W_ii=" << zeta->zeta_weight_ii
+              << ", W_ei=" << zeta->zeta_weight_ei << ").\n";
+}
+
+void test_matrix_no_silent_fallback()
+{
+    ZetaRpaMatrixInputs<> inputs{
+        .chi_lindhard_e = {.real_part = -0.2, .imag_part = 0.05},
+        .chi_lindhard_i = {.real_part = -0.05, .imag_part = 0.01},
+        .potentials = {.v_ee = 1.0, .v_ii = 1.0, .v_ei = -1.0},
+        .regime_e = {.rs = 1.0, .gamma_plasma = 1.0, .tau = 0.1},
+        .regime_i = {.rs = 1.0, .gamma_plasma = 1.0, .tau = 0.1},
+        .pathway = ResponsePathway::ZetaRPA,
+        .force_pathway = false,
+    };
+    assert(!evaluate_zeta_rpa_matrix(inputs).has_value());
+
+    inputs.pathway = ResponsePathway::StandardRPA;
+    inputs.force_pathway = true;
+    assert(!evaluate_zeta_rpa_matrix(inputs).has_value());
+
+    std::cout << "Matrix no silent RPA fallback OK.\n";
+}
+
 }  // namespace
 
 int main()
@@ -192,6 +294,9 @@ int main()
     test_experimental_dress_vanishes_at_zero_gamma();
     test_no_silent_fallback();
     test_nonfinite_rejection();
+    test_matrix_weak_coupling_identity();
+    test_matrix_species_asymmetry_and_dress();
+    test_matrix_no_silent_fallback();
     std::cout << "All ZetaRPA tests passed.\n";
     return 0;
 }

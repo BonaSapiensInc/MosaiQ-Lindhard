@@ -29,11 +29,14 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 import numpy as np
 
 from plot_common import OUTPUT_DIR, apply_pdf_rcparams, format_temperature_k, save_figure
@@ -174,7 +177,7 @@ def compute_display_bounds(
 
 
 def mark_rpa_breakdown(
-    ax: plt.Axes,
+    ax: Axes,
     q: np.ndarray,
     omega_rpa: np.ndarray,
     omega_zeta: np.ndarray,
@@ -289,11 +292,11 @@ def plot_rescue(
     ax_top.grid(True, which="major", linestyle=":", linewidth=0.5, alpha=0.35)
 
     legend_handles = [
-        plt.Line2D(
+        Line2D(
             [0], [0], color=COLOR_BOHM_GROSS, linewidth=1.8, linestyle="--"
         ),
-        plt.Line2D([0], [0], color=COLOR_RPA, linewidth=2.0),
-        plt.Line2D([0], [0], color=COLOR_ZETA, linewidth=2.2),
+        Line2D([0], [0], color=COLOR_RPA, linewidth=2.0),
+        Line2D([0], [0], color=COLOR_ZETA, linewidth=2.2),
     ]
     legend_labels = [
         "Bohm--Gross",
@@ -302,7 +305,7 @@ def plot_rescue(
     ]
     if np.any(np.isfinite(omega_zeta[q_mask]) & ~np.isfinite(omega_rpa[q_mask])):
         legend_handles.append(
-            plt.Line2D(
+            Line2D(
                 [0],
                 [0],
                 marker="o",
@@ -337,7 +340,8 @@ def plot_rescue(
         meta_bits.append(pathway)
 
     fig.canvas.draw()
-    legend_bbox = legend.get_window_extent(fig.canvas.get_renderer()).transformed(
+    canvas = cast(Any, fig.canvas)
+    legend_bbox = legend.get_window_extent(canvas.get_renderer()).transformed(
         ax_top.transAxes.inverted()
     )
     if meta_bits:
@@ -388,8 +392,8 @@ def plot_rescue(
 
     ax_bottom.legend(
         [
-            plt.Line2D([0], [0], color=COLOR_RPA, linewidth=2.0),
-            plt.Line2D([0], [0], color=COLOR_ZETA, linewidth=2.2),
+            Line2D([0], [0], color=COLOR_RPA, linewidth=2.0),
+            Line2D([0], [0], color=COLOR_ZETA, linewidth=2.2),
         ],
         [
             r"$|\Im\varepsilon^{\mathrm{RPA}}|$ at RPA pole",

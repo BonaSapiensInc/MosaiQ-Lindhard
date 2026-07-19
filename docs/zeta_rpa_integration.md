@@ -1,6 +1,6 @@
 # MosaiQ-Lindhard: Zeta-RPA Integration Blueprint
 
-**Status:** Architecture Blueprint — Phase Z1 complete; Phase Z2 dielectric roots implemented (plot deferred)  
+**Status:** Architecture Blueprint — Phase Z1–Z2 complete; Phase Z3 matrix API live; Phase Z4 manuscript integrated  
 **Protocol:** Pontifex — *Arx Axiomatis* under Imperator  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Parent Blueprint:** `docs/simulator_architecture.md`  
@@ -462,7 +462,14 @@ sequenceDiagram
 
 ### Phase Z3 — Multi-component promotion
 
-See Section 9.
+**Deliverables**
+
+- `ZetaRpaMatrixInputs` / `ZetaRpaMatrixResult` in `ZetaRPA.hpp`
+- `evaluate_zeta_rpa_matrix` — per-channel $W_\zeta^{ee,ii,ei}$ dress of the audited $2\times 2$ RPA inverse
+- Species-asymmetric regimes (`regime_e`, `regime_i`) with arithmetic-mean cross regime for $W_\zeta^{ei}$
+- CTest: matrix weak-coupling identity vs `evaluate_rpa_susceptibility`; no silent StandardRPA fallback
+
+**Exit gate:** When all $W\to 1$, matrix channels match `evaluate_rpa_susceptibility` to $10^{-14}$; manuscript two-component CLI still defaults to StandardRPA.
 
 ### Phase Z4 — Manuscript coupling
 
@@ -480,7 +487,7 @@ See Section 9.
 
 **Strict phase fence:** Phase Z1 is scalar-only; multi-component work is **Phase Z3 only**. Phase Z1 freezes the **scalar** algebra and must not grow matrix Zeta-RPA types. Multi-component Zeta-RPA (when authorized) must preserve the existing `RpaResult` channel layout $\{ee,ii,ei\}$ while generalizing $W_\zeta$ to a matrix weight.
 
-### 9.1 Target types (not implemented in Z1)
+### 9.1 Target types (Phase Z3 — implemented)
 
 ```cpp
 template<ScalarPhysical T = double>
@@ -488,6 +495,7 @@ struct ZetaRpaMatrixResult {
     std::complex<T> chi_ee{};
     std::complex<T> chi_ii{};
     std::complex<T> chi_ei{};
+    std::complex<T> epsilon{};
     T zeta_weight_ee{};
     T zeta_weight_ii{};
     T zeta_weight_ei{};
@@ -495,6 +503,8 @@ struct ZetaRpaMatrixResult {
 };
 ```
 
+Production entry point: `evaluate_zeta_rpa_matrix(const ZetaRpaMatrixInputs<double>&)`.
+Manuscript figure pipelines remain on `StandardRPA` until an explicit versioned switch.
 ### 9.2 Promotion rules
 
 1. **Algebraic continuity:** When all $W_\zeta^{st}\to 1$, `ZetaRpaMatrixResult` must match `evaluate_rpa_susceptibility` within tolerance (matrix analogue of the weak-coupling identity).

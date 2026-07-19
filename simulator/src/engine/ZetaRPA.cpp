@@ -159,4 +159,99 @@ std::optional<ZetaRpaResult<double>> evaluate_zeta_rpa(const ZetaRpaInputs<doubl
     };
 }
 
+std::optional<ZetaRpaMatrixResult<double>> evaluate_zeta_rpa_matrix(
+    const ZetaRpaMatrixInputs<double>& inputs)
+{
+    if (inputs.pathway == ResponsePathway::StandardRPA) {
+        return std::nullopt;
+    }
+
+    const std::complex<double> chi_e = as_complex(inputs.chi_lindhard_e);
+    const std::complex<double> chi_i = as_complex(inputs.chi_lindhard_i);
+    const BarePotentials<double>& v = inputs.potentials;
+
+    if (!std::isfinite(v.v_ee) || !std::isfinite(v.v_ii) || !std::isfinite(v.v_ei) ||
+        !std::isfinite(chi_e.real()) || !std::isfinite(chi_e.imag()) ||
+        !std::isfinite(chi_i.real()) || !std::isfinite(chi_i.imag())) {
+        return std::nullopt;
+    }
+
+    // Cross channel: arithmetic mean of species regimes (species-asymmetry contract).
+    const CouplingRegime<double> regime_ei{
+        .rs = 0.5 * (inputs.regime_e.rs + inputs.regime_i.rs),
+        .gamma_plasma = 0.5 * (inputs.regime_e.gamma_plasma + inputs.regime_i.gamma_plasma),
+        .tau = 0.5 * (inputs.regime_e.tau + inputs.regime_i.tau),
+    };
+
+    if (!std::isfinite(regime_ei.rs) || regime_ei.rs <= 0.0 ||
+        !std::isfinite(regime_ei.gamma_plasma) || regime_ei.gamma_plasma < 0.0 ||
+        !std::isfinite(regime_ei.tau) || regime_ei.tau < 0.0) {
+        return std::nullopt;
+    }
+
+    const ResponsePathway selected_e = select_response_pathway(
+        inputs.regime_e, inputs.pathway, inputs.force_pathway, /*auto_bypass=*/false);
+    const ResponsePathway selected_i = select_response_pathway(
+        inputs.regime_i, inputs.pathway, inputs.force_pathway, /*auto_bypass=*/false);
+    const ResponsePathway selected_ei = select_response_pathway(
+        regime_ei, inputs.pathway, inputs.force_pathway, /*auto_bypass=*/false);
+
+    // Refuse silent full-matrix RPA fallback inside the Zeta pathway.
+    if (selected_e == ResponsePathway::StandardRPA &&
+        selected_i == ResponsePathway::StandardRPA &&
+        selected_ei == ResponsePathway::StandardRPA) {
+        return std::nullopt;
+    }
+
+    const auto w_ee =
+        evaluate_zeta_weight(selected_e, inputs.regime_e, inputs.borwein, inputs.weight_params);
+    const auto w_ii =
+        evaluate_zeta_weight(selected_i, inputs.regime_i, inputs.borwein, inputs.weight_params);
+    const auto w_ei =
+        evaluate_zeta_weight(selected_ei, regime_ei, inputs.borwein, inputs.weight_params);
+
+    if (!w_ee || !w_ii || !w_ei) {
+        return std::nullopt;
+    }
+
+    // Dress bare potentials; algebra matches RPA.cpp with v → W v.
+    const BarePotentials<double> v_eff{
+        .v_ee = v.v_ee * (*w_ee),
+        .v_ii = v.v_ii * (*w_ii),
+        .v_ei = v.v_ei * (*w_ei),
+    };
+
+    const std::complex<double> one{1.0, 0.0};
+    const std::complex<double> block_e = one - chi_e * v_eff.v_ee;
+    const std::complex<double> block_i = one - chi_i * v_eff.v_ii;
+    const std::complex<double> epsilon =
+        block_e * block_i - chi_e * chi_i * v_eff.v_ei * v_eff.v_ei;
+
+    if (!std::isfinite(epsilon.real()) || !std::isfinite(epsilon.imag()) ||
+        (epsilon.real() == 0.0 && epsilon.imag() == 0.0)) {
+        return std::nullopt;
+    }
+
+    const std::complex<double> chi_ee = (chi_e - chi_e * v_eff.v_ii * chi_i) / epsilon;
+    const std::complex<double> chi_ii = (chi_i - chi_i * v_eff.v_ee * chi_e) / epsilon;
+    const std::complex<double> chi_ei = (chi_e * v_eff.v_ei * chi_i) / epsilon;
+
+    if (!std::isfinite(chi_ee.real()) || !std::isfinite(chi_ee.imag()) ||
+        !std::isfinite(chi_ii.real()) || !std::isfinite(chi_ii.imag()) ||
+        !std::isfinite(chi_ei.real()) || !std::isfinite(chi_ei.imag())) {
+        return std::nullopt;
+    }
+
+    return ZetaRpaMatrixResult<double>{
+        .chi_ee = chi_ee,
+        .chi_ii = chi_ii,
+        .chi_ei = chi_ei,
+        .epsilon = epsilon,
+        .zeta_weight_ee = *w_ee,
+        .zeta_weight_ii = *w_ii,
+        .zeta_weight_ei = *w_ei,
+        .pathway = inputs.pathway,
+    };
+}
+
 }  // namespace mosaiq
