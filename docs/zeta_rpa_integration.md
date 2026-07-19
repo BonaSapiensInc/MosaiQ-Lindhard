@@ -165,7 +165,7 @@ The Lindhard engine proved that finite-$T$ causality heals the $T\to 0$ topologi
 
 ## 4. Interface Design — Single-Component Scalar Case
 
-**Phase Z1 remains scalar-only.** It implements **one species**, **one scalar susceptibility channel**. Multi-component matrix structure is **strictly Phase Z3** (Section 9); no Phase Z1 commit may introduce $\{ee,ii,ei\}$ Zeta-RPA types or rewrite two-component manuscript pipelines.
+**Phase Z1 delivered scalar-only.** Multi-component matrix structure is **Phase Z3** (Section 9, now implemented); Phase Z1 commits froze the scalar algebra without introducing $\{ee,ii,ei\}$ Zeta-RPA types.
 
 ### 4.1 Core: `RiemannZetaBorwein`
 
@@ -299,7 +299,7 @@ flowchart TD
 1. **No shared mutable buffer** between RPA and Zeta-RPA evaluations.
 2. **Bypass is explicit:** CLI (`--pathway zeta-rpa` / `--pathway zeta-rpa-experimental` / `--pathway rpa`) or `ResponsePathway` argument; auto-bypass, if enabled, writes a one-line reason to stderr / run header and may select only production `ZetaRPA`, never `ZetaRPA_Experimental`.
 3. In the strong-coupling window, production structure-factor export for the **scalar** channel shall call `evaluate_zeta_rpa`, not `evaluate_rpa_susceptibility`.
-4. Two-component `RpaResult` remains the production path for the existing manuscript figures (Figs. 3–8) until Phase Z3. **Phase Z1 remains scalar-only and does not silently rewrite those pipelines.**
+4. Two-component `RpaResult` remains the undressed comparison oracle. **Phase Z4** promotes multi-component `ZetaRPA` as the production default for structure-factor exports; `StandardRPA` is retained as an explicit legacy pathway.
 
 ### 5.2 Effective interaction
 
@@ -367,10 +367,10 @@ flowchart LR
 | `evaluate_lindhard` | Sole producer of bare $\chi^L$ for both pathways. |
 | `as_complex` / `susceptibility_in_natural_units` | Reused to place $\chi^L$ in the unit convention expected by $v(q)$. |
 | `evaluate_rpa_susceptibility` | **Untouched** production API; used as comparison oracle in tests. |
-| `evaluate_rpa_response` (`StructureFactor`) | Gains an optional pathway argument or a parallel `evaluate_zeta_rpa_response` for scalar OCP-like runs. |
+| `evaluate_rpa_response` (`StructureFactor`) | Production entry: defaults to multi-component `ZetaRPA` via DOS-restored `evaluate_zeta_rpa_matrix`; `StandardRPA` remains an explicit legacy pathway. |
 | `dynamic_structure_factor` | Remains FDT wrapper $S \propto -\Im\chi\,(1+n_B)$; accepts $\chi$ from either pathway. |
-| `PlasmonPoleExtractor` | Phase Z2: scalar overload `extract(PlasmonPoleZetaInputs)` with objective `Re ε^ζ(q,ω)=0` (and scalar `StandardRPA` comparison); two-component path unchanged. |
-| `main.cpp` | `--pathway standard-rpa|zeta-rpa|zeta-rpa-experimental` (default StandardRPA). Zeta pathways run **scalar diagnostic only** and write `output_zeta_rpa_scalar.dat`; manuscript two-component exports untouched. |
+| `PlasmonPoleExtractor` | Phase Z2: scalar overload `extract(PlasmonPoleZetaInputs)` with objective `Re ε^ζ(q,ω)=0` (and scalar `StandardRPA` comparison); two-component path still undressed unless a future $\varepsilon^\zeta$ overload is added. |
+| `main.cpp` | `--pathway standard-rpa|zeta-rpa|zeta-rpa-experimental` (**default `zeta-rpa`**). Production runs export multi-component structure factors; scalar grids are opt-in via `--scalar-diagnostic`. |
 
 ### 6.3 CMake
 
@@ -458,7 +458,7 @@ sequenceDiagram
 
 **Plotting:** `scripts/plot_zeta_rpa_dispersion.py` — two-panel Bohm–Gross / scalar RPA / Zeta-RPA rescue figure from `output_zeta_rpa_dispersion.dat` (candidate “Figure X”).
 
-### Phase Z3 — Multi-component promotion
+### Phase Z3 — Multi-component promotion ✅
 
 **Deliverables**
 
@@ -467,25 +467,75 @@ sequenceDiagram
 - Species-asymmetric regimes (`regime_e`, `regime_i`) with arithmetic-mean cross regime for $W_\zeta^{ei}$
 - CTest: matrix weak-coupling identity vs `evaluate_rpa_susceptibility`; no silent StandardRPA fallback
 
-**Exit gate:** When all $W\to 1$, matrix channels match `evaluate_rpa_susceptibility` to $10^{-14}$; manuscript two-component CLI still defaults to StandardRPA.
+**Exit gate:** When all $W\to 1$, matrix channels match `evaluate_rpa_susceptibility` to $10^{-14}$. **Met.**
 
-### Phase Z4 — Manuscript coupling
+### Phase Z4 — Manuscript coupling + versioned switch ✅
 
 **Deliverables**
 
-- New section in `manuscript/two-fermi.tex` after finite-$T$ Lindhard: *Analytic continuation of the RPA kernel in the strong-coupling regime* (`sec:zeta-rpa`)
-- Appendix C coefficients for $W_\zeta$ (`sec:zeta-weight-coefficients`)
-- Figure 10: `zeta_rpa_dispersion.pdf` registered in `MANUSCRIPT_FIGURE_NAMES` and `package_aps_submission.sh`
+- Section V in `manuscript/two-fermi.tex`: scalar Zeta-RPA (`sec:zeta-rpa`) + asymmetric matrix subsection (`sec:zeta-rpa-matrix`)
+- Appendix C coefficients for $W_\zeta$
+- Figure 10: `zeta_rpa_dispersion.pdf`
+- Versioned switch: multi-component ZetaRPA is production default in `StructureFactor` / CLI
 
-**Exit gate:** Figure present under `manuscript/figures/`; APS zip includes the stem.
+**Exit gate:** Theory docs synchronized with live matrix architecture; APS zip includes Fig. 10 stem. **Met** (static $S(q)$ figure regeneration under Zeta default is the remaining visualization step).
 
 ---
 
-## 9. Future Extension Path to Multi-Component
+## 9. Implemented Architecture — Multi-Component Asymmetric Zeta Matrix
 
-**Strict phase fence:** Phase Z1 is scalar-only; multi-component work is **Phase Z3 only**. Phase Z1 freezes the **scalar** algebra and must not grow matrix Zeta-RPA types. Multi-component Zeta-RPA (when authorized) must preserve the existing `RpaResult` channel layout $\{ee,ii,ei\}$ while generalizing $W_\zeta$ to a matrix weight.
+**Status:** Phase Z3 complete; Phase Z4 versioned switch live. Multi-component Zeta-RPA is the **production default** for structure-factor and Gamma-sweep exports (`evaluate_rpa_response` → `evaluate_zeta_rpa_matrix` with DOS-restored $\chi^L$). Legacy undressed RPA remains `--pathway standard-rpa`. Scalar Zeta-RPA remains the diagnostic / plasmon-rescue pathway (`--scalar-diagnostic`).
 
-### 9.1 Target types (Phase Z3 — implemented)
+The matrix pathway preserves the audited $\{ee,ii,ei\}$ channel layout of `RpaResult` while dressing each bare Coulomb line with an independent zeta weight. Bare Lindhard susceptibilities $\chi_e^L$ and $\chi_i^L$ are never renegotiated—only $v_{st}\to v_{st}^\zeta$.
+
+### 9.1 Dressed potentials and cross-channel regime
+
+Per-channel effective interactions:
+
+$$
+v_{st}^{\zeta}(q) = v_{st}(q)\,W_\zeta^{st}\,,
+\qquad
+st\in\{ee,ii,ei\}\,.
+$$
+
+Diagonal weights use species-local thermodynamic regimes $(\Gamma_e,r_{s,e},\tau_e)$ and $(\Gamma_i,r_{s,i},\tau_i)$. Because of extreme mass asymmetry ($m_i\gg m_e$), these regimes are independent. The off-diagonal cross channel uses the **arithmetic mean** regime
+
+$$
+\Gamma_{ei}=\frac{\Gamma_e+\Gamma_i}{2}\,,
+\qquad
+r_{s,ei}=\frac{r_{s,e}+r_{s,i}}{2}\,,
+\qquad
+\tau_{ei}=\frac{\tau_e+\tau_i}{2}\,,
+$$
+
+so that $W_\zeta^{ei}=W_\zeta(\Gamma_{ei},r_{s,ei},\tau_{ei})$ preserves algebraic symmetry of $v_{ei}=v_{ie}$ and the weak-coupling continuity $\lim_{\Gamma\to 0}W_\zeta^{st}=1$ on every channel.
+
+### 9.2 Two-component dressed dielectric and response tensor
+
+With $v_{st}^\zeta$ substituted into the audited RPA algebra (`RPA.cpp` with $v\to Wv$):
+
+$$
+\varepsilon^{\zeta}(q,\omega)
+=
+\bigl(1 - v_{ee}^{\zeta}\chi_e^L\bigr)
+\bigl(1 - v_{ii}^{\zeta}\chi_i^L\bigr)
+-
+\bigl(v_{ei}^{\zeta}\bigr)^2\,\chi_e^L\,\chi_i^L\,,
+$$
+
+and the electron–electron tensor element (representative)
+
+$$
+\chi_{ee}^{\zeta}(q,\omega)
+=
+\frac{
+\chi_e^L - \chi_e^L\,v_{ii}^{\zeta}\,\chi_i^L
+}{\varepsilon^{\zeta}(q,\omega)}\,,
+$$
+
+with $\chi_{ii}^{\zeta}$ and $\chi_{ei}^{\zeta}$ obtained by the same substitution into Eqs.~(response-ee)–(response-ei) of the manuscript. When all $W_\zeta^{st}\to 1$, the matrix recovers `evaluate_rpa_susceptibility` to $10^{-14}$ (CTest gate).
+
+### 9.3 Production types
 
 ```cpp
 template<ScalarPhysical T = double>
@@ -493,7 +543,7 @@ struct ZetaRpaMatrixResult {
     std::complex<T> chi_ee{};
     std::complex<T> chi_ii{};
     std::complex<T> chi_ei{};
-    std::complex<T> epsilon{};
+    std::complex<T> epsilon{};  // ε^ζ dielectric determinant
     T zeta_weight_ee{};
     T zeta_weight_ii{};
     T zeta_weight_ei{};
@@ -501,24 +551,26 @@ struct ZetaRpaMatrixResult {
 };
 ```
 
-Production entry point: `evaluate_zeta_rpa_matrix(const ZetaRpaMatrixInputs<double>&)`.
-Manuscript figure pipelines remain on `StandardRPA` until an explicit versioned switch.
-### 9.2 Promotion rules
+| Symbol | Role |
+|--------|------|
+| `ZetaRpaMatrixInputs` | DOS-restored $\chi_e^L$, $\chi_i^L$; bare $v_{st}$; `regime_e`, `regime_i`; `force_pathway` |
+| `evaluate_zeta_rpa_matrix` | Pure matrix evaluation; no silent StandardRPA fallback |
+| `evaluate_rpa_response` | StructureFactor production entry; default pathway `ZetaRPA` |
 
-1. **Algebraic continuity:** When all $W_\zeta^{st}\to 1$, `ZetaRpaMatrixResult` must match `evaluate_rpa_susceptibility` within tolerance (matrix analogue of the weak-coupling identity).
-2. **Species asymmetry:** Electron and ion Lindhard inputs remain independent; zeta weights may depend on $\Gamma_e$, $\Gamma_i$, and cross-coupling.
-3. **No rewrite of history (superseded by Phase Z4):** Phase Z4 versioned switch promotes multi-component `ZetaRPA` as the default production pathway for structure-factor / Gamma-sweep exports. Legacy `StandardRPA` remains available via `--pathway standard-rpa`.
-4. **Extractor reuse:** `PlasmonPoleExtractor` continues to consume a `DielectricFunction` concept; multi-component $\varepsilon^\zeta$ is supplied as a callable, preserving Brent’s derivative-free contract.
+### 9.4 Architectural invariants (locked)
 
-### 9.3 Dependency direction
+1. **Algebraic continuity:** $W_\zeta^{st}\to 1$ ⇒ bit-stable match to undressed two-component RPA.
+2. **Species asymmetry:** Independent $\Gamma_e$, $\Gamma_i$ on diagonals; arithmetic-mean $\Gamma_{ei}$ on the cross channel.
+3. **Causality inviolability:** $\chi^L$ remains the KK/sinc Lindhard input; only the interaction ladder is dressed.
+4. **Versioned switch:** Production default is multi-component ZetaRPA; `StandardRPA` is explicit legacy.
+5. **Dependency direction:** Matrix may call scalar `evaluate_zeta_weight`; scalar must never depend on matrix types.
+6. **Extractor:** Two-component `PlasmonPoleExtractor` still consumes undressed $\varepsilon$ unless a future overload supplies $\varepsilon^\zeta$; scalar Zeta poles remain Phase Z2.
 
 ```
 RiemannZetaBorwein  →  ZetaRPA (scalar)  →  ZetaRPA (matrix)
                               ↓
-                     StructureFactor / CLI
+                     StructureFactor / CLI  (default: matrix ZetaRPA)
 ```
-
-Matrix Zeta-RPA may call scalar helpers; scalar Zeta-RPA must never depend on matrix types.
 
 ---
 
@@ -547,15 +599,16 @@ Matrix Zeta-RPA may call scalar helpers; scalar Zeta-RPA must never depend on ma
 
 ---
 
-## 12. Explicit Non-Goals (Phase Z1)
+## 12. Explicit Non-Goals (historical Phase Z1 fence; superseded where noted)
 
-- Replacing two-component manuscript pipelines in place.
-- Multi-component Zeta-RPA types (strictly Phase Z3).
+- ~~Replacing two-component manuscript pipelines in place.~~ → Superseded by Phase Z4 versioned switch.
+- ~~Multi-component Zeta-RPA types (strictly Phase Z3).~~ → Implemented (Section 9).
 - Embedding phenomenological bridge / HNC closures as production $W_\zeta$.
-- Claiming a frozen $W_\zeta$ formula before the manuscript lock.
+- Claiming a frozen $W_\zeta$ formula before the manuscript lock. *(formula locked; Appendix C coefficients remain provisional defaults)*
 - Parallelism / GPU offload.
 - Networked or adaptive “precision oracles” for $\zeta(s)$.
+- Multi-component $\varepsilon^\zeta$ plasmon extraction in Fig. 5 (scalar Zeta poles only to date).
 
 ---
 
-*Document version: 1.4 — Locked $W_\zeta=\zeta(1+f)/\zeta(1)$ with Laurent production $W=f\zeta(1+f)$; Appendix C coefficients $(\alpha,\beta,\gamma,\delta)$.*
+*Document version: 1.5 — Phase Z3/Z4: Section 9 promoted to Implemented Architecture (asymmetric multi-component Zeta matrix; production default). Locked $W_\zeta=\zeta(1+f)/\zeta(1)$ with Laurent production $W=f\zeta(1+f)$.*
