@@ -1,9 +1,16 @@
+# Prefer the CMake compilation database (absolute -I paths, -std=c++20, -Werror).
+# Per-directory compile_flags.txt under simulator/src/{core,physics,engine}/ and
+# simulator/tests/ cover the case where a header is opened before CMake configure.
 CompileFlags:
+  CompilationDatabase: simulator/build
   Add:
-    - -std=c++20
-    - -Isimulator/src
     - -Wno-pragma-once-outside-header
 
 Diagnostics:
   Suppress:
     - pragma-once-outside-header
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
+
+Index:
+  Background: Build

@@ -55,6 +55,7 @@ simulator/
 | Optimization | `-O3 -march=native` for release; `-O0 -g` for debug |
 | Tests | CTest + GoogleTest or Catch2 (TBD at Phase 1 kickoff) |
 | I/O | Header-only JSON or TOML for run manifests; no runtime network |
+| Editor / clangd | Each of `src/`, `src/core/`, `src/physics/`, `src/engine/`, `tests/` must contain `compile_flags.txt` (`-std=c++20`, include path to `src/`). New subdirectories copy this file or Problems-tab diagnostics regress. |
 
 ---
 

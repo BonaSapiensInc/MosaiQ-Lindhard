@@ -49,6 +49,32 @@ template<ScalarPhysical T>
 
 }  // namespace
 
+ResponsePathway select_response_pathway(CouplingRegime<double> regime,
+                                        ResponsePathway requested,
+                                        bool force_pathway,
+                                        bool auto_bypass) noexcept
+{
+    const bool strong = is_strong_coupling(regime);
+
+    switch (requested) {
+    case ResponsePathway::StandardRPA:
+        if (auto_bypass && strong) {
+            // Auto-bypass selects production ZetaRPA only — never Experimental.
+            return ResponsePathway::ZetaRPA;
+        }
+        return ResponsePathway::StandardRPA;
+
+    case ResponsePathway::ZetaRPA:
+    case ResponsePathway::ZetaRPA_Experimental:
+        if (strong || force_pathway) {
+            return requested;
+        }
+        return ResponsePathway::StandardRPA;
+    }
+
+    return ResponsePathway::StandardRPA;
+}
+
 template<ScalarPhysical T>
 std::complex<T> evaluate_dielectric(std::complex<T> chi_e,
                                     std::complex<T> chi_i,

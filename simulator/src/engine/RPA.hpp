@@ -11,6 +11,7 @@
 #pragma once
 
 #include "core/Concepts.hpp"
+#include "physics/Constants.hpp"
 
 #include <complex>
 
@@ -35,6 +36,44 @@ struct RpaResult {
     [[nodiscard]] constexpr const std::complex<T>& ii() const noexcept { return chi_ii; }
     [[nodiscard]] constexpr const std::complex<T>& ei() const noexcept { return chi_ei; }
 };
+
+/// Explicit response pathway — never silent. Experimental is never auto-selected.
+enum class ResponsePathway {
+    StandardRPA,
+    ZetaRPA,
+    ZetaRPA_Experimental,
+};
+
+/// Thermodynamic / coupling gate for pathway selection (Phase Z1 scalar fence).
+template<ScalarPhysical T = double>
+struct CouplingRegime {
+    T rs{};
+    T gamma_plasma{};
+    T tau{};
+};
+
+/// True iff the state lies in the declared strong-coupling window (provisional constants).
+template<ScalarPhysical T = double>
+[[nodiscard]] constexpr bool is_strong_coupling(CouplingRegime<T> regime) noexcept
+{
+    return regime.gamma_plasma >= static_cast<T>(constants::zeta_rpa_gamma_star) ||
+           regime.rs >= static_cast<T>(constants::zeta_rpa_rs_star);
+}
+
+/// Explicit pathway selection. Auto-bypass never selects ZetaRPA_Experimental.
+[[nodiscard]] ResponsePathway select_response_pathway(CouplingRegime<double> regime,
+                                                      ResponsePathway requested,
+                                                      bool force_pathway = false,
+                                                      bool auto_bypass = false) noexcept;
+
+/// Scalar one-component RPA: χ / (1 − v χ). Comparison oracle for Zeta-RPA identity gate.
+template<ScalarPhysical T = double>
+[[nodiscard]] std::complex<T> evaluate_scalar_rpa(std::complex<T> chi,
+                                                  T bare_potential) noexcept
+{
+    const std::complex<T> one{T{1}, T{0}};
+    return chi / (one - bare_potential * chi);
+}
 
 /// Map Lindhard Re/Im pair to complex χ^L(q, ω).
 template<ScalarPhysical T>

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <numbers>
 
 namespace mosaiq::constants {
@@ -65,5 +66,23 @@ inline constexpr double nine_pi_over_four_cbrt = 1.7044777697860926;
 {
     return boltzmann_hartree_per_kelvin * T_kelvin;
 }
+
+/// --- Zeta-RPA Phase Z1 (provisional; W_ζ form awaits manuscript lock) ---
+
+/// Default Borwein truncation order for ζ(s), s > 1.
+inline constexpr std::size_t default_borwein_truncation_order = 50;
+
+/// Absolute tolerance floor for Borwein residual diagnostics (tests).
+inline constexpr double default_borwein_absolute_tolerance = 1.0e-15;
+
+/// Strong-coupling gate: Γ ≥ Γ★ (plasma coupling). Provisional until manuscript lock.
+inline constexpr double zeta_rpa_gamma_star = 10.0;
+
+/// Strong-coupling gate: r_s ≥ r_s★. Provisional until manuscript lock.
+inline constexpr double zeta_rpa_rs_star = 5.0;
+
+/// Experimental-only provisional dress amplitude κ in
+/// W_ζ(Γ) = 1 + κ Γ/(1+Γ) · (ζ(3)/ζ(2)). Production ZetaRPA keeps W_ζ ≡ 1.
+inline constexpr double zeta_rpa_experimental_kappa = 0.05;
 
 }  // namespace mosaiq::constants

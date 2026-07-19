@@ -78,7 +78,9 @@ cmake --build simulator/build
 ln -sf simulator/build/compile_commands.json compile_commands.json
 ```
 
-Headers under `simulator/src/` resolve includes via committed `compile_flags.txt` files even before CMake is run; the symlink is only needed for full `.cpp` IntelliSense (warnings, defines).
+Workspace settings already point clangd at `simulator/build` via `--compile-commands-dir`. Headers under `simulator/src/{core,physics,engine}/` and `simulator/tests/` each carry a committed `compile_flags.txt` (`-std=c++20`, `-I` to `src/`, `-Wno-pragma-once-outside-header`) so opening a header as a main file still resolves includes before CMake has been run. **When adding a new source subdirectory, copy an existing `compile_flags.txt` into it** — otherwise the Problems tab will report missing headers and false C++14/C++17 diagnostics.
+
+**Do not enable `mitaki28.vscode-clang` in this workspace.** That extension runs bare `clang` without `-std=c++20` and floods Problems with false `std::numbers` / “C++17 extension” errors on headers such as `physics/Constants.hpp`. C++ diagnostics are owned exclusively by **clangd** (Microsoft/`anysphere` C/C++ IntelliSense is disabled in `.vscode/settings.json`).
 
 Run the CLI from the repository root:
 

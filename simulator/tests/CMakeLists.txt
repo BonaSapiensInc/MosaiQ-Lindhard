@@ -30,6 +30,22 @@ target_compile_options(test_rpa PRIVATE -UNDEBUG)
 
 add_test(NAME RPATest COMMAND test_rpa)
 
+add_executable(test_riemann_zeta_borwein test_riemann_zeta_borwein.cpp)
+
+target_link_libraries(test_riemann_zeta_borwein PRIVATE mosaiq::mosaiq)
+
+target_compile_options(test_riemann_zeta_borwein PRIVATE -UNDEBUG)
+
+add_test(NAME RiemannZetaBorweinTest COMMAND test_riemann_zeta_borwein)
+
+add_executable(test_zeta_rpa test_zeta_rpa.cpp)
+
+target_link_libraries(test_zeta_rpa PRIVATE mosaiq::mosaiq)
+
+target_compile_options(test_zeta_rpa PRIVATE -UNDEBUG)
+
+add_test(NAME ZetaRPATest COMMAND test_zeta_rpa)
+
 add_executable(test_plasmon_pole_extractor test_plasmon_pole_extractor.cpp)
 
 target_link_libraries(test_plasmon_pole_extractor PRIVATE mosaiq::mosaiq)

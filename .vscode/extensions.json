@@ -1,5 +1,10 @@
 {
     "recommendations": [
+        "llvm-vs-code-extensions.vscode-clangd",
         "tomoki1207.pdf"
+    ],
+    "unwantedRecommendations": [
+        "mitaki28.vscode-clang",
+        "ms-vscode.cpptools"
     ]
 }

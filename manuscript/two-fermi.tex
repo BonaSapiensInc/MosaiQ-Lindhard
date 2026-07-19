@@ -561,6 +561,22 @@ It is possible to apply the high-temperature ($T \rightarrow \infty$)
 limit~\cite{Fetter-Walecka1971} for the finite temperature Lindhard function.
 However, we will try to find out a general expressions.
 
+\subsection{Regularization of the static susceptibility at finite temperature}
+\label{sec:finite-T-regularization}
+
+While the zero-temperature ($T=0$) Lindhard function is ubiquitous in standard many-body perturbation theory, its reliance on a discontinuous Fermi surface introduces non-physical artifacts.
+Most notably, the sharp step-function nature of the $T=0$ Fermi--Dirac occupations $n_{\mathbf{k}\sigma}$ forces a logarithmic singularity in the derivative of the static susceptibility at $q=2k_\mathrm{F}$ (the Kohn anomaly)~\cite{Kohn1959}.
+In conventional computational solid-state physics, such singular behaviors are often masked by introducing anomalously large empirical broadening factors ($\eta$ or $\delta$) or by implicitly truncating the analytical structure via pseudopotential constraints.
+
+We argue that evaluating the dielectric response at finite temperature ($T>0$) is not merely a thermodynamic refinement, but a fundamental requirement for preserving the analytic structure of the response manifold.
+At $T>0$, the Fermi--Dirac distribution $n_{\mathbf{k}\sigma}$ [later written in reduced variables as Eq.~(\ref{eq:fermi-kappa})] naturally smooths the discontinuous occupation boundaries that underlie Eq.~(\ref{Lindhard}).
+However, the exact numerical integration of the finite-temperature independent-particle polarizability $\chi^L(\mathbf{q},\omega)$ in Eq.~(\ref{Lindhard}) presents a severe computational challenge due to the dense accumulation of closely spaced poles near the real energy axis.
+By employing the modified sinc-quadrature method developed below, we resolve the finite-$T$ spectrum without resorting to artificial smearing.
+
+The exact thermal smearing intrinsically heals the $T=0$ divergences and maintains strict causality (Kramers--Kr\"onig compliance) down to the machine-precision floor documented in Secs.~\ref{sec:stratonovich-imperative} and~\ref{sec:singularity-excision}.
+Consequently, the discrepancy between the $T=0$ and finite-$T$ formulations represents a qualitative restoration of physical stability rather than a numerical inconvenience.
+This robust, divergence-free baseline at finite temperature establishes the analytic foundation required for subsequent strong-coupling and vertex-corrected extensions of the random-phase approximation (RPA).
+
 The first complete calculation for the finite temperature Lindhard function
 was done by Khanna and Glyde~\cite{Khanna-Glyde1976}
 starting from the Lindhard function Eq. (\ref{Lindhard}).
@@ -3349,6 +3365,8 @@ Phys. Rev. E \textbf{64}, 056410 (2001).
 
 \bibitem{Fetter-Walecka1971} A. L. Fetter and J. D. Walecka, \textit{Quantum Theory of Many-Particle Systems} 
 (McGraw-Hill, New York, 1971).
+
+\bibitem{Kohn1959} W. Kohn, Phys. Rev. Lett. \textbf{2}, 393 (1959).
 
 \bibitem{Khanna-Glyde1976} F. C. Khanna and H. R. Glyde, Can. J. Phys. \textbf{54}, 648 (1976).
 
