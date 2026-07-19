@@ -189,11 +189,18 @@ DynamicStructureFactorSample evaluate_dynamic_sample(double q,
     const ZetaRpaMatrixResult<> rpa = evaluate_rpa_response(q, omega_e, plasma, pathway);
     const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
 
+    // Matrix assembly uses DOS-restored (natural) χ for dimensionless vχ.
+    // FDT + reduced_lindhard_static_normalization() expect the reduced convention:
+    // χ̃_ee = χ_ee/D_e, χ̃_ii = χ_ii/D_i, χ̃_ei = χ_ei/√(D_e D_i).
+    const double dos_e = density_of_states_at_fermi(plasma.n, plasma.electron.E_F);
+    const double dos_i = density_of_states_at_fermi(plasma.n, plasma.ion.E_F);
+    const double dos_cross = std::sqrt(dos_e * dos_i);
+
     return DynamicStructureFactorSample{
         omega_e,
-        dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw()),
-        dynamic_structure_factor(rpa.chi_ii, omega_i, plasma.ion.tau.raw()),
-        dynamic_structure_factor(rpa.chi_ei, omega_e, plasma.electron.tau.raw()),
+        dynamic_structure_factor(rpa.chi_ee / dos_e, omega_e, plasma.electron.tau.raw()),
+        dynamic_structure_factor(rpa.chi_ii / dos_i, omega_i, plasma.ion.tau.raw()),
+        dynamic_structure_factor(rpa.chi_ei / dos_cross, omega_e, plasma.electron.tau.raw()),
     };
 }
 
@@ -218,7 +225,10 @@ ZetaRpaMatrixResult<> evaluate_rpa_response(double q,
         plasma.ion.tau,
         plasma.ion.gamma);
 
-    // CRITICAL: matrix / RPA assembly consumes DOS-restored (natural) susceptibilities.
+    // CRITICAL: matrix / RPA assembly consumes DOS-restored (natural) susceptibilities
+    // so that vχ is dimensionless. FDT consumers must convert back to the reduced
+    // convention (see evaluate_dynamic_sample) before applying
+    // reduced_lindhard_static_normalization().
     const double dos_e = density_of_states_at_fermi(plasma.n, plasma.electron.E_F);
     const double dos_i = density_of_states_at_fermi(plasma.n, plasma.ion.E_F);
     const LindhardResult<> chi_e{

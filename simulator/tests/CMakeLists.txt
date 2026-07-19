@@ -38,6 +38,14 @@ target_compile_options(test_riemann_zeta_borwein PRIVATE -UNDEBUG)
 
 add_test(NAME RiemannZetaBorweinTest COMMAND test_riemann_zeta_borwein)
 
+add_executable(test_complex_polylogarithm test_complex_polylogarithm.cpp)
+
+target_link_libraries(test_complex_polylogarithm PRIVATE mosaiq::mosaiq)
+
+target_compile_options(test_complex_polylogarithm PRIVATE -UNDEBUG)
+
+add_test(NAME ComplexPolylogarithmTest COMMAND test_complex_polylogarithm)
+
 add_executable(test_zeta_rpa test_zeta_rpa.cpp)
 
 target_link_libraries(test_zeta_rpa PRIVATE mosaiq::mosaiq)

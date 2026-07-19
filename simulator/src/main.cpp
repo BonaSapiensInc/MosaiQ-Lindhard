@@ -330,13 +330,15 @@ int run_standard_mode(double rs, double T_kelvin, ResponsePathway pathway)
             const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
             const ZetaRpaMatrixResult<> rpa =
                 evaluate_rpa_response(q, omega_e, plasma, pathway);
-
-            const double S_ee =
-                dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw());
-            const double S_ii =
-                dynamic_structure_factor(rpa.chi_ii, omega_i, plasma.ion.tau.raw());
-            const double S_ei =
-                dynamic_structure_factor(rpa.chi_ei, omega_e, plasma.electron.tau.raw());
+            const double dos_e = density_of_states_at_fermi(plasma.n, plasma.electron.E_F);
+            const double dos_i = density_of_states_at_fermi(plasma.n, plasma.ion.E_F);
+            const double dos_cross = std::sqrt(dos_e * dos_i);
+            const double S_ee = dynamic_structure_factor(
+                rpa.chi_ee / dos_e, omega_e, plasma.electron.tau.raw());
+            const double S_ii = dynamic_structure_factor(
+                rpa.chi_ii / dos_i, omega_i, plasma.ion.tau.raw());
+            const double S_ei = dynamic_structure_factor(
+                rpa.chi_ei / dos_cross, omega_e, plasma.electron.tau.raw());
 
             if (!std::isfinite(S_ee) || !std::isfinite(S_ii) || !std::isfinite(S_ei)) {
                 continue;
@@ -437,6 +439,7 @@ int run_gamma_sweep_mode(double rs,
             output << std::fixed << std::setprecision(6) << q << ' '
                    << std::scientific << std::setprecision(12) << static_sq.S_ee << ' '
                    << static_sq.S_ii << ' ' << static_sq.S_ei << '\n';
+            output.flush();
             ++rows_written;
         }
 

@@ -35,7 +35,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
 | [`manuscript/figures/`](manuscript/figures/) | APS submission figure PDFs (synced from `output/`) |
 | [`manuscript/submission.zip`](manuscript/submission.zip) | APS upload bundle (`two-fermi.tex` + cited PDFs only; generated locally, not in git) |
-| [`docs/`](docs/) | Architecture notes and reference extracts |
+| [`docs/`](docs/) | Architecture notes; dual-pathway theory ([`theory.md`](docs/theory.md)) and CLI ([`usage.md`](docs/usage.md)) |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
 

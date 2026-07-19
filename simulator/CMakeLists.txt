@@ -38,6 +38,7 @@ add_library(mosaiq STATIC
     src/core/SincQuadrature.cpp
     src/core/FermiDirac.cpp
     src/core/RiemannZetaBorwein.cpp
+    src/core/ComplexPolylogarithm.cpp
     src/engine/Lindhard.cpp
     src/engine/RPA.cpp
     src/engine/ZetaRPA.cpp

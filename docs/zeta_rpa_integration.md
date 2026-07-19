@@ -4,21 +4,27 @@
 **Protocol:** Pontifex — *Arx Axiomatis* under Imperator  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Parent Blueprint:** `docs/simulator_architecture.md`  
+**Dual-pathway theory / CLI:** [`theory.md`](theory.md) · [`usage.md`](usage.md)  
 **Purpose:** Define the deterministic insertion of a **Zeta-RPA** pathway that extends the causality-constrained Lindhard baseline into the strong-coupling regime, without contaminating the audited weak-coupling RPA stack already validated in Phases 3–6.
 
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
+
+**Dual-pathway numbering (manuscript).** Pathway~A = PolyLog-RPA (formal $\mathrm{Li}_s$ definition); Pathway~B = LFC–Zeta / Zeta-RPA (production). Zeta-RPA is **retained** as the live default; PolyLog-RPA is formalized for a parallel production evaluator (`--pathway polylog-rpa`, next sprint).
 
 **Implementation status (Phase Z4 — versioned switch).** `evaluate_rpa_response` defaults to multi-component `ZetaRPA` via DOS-restored `evaluate_zeta_rpa_matrix`. CLI default is `--pathway zeta-rpa`. Legacy undressed RPA remains `--pathway standard-rpa`. Scalar grids are opt-in via `--scalar-diagnostic`.
 
 ### CLI usage (Phase Z4 versioned switch)
 
 ```bash
-# Production default — multi-component Zeta-RPA structure factors + dispersion
+# Production default — Pathway B (multi-component Zeta-RPA / LFC)
 ./simulator/build/mosaiq_simulator 1.0 10000
 ./simulator/build/mosaiq_simulator --pathway zeta-rpa 1.0 10000
 
 # Legacy undressed two-component RPA
 ./simulator/build/mosaiq_simulator --pathway standard-rpa 1.0 10000
+
+# Pathway A — PolyLog-RPA (reserved; evaluator sprint next)
+# ./simulator/build/mosaiq_simulator --pathway polylog-rpa 1.0 10000
 
 # Opt-in scalar Zeta diagnostic grids
 ./simulator/build/mosaiq_simulator --scalar-diagnostic --pathway zeta-rpa --gamma 50 1.0 1000
@@ -37,6 +43,19 @@ Strong-coupling exploration: `verify_zeta_rpa_scalar` → `output/zeta_rpa_stron
 plot with `scripts/plot_zeta_rpa_strong_coupling.py`.
 
 **Strongest divergence-rescue observed (Phase Z1 stress test):** parking the scalar interaction on the RPA pole $v\approx 1/\Re\chi^L$ (and Coulomb amplifications up to $200\times$), scalar RPA yields $\mathrm{Inf}/\mathrm{NaN}$ or $|\chi|\gtrsim 10^{14}$ while Zeta-dressed responses remain finite. Strongest logged Experimental rescue block: **$r_s=4$, $\Gamma=200$**. With the locked production $W_\zeta$, production `zeta-rpa` also departs from bare RPA at finite $\Gamma$ and can shift dielectric zeros.
+
+---
+
+## 0. Dual-Pathway Regularization (summary)
+
+Full equations and the $x\to 1$ bridge live in [`theory.md`](theory.md). In one line:
+
+| Pathway | Role | Formula | CLI |
+|---------|------|---------|-----|
+| **A** PolyLog-RPA | Formal diagrammatic definition (**scalar** ladder) | $\chi^{(s)}=\chi^L\mathrm{Li}_s(v\chi^L)$ | `polylog-rpa` (next) |
+| **B** LFC–Zeta | Production Ansatz (default; **multi-component**) | $\chi^{\zeta}=\chi^L/(1-W_\zeta v\chi^L)$ | `zeta-rpa` (**live**) |
+
+Shared $s=1+f(\Gamma,r_s,\tau)$; asymptotic bridge $\mathrm{Li}_s(1)=\zeta(s)\leftrightarrow W/(1-W)$. Pathway~B remains the manuscript numerical path—including the asymmetric two-component zeta matrix—because a scalar $\mathrm{Li}_s$ does not promote cleanly to coupled RPA without a separate matrix-function calculus. Pathway~A is reserved for scalar formal definition and diagnostic validation until that calculus is specified.
 
 ---
 
