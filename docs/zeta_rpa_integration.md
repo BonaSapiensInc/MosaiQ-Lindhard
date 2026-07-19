@@ -8,7 +8,7 @@
 
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
 
-**Implementation status (Phase Z1).** Library + CTest + scalar strong-coupling verifier are live. Production `ZetaRPA` ships $W_\zeta\equiv 1$ (weak-coupling identity). `ZetaRPA_Experimental` applies the provisional dress.
+**Implementation status (Phase Z1).** Library + CTest + CLI `--pathway` + scalar verifier are live. Production `ZetaRPA` uses the **locked** $W_\zeta(\Gamma,r_s,\tau)$ (Laurent-regularized $\zeta(1+f)/\zeta(1)$). `ZetaRPA_Experimental` keeps a provisional A/B dress. Manuscript two-component pipelines remain on `StandardRPA`.
 
 ### CLI usage (Phase Z1 complete)
 
@@ -31,7 +31,7 @@ Zeta pathways write `output/output_zeta_rpa_scalar.dat` only.
 Strong-coupling exploration: `verify_zeta_rpa_scalar` → `output/zeta_rpa_strong_coupling_{sweep,rescue}.dat`;
 plot with `scripts/plot_zeta_rpa_strong_coupling.py`.
 
-**Strongest divergence-rescue observed (Phase Z1 stress test):** parking the scalar interaction on the RPA pole $v\approx 1/\Re\chi^L$ (and Coulomb amplifications up to $200\times$), scalar RPA yields $\mathrm{Inf}/\mathrm{NaN}$ or $|\chi|\gtrsim 10^{14}$ while `ZetaRPA_Experimental` remains finite. Strongest logged rescue block: **$r_s=4$, $\Gamma=200$** (also rescues from $\Gamma=10$ upward). Production `ZetaRPA` ($W_\zeta\equiv 1$) cannot rescue poles — as designed until the manuscript locks $W_\zeta$.
+**Strongest divergence-rescue observed (Phase Z1 stress test):** parking the scalar interaction on the RPA pole $v\approx 1/\Re\chi^L$ (and Coulomb amplifications up to $200\times$), scalar RPA yields $\mathrm{Inf}/\mathrm{NaN}$ or $|\chi|\gtrsim 10^{14}$ while Zeta-dressed responses remain finite. Strongest logged Experimental rescue block: **$r_s=4$, $\Gamma=200$**. With the locked production $W_\zeta$, production `zeta-rpa` also departs from bare RPA at finite $\Gamma$ and can shift dielectric zeros.
 
 ---
 
@@ -119,7 +119,28 @@ $$
 \frac{\chi^L(q,\omega)}{1 - v(q)\,W_\zeta\!\bigl[\chi^L;\,q,\omega;\,\Gamma\bigr]\,\chi^L(q,\omega)} ,
 $$
 
-where $W_\zeta$ is a **deterministic weight** constructed from Riemann-zeta values (and, where the manuscript later specifies, from finite truncations of zeta-regularized spectral moments). **The exact mathematical form of $W_\zeta$ must be locked in the manuscript before the public API is frozen.** Until that lock, Phase Z1 ships a provisional weight policy (production identity $W_\zeta\equiv 1$; experimental probe only under `ZetaRPA_Experimental`) that obeys the software contract below without claiming final theory status.
+where $W_\zeta$ dresses the bare interaction. **Locked production form (Phase Z1):**
+
+$$
+W_\zeta(\Gamma, r_s, \tau)
+=
+\frac{\zeta\Bigl(1 + \alpha \dfrac{\Gamma^{\beta}}{1 + \gamma\, r_s^{-\delta}\,\tau}\Bigr)}{\zeta(1)}\,.
+$$
+
+The parameters $\alpha$, $\beta$, $\gamma$, $\delta$ are theory parameters fixed in the manuscript (Appendix C).
+
+**Numerical regularization.** The pole $\zeta(1)=\infty$ is removable in the weak-coupling limit: with
+$f=\alpha\Gamma^{\beta}/(1+\gamma r_s^{-\delta}\tau)$, the Laurent expansion $\zeta(1+f)\sim 1/f+\gamma_E+\cdots$ implies the IEEE-evaluable equivalent
+
+$$
+W_\zeta \;=\;
+\begin{cases}
+1, & f=0\ (\Gamma\to 0),\\[4pt]
+f\,\zeta(1+f), & f>0\ \text{(Borwein, argument $>1$)},
+\end{cases}
+$$
+
+which satisfies $W_\zeta\to 1$ as $\Gamma\to 0$ and is the production implementation in `evaluate_zeta_weight`. `ZetaRPA_Experimental` retains a separate provisional probe dress for A/B diagnostics only.
 
 ### 3.2 What Zeta-RPA is not
 
@@ -277,17 +298,25 @@ flowchart TD
 
 ### 5.2 Effective interaction
 
-Conceptually (**exact $W_\zeta$ must be locked in the manuscript before API freeze**):
-
 $$
-v_{\mathrm{eff}}(q;\Gamma)
+v_{\mathrm{eff}}(q;\Gamma,r_s,\tau)
 =
-v(q)\,W_\zeta(\Gamma;\,\{\zeta(s_k)\}) ,
+v(q)\,W_\zeta(\Gamma,r_s,\tau)\,,
 \qquad
-\varepsilon^\zeta = 1 - v_{\mathrm{eff}}\,\chi^L .
+\varepsilon^\zeta = 1 - v_{\mathrm{eff}}\,\chi^L\,,
 $$
 
-$W_\zeta \to 1$ must recover ordinary scalar RPA identically (bit-level within roundoff) at a documented weak-coupling limit. That identity is a **hard regression gate** (Section 7).
+with the locked weight
+
+$$
+W_\zeta(\Gamma, r_s, \tau)
+=
+\frac{\zeta\Bigl(1 + \alpha \dfrac{\Gamma^{\beta}}{1 + \gamma\, r_s^{-\delta}\,\tau}\Bigr)}{\zeta(1)}\,.
+$$
+
+The parameters $\alpha$, $\beta$, $\gamma$, $\delta$ are theory parameters fixed in the manuscript (Appendix C). Numerically, $W_\zeta=f\,\zeta(1+f)$ with $f=\alpha\Gamma^{\beta}/(1+\gamma r_s^{-\delta}\tau)$ (Laurent regularization of the $\zeta(1)$ pole; $W_\zeta=1$ at $f=0$).
+
+$W_\zeta \to 1$ must recover ordinary scalar RPA identically (bit-level within roundoff) at $\Gamma\to 0$. That identity is a **hard regression gate** (Section 7).
 
 ---
 
@@ -486,10 +515,10 @@ Matrix Zeta-RPA may call scalar helpers; scalar Zeta-RPA must never depend on ma
 
 ## 11. Open Decisions (resolve before API freeze)
 
-1. **Exact $W_\zeta$ formula** — **must be locked in the manuscript before API freeze.** Phase Z1 uses a provisional policy only: production `ZetaRPA` ships $W_\zeta\equiv 1$ (weak-coupling identity); `ZetaRPA_Experimental` may probe a documented, non-default provisional dress that still recovers $W_\zeta\to 1$ as $\Gamma\to 0$.
+1. **Exact $W_\zeta$ formula** — **locked** as $\zeta(1+f)/\zeta(1)$ with Laurent production form $W=f\zeta(1+f)$, $f=\alpha\Gamma^{\beta}/(1+\gamma r_s^{-\delta}\tau)$. Coefficients $(\alpha,\beta,\gamma,\delta)$ await final Appendix C numerical freeze (defaults ship in `Constants.hpp`).
 2. **Unit convention** — Phase Z1 picks **DOS-restored (natural) units** at the `ZetaRpaInputs` / $v(q)$ boundary.
 3. **Auto-bypass defaults** — **off** (explicit `--pathway`) for reproducibility of existing figures; auto-bypass never selects `ZetaRPA_Experimental`.
-4. **Domain of $\zeta(s)$** — Phase Z1 restricted to real $s>1$.
+4. **Domain of $\zeta(s)$** — Phase Z1 restricted to real $s>1$ (ensured by $1+f$ with $f>0$).
 5. **Floating-point policy** — Borwein sums accumulate in `double` (align with current Lindhard/`double` stack).
 
 ---
@@ -505,4 +534,4 @@ Matrix Zeta-RPA may call scalar helpers; scalar Zeta-RPA must never depend on ma
 
 ---
 
-*Document version: 1.3 — Phase Z1 CLI `--pathway` live; strong-coupling pole-parking rescues documented ($r_s=4$, $\Gamma=200$ strongest).*
+*Document version: 1.4 — Locked $W_\zeta=\zeta(1+f)/\zeta(1)$ with Laurent production $W=f\zeta(1+f)$; Appendix C coefficients $(\alpha,\beta,\gamma,\delta)$.*

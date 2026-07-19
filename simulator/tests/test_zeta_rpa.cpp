@@ -61,6 +61,13 @@ void test_weak_coupling_identity()
     const std::complex<double> chi_c = as_complex(chi_l);
     const std::complex<double> chi_rpa = evaluate_scalar_rpa(chi_c, v);
 
+    // Γ → 0 ⇒ f → 0 ⇒ W_ζ → 1 (locked form).
+    const auto w0 = evaluate_zeta_weight(
+        ResponsePathway::ZetaRPA,
+        CouplingRegime<>{.rs = 1.0, .gamma_plasma = 0.0, .tau = 0.05});
+    assert(w0.has_value());
+    assert(std::abs(*w0 - 1.0) < 1.0e-15);
+
     ZetaRpaInputs<> inputs{
         .q = WaveVector<>{1.0},
         .omega = Frequency<>{0.5},
@@ -82,7 +89,43 @@ void test_weak_coupling_identity()
     const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_c, std::complex<double>{0.0, 0.0}, pot);
     assert(std::abs(zeta->chi - rpa.chi_ee) < 1.0e-14);
 
-    std::cout << "Weak-coupling identity (W_ζ → 1) OK.\n";
+    std::cout << "Weak-coupling identity (W_ζ → 1 as Γ → 0) OK.\n";
+}
+
+void test_high_gamma_stability()
+{
+    const CouplingRegime<> regime{.rs = 1.0, .gamma_plasma = 200.0, .tau = 0.05};
+    const auto weight = evaluate_zeta_weight(ResponsePathway::ZetaRPA, regime);
+    assert(weight.has_value());
+    assert(std::isfinite(*weight));
+    assert(*weight > 1.0);  // locked dress grows with Γ for α>0
+
+    const LindhardResult<> chi_l = evaluate_lindhard(
+        WaveVector<>{1.0},
+        Frequency<>{0.5},
+        ReducedTemperature<>{0.05},
+        ReducedChemicalPotential<>{1.0});
+
+    ZetaRpaInputs<> inputs{
+        .q = WaveVector<>{1.0},
+        .omega = Frequency<>{0.5},
+        .chi_lindhard = chi_l,
+        .bare_potential = 1.2,
+        .regime = regime,
+        .pathway = ResponsePathway::ZetaRPA,
+        .force_pathway = true,
+    };
+    const auto zeta = evaluate_zeta_rpa(inputs);
+    assert(zeta.has_value());
+    assert(std::isfinite(zeta->chi.real()) && std::isfinite(zeta->chi.imag()));
+    assert(std::isfinite(zeta->epsilon.real()) && std::isfinite(zeta->epsilon.imag()));
+    assert(std::abs(zeta->zeta_weight - *weight) < 1.0e-12);
+
+    // Distinct from bare scalar RPA at finite Γ.
+    const auto chi_rpa = evaluate_scalar_rpa(as_complex(chi_l), inputs.bare_potential);
+    assert(std::abs(zeta->chi - chi_rpa) > 1.0e-6);
+
+    std::cout << "High-Γ stability OK (W_ζ = " << *weight << ").\n";
 }
 
 void test_experimental_dress_vanishes_at_zero_gamma()
@@ -145,6 +188,7 @@ int main()
 {
     test_pathway_selection();
     test_weak_coupling_identity();
+    test_high_gamma_stability();
     test_experimental_dress_vanishes_at_zero_gamma();
     test_no_silent_fallback();
     test_nonfinite_rejection();

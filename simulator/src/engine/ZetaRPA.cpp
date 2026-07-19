@@ -16,17 +16,78 @@
 
 namespace mosaiq {
 
+namespace {
+
+/// f = α Γ^β / (1 + γ r_s^{-δ} τ)
+[[nodiscard]] std::optional<double> coupling_shape_factor(CouplingRegime<double> regime,
+                                                         ZetaWeightParameters params) noexcept
+{
+    if (!std::isfinite(regime.gamma_plasma) || regime.gamma_plasma < 0.0 ||
+        !std::isfinite(regime.rs) || regime.rs <= 0.0 || !std::isfinite(regime.tau) ||
+        regime.tau < 0.0) {
+        return std::nullopt;
+    }
+    if (!std::isfinite(params.alpha) || !std::isfinite(params.beta) ||
+        !std::isfinite(params.gamma) || !std::isfinite(params.delta) || params.alpha < 0.0) {
+        return std::nullopt;
+    }
+
+    const double gamma_pow = std::pow(regime.gamma_plasma, params.beta);
+    const double rs_pow = std::pow(regime.rs, -params.delta);
+    const double denom = 1.0 + params.gamma * rs_pow * regime.tau;
+    if (!std::isfinite(gamma_pow) || !std::isfinite(rs_pow) || !std::isfinite(denom) ||
+        denom <= 0.0) {
+        return std::nullopt;
+    }
+
+    const double f = params.alpha * gamma_pow / denom;
+    if (!std::isfinite(f) || f < 0.0) {
+        return std::nullopt;
+    }
+    return f;
+}
+
+/// Laurent-regularized ζ(1+f)/ζ(1) ≡ f·ζ(1+f) for f>0; identity 1 at f=0.
+[[nodiscard]] std::optional<double> locked_zeta_weight(double f, BorweinPolicy borwein)
+{
+    if (f <= constants::zeta_weight_f_floor) {
+        return 1.0;
+    }
+
+    const double s = 1.0 + f;
+    const auto zeta = riemann_zeta_borwein(s, borwein);
+    if (!zeta) {
+        return std::nullopt;
+    }
+
+    const double weight = f * (*zeta);
+    if (!std::isfinite(weight) || weight <= 0.0) {
+        return std::nullopt;
+    }
+    return weight;
+}
+
+}  // namespace
+
 std::optional<double> evaluate_zeta_weight(ResponsePathway pathway,
                                            CouplingRegime<double> regime,
-                                           BorweinPolicy borwein)
+                                           BorweinPolicy borwein,
+                                           ZetaWeightParameters params)
 {
     switch (pathway) {
     case ResponsePathway::StandardRPA:
-    case ResponsePathway::ZetaRPA:
-        // Production identity until manuscript locks W_ζ.
         return 1.0;
 
+    case ResponsePathway::ZetaRPA: {
+        const auto f = coupling_shape_factor(regime, params);
+        if (!f) {
+            return std::nullopt;
+        }
+        return locked_zeta_weight(*f, borwein);
+    }
+
     case ResponsePathway::ZetaRPA_Experimental: {
+        // Provisional A/B probe (not the locked production form).
         if (!std::isfinite(regime.gamma_plasma) || regime.gamma_plasma < 0.0) {
             return std::nullopt;
         }
@@ -70,7 +131,8 @@ std::optional<ZetaRpaResult<double>> evaluate_zeta_rpa(const ZetaRpaInputs<doubl
         return std::nullopt;
     }
 
-    const auto weight = evaluate_zeta_weight(selected, inputs.regime, inputs.borwein);
+    const auto weight =
+        evaluate_zeta_weight(selected, inputs.regime, inputs.borwein, inputs.weight_params);
     if (!weight) {
         return std::nullopt;
     }

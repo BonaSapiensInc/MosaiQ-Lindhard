@@ -67,7 +67,7 @@ inline constexpr double nine_pi_over_four_cbrt = 1.7044777697860926;
     return boltzmann_hartree_per_kelvin * T_kelvin;
 }
 
-/// --- Zeta-RPA Phase Z1 (provisional; W_ζ form awaits manuscript lock) ---
+/// --- Zeta-RPA Phase Z1 (locked W_ζ; Appendix C coefficients) ---
 
 /// Default Borwein truncation order for ζ(s), s > 1.
 inline constexpr std::size_t default_borwein_truncation_order = 50;
@@ -75,14 +75,23 @@ inline constexpr std::size_t default_borwein_truncation_order = 50;
 /// Absolute tolerance floor for Borwein residual diagnostics (tests).
 inline constexpr double default_borwein_absolute_tolerance = 1.0e-15;
 
-/// Strong-coupling gate: Γ ≥ Γ★ (plasma coupling). Provisional until manuscript lock.
+/// Strong-coupling gate: Γ ≥ Γ★ (plasma coupling).
 inline constexpr double zeta_rpa_gamma_star = 10.0;
 
-/// Strong-coupling gate: r_s ≥ r_s★. Provisional until manuscript lock.
+/// Strong-coupling gate: r_s ≥ r_s★.
 inline constexpr double zeta_rpa_rs_star = 5.0;
 
-/// Experimental-only provisional dress amplitude κ in
-/// W_ζ(Γ) = 1 + κ Γ/(1+Γ) · (ζ(3)/ζ(2)). Production ZetaRPA keeps W_ζ ≡ 1.
+/// Locked W_ζ parameters (manuscript Appendix C — provisional defaults until table freeze).
+/// f = α Γ^β / (1 + γ r_s^{-δ} τ),  W = f ζ(1+f)  (Laurent form of ζ(1+f)/ζ(1)).
+inline constexpr double zeta_weight_alpha = 0.05;
+inline constexpr double zeta_weight_beta = 1.0;
+inline constexpr double zeta_weight_gamma = 1.0;
+inline constexpr double zeta_weight_delta = 1.0;
+
+/// Treat f below this as the Γ→0 identity W=1.
+inline constexpr double zeta_weight_f_floor = 1.0e-14;
+
+/// Experimental-only provisional dress amplitude κ (A/B probe; not production).
 inline constexpr double zeta_rpa_experimental_kappa = 0.05;
 
 }  // namespace mosaiq::constants

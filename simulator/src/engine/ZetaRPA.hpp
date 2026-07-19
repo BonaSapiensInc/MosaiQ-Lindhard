@@ -13,11 +13,20 @@
 #include "core/Concepts.hpp"
 #include "core/RiemannZetaBorwein.hpp"
 #include "engine/RPA.hpp"
+#include "physics/Constants.hpp"
 
 #include <complex>
 #include <optional>
 
 namespace mosaiq {
+
+/// Theory coefficients for locked W_ζ (manuscript Appendix C).
+struct ZetaWeightParameters {
+    double alpha{constants::zeta_weight_alpha};
+    double beta{constants::zeta_weight_beta};
+    double gamma{constants::zeta_weight_gamma};
+    double delta{constants::zeta_weight_delta};
+};
 
 /// Scalar Zeta-RPA result (Phase Z1 — single component only).
 template<ScalarPhysical T = double>
@@ -39,14 +48,18 @@ struct ZetaRpaInputs {
     BorweinPolicy borwein{};
     ResponsePathway pathway{ResponsePathway::ZetaRPA};
     bool force_pathway{false};
+    ZetaWeightParameters weight_params{};
 };
 
-/// Provisional W_ζ until the manuscript locks the exact form.
-/// Production ZetaRPA: W ≡ 1 (weak-coupling identity).
-/// Experimental: W(Γ) = 1 + κ Γ/(1+Γ) · (ζ(3)/ζ(2)), with W → 1 as Γ → 0.
-[[nodiscard]] std::optional<double> evaluate_zeta_weight(ResponsePathway pathway,
-                                                         CouplingRegime<double> regime,
-                                                         BorweinPolicy borwein = {});
+/// Locked production weight:
+///   f = α Γ^β / (1 + γ r_s^{-δ} τ),
+///   W = ζ(1+f)/ζ(1)  ≅  f·ζ(1+f)  (Laurent regularization; W=1 at f=0).
+/// Experimental pathway retains a provisional A/B dress.
+[[nodiscard]] std::optional<double> evaluate_zeta_weight(
+    ResponsePathway pathway,
+    CouplingRegime<double> regime,
+    BorweinPolicy borwein = {},
+    ZetaWeightParameters params = {});
 
 /// Pure scalar Zeta-RPA evaluation. Returns nullopt on non-finite inputs or failed ζ.
 /// Does not renegotiate causality: χ^L is an immutable upstream Lindhard input.

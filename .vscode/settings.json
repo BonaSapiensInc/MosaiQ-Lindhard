@@ -1,5 +1,7 @@
 {
     "cSpell.configPath": "cspell.json",
+    "cSpell.enabled": true,
+    "cSpell.diagnosticLevel": "Warning",
     "cSpell.enabledLanguageIds": [
         "latex",
         "markdown",
@@ -7,7 +9,21 @@
         "python",
         "scminput",
         "cpp",
-        "c"
+        "c",
+        "json",
+        "yaml",
+        "cmake"
+    ],
+    "cSpell.ignorePaths": [
+        "**/node_modules/**",
+        "**/__pycache__/**",
+        "**/.cache/**",
+        "**/.venv/**",
+        "simulator/build/**",
+        "simulator/output/**",
+        "output/**/*.dat",
+        "**/*.pdf",
+        "**/*.zip"
     ],
 
     "C_Cpp.default.cppStandard": "c++20",

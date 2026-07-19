@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "streetsidesoftware.code-spell-checker",
         "llvm-vs-code-extensions.vscode-clangd",
         "tomoki1207.pdf"
     ],

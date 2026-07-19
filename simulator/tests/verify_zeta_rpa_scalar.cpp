@@ -212,7 +212,7 @@ int main()
                                 max_abs_exp = std::max(max_abs_exp, std::abs(z_exp->chi));
                             }
 
-                            // Production W≡1 cannot rescue RPA poles; Experimental may.
+                            // Locked production W may also rescue poles; Experimental is A/B.
                             if (rpa_bad && exp_ok) {
                                 ++n_rescue;
                                 ++total_rescue;
