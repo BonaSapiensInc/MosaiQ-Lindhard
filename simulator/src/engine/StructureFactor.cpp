@@ -54,6 +54,23 @@ double temperature_kelvin_from_gamma(double rs, double gamma) noexcept
     return constants::debye_prefactor_numerator / (rs * gamma);
 }
 
+double plasma_coupling_from_kelvin(double rs, double T_kelvin) noexcept
+{
+    if (!(rs > 0.0) || !(T_kelvin > 0.0)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return constants::debye_prefactor_numerator / (rs * T_kelvin);
+}
+
+double temperature_kelvin_from_plasma(const PlasmaContext& plasma) noexcept
+{
+    const double T_ha = plasma.electron.tau.raw() * plasma.electron.E_F;
+    if (!(T_ha > 0.0) || !(constants::boltzmann_hartree_per_kelvin > 0.0)) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return T_ha / constants::boltzmann_hartree_per_kelvin;
+}
+
 BarePotentials<> coulomb_potentials_rational(double q_rational) noexcept
 {
     const double q_sq = q_rational * q_rational + coulomb_softening * coulomb_softening;
@@ -166,9 +183,10 @@ std::optional<std::vector<double>> parse_gamma_list(const std::string& text)
 
 DynamicStructureFactorSample evaluate_dynamic_sample(double q,
                                                      double omega_e,
-                                                     const PlasmaContext& plasma) noexcept
+                                                     const PlasmaContext& plasma,
+                                                     ResponsePathway pathway) noexcept
 {
-    const RpaResult<> rpa = evaluate_rpa_response(q, omega_e, plasma);
+    const ZetaRpaMatrixResult<> rpa = evaluate_rpa_response(q, omega_e, plasma, pathway);
     const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
 
     return DynamicStructureFactorSample{
@@ -179,27 +197,98 @@ DynamicStructureFactorSample evaluate_dynamic_sample(double q,
     };
 }
 
-RpaResult<> evaluate_rpa_response(double q,
-                                  double omega_e,
-                                  const PlasmaContext& plasma) noexcept
+ZetaRpaMatrixResult<> evaluate_rpa_response(double q,
+                                            double omega_e,
+                                            const PlasmaContext& plasma,
+                                            ResponsePathway pathway) noexcept
 {
     const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
     const double q_i = q * (plasma.electron.k_f / plasma.ion.k_f);
     const BarePotentials<> potentials = coulomb_potentials_rational(q);
 
-    const LindhardResult<> chi_e = evaluate_lindhard(
+    const LindhardResult<> chi_e_reduced = evaluate_lindhard(
         WaveVector<>{q},
         Frequency<>{omega_e},
         plasma.electron.tau,
         plasma.electron.gamma);
 
-    const LindhardResult<> chi_i = evaluate_lindhard(
+    const LindhardResult<> chi_i_reduced = evaluate_lindhard(
         WaveVector<>{q_i},
         Frequency<>{omega_i},
         plasma.ion.tau,
         plasma.ion.gamma);
 
-    return evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
+    // CRITICAL: matrix / RPA assembly consumes DOS-restored (natural) susceptibilities.
+    const double dos_e = density_of_states_at_fermi(plasma.n, plasma.electron.E_F);
+    const double dos_i = density_of_states_at_fermi(plasma.n, plasma.ion.E_F);
+    const LindhardResult<> chi_e{
+        chi_e_reduced.real() * dos_e,
+        chi_e_reduced.imag() * dos_e,
+    };
+    const LindhardResult<> chi_i{
+        chi_i_reduced.real() * dos_i,
+        chi_i_reduced.imag() * dos_i,
+    };
+
+    if (pathway == ResponsePathway::StandardRPA) {
+        const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
+        const auto epsilon = evaluate_dielectric(chi_e, chi_i, potentials);
+        return ZetaRpaMatrixResult<>{
+            .chi_ee = rpa.chi_ee,
+            .chi_ii = rpa.chi_ii,
+            .chi_ei = rpa.chi_ei,
+            .epsilon = epsilon,
+            .zeta_weight_ee = 1.0,
+            .zeta_weight_ii = 1.0,
+            .zeta_weight_ei = 1.0,
+            .pathway = ResponsePathway::StandardRPA,
+        };
+    }
+
+    const double T_kelvin = temperature_kelvin_from_plasma(plasma);
+    const double gamma_plasma = plasma_coupling_from_kelvin(plasma.rs, T_kelvin);
+    const CouplingRegime<> regime_e{
+        .rs = plasma.rs,
+        .gamma_plasma = gamma_plasma,
+        .tau = plasma.electron.tau.raw(),
+    };
+    const CouplingRegime<> regime_i{
+        .rs = plasma.rs,
+        .gamma_plasma = gamma_plasma,
+        .tau = plasma.ion.tau.raw(),
+    };
+
+    // Force pathway so weak-Γ production still evaluates W_ζ → 1 rather than nullopt.
+    ZetaRpaMatrixInputs<> inputs{
+        .q = WaveVector<>{q},
+        .omega = Frequency<>{omega_e},
+        .chi_lindhard_e = chi_e,
+        .chi_lindhard_i = chi_i,
+        .potentials = potentials,
+        .regime_e = regime_e,
+        .regime_i = regime_i,
+        .pathway = pathway,
+        .force_pathway = true,
+    };
+
+    const auto zeta = evaluate_zeta_rpa_matrix(inputs);
+    if (zeta) {
+        return *zeta;
+    }
+
+    // Honesty fallback: never invent silent NaN channels; recover StandardRPA algebra.
+    const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
+    const auto epsilon = evaluate_dielectric(chi_e, chi_i, potentials);
+    return ZetaRpaMatrixResult<>{
+        .chi_ee = rpa.chi_ee,
+        .chi_ii = rpa.chi_ii,
+        .chi_ei = rpa.chi_ei,
+        .epsilon = epsilon,
+        .zeta_weight_ee = 1.0,
+        .zeta_weight_ii = 1.0,
+        .zeta_weight_ei = 1.0,
+        .pathway = ResponsePathway::StandardRPA,
+    };
 }
 
 double dynamic_structure_factor_omega_max(double q, const PlasmaContext& plasma) noexcept
@@ -220,7 +309,8 @@ StaticStructureFactor integrate_static_structure_factor(double q,
                                                         const PlasmaContext& plasma,
                                                         double omega_min,
                                                         double omega_max,
-                                                        double omega_step) noexcept
+                                                        double omega_step,
+                                                        ResponsePathway pathway) noexcept
 {
     std::vector<double> omega_grid;
     std::vector<double> s_ee;
@@ -237,7 +327,7 @@ StaticStructureFactor integrate_static_structure_factor(double q,
     for (double omega_e = omega_min; omega_e <= actual_omega_max + 0.5 * omega_step;
          omega_e += omega_step) {
         const DynamicStructureFactorSample sample =
-            evaluate_dynamic_sample(q, omega_e, plasma);
+            evaluate_dynamic_sample(q, omega_e, plasma, pathway);
 
         if (!std::isfinite(sample.S_ee) || !std::isfinite(sample.S_ii) ||
             !std::isfinite(sample.S_ei)) {

@@ -1,6 +1,6 @@
 # MosaiQ-Lindhard: Zeta-RPA Integration Blueprint
 
-**Status:** Architecture Blueprint — Phase Z1–Z2 complete; Phase Z3 matrix API live; Phase Z4 manuscript integrated  
+**Status:** Architecture Blueprint — Phase Z1–Z4 complete (versioned switch: multi-component ZetaRPA is production default)  
 **Protocol:** Pontifex — *Arx Axiomatis* under Imperator  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
 **Parent Blueprint:** `docs/simulator_architecture.md`  
@@ -8,32 +8,30 @@
 
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
 
-**Implementation status (Phase Z1).** Library + CTest + CLI `--pathway` + scalar verifier are live. Production `ZetaRPA` uses the **locked** $W_\zeta(\Gamma,r_s,\tau)$ (Laurent-regularized $\zeta(1+f)/\zeta(1)$). `ZetaRPA_Experimental` keeps a provisional A/B dress. Manuscript two-component pipelines remain on `StandardRPA`.
+**Implementation status (Phase Z4 — versioned switch).** `evaluate_rpa_response` defaults to multi-component `ZetaRPA` via DOS-restored `evaluate_zeta_rpa_matrix`. CLI default is `--pathway zeta-rpa`. Legacy undressed RPA remains `--pathway standard-rpa`. Scalar grids are opt-in via `--scalar-diagnostic`.
 
-**Implementation status (Phase Z2 — dielectric roots).** `PlasmonPoleExtractor` gains an opt-in scalar overload `extract(PlasmonPoleZetaInputs)` / `evaluate_epsilon_zeta` / `evaluate_epsilon_scalar`. The two-component `extract(PlasmonPoleInputs)` path is unchanged (manuscript bit-identical). Zeta CLI modes additionally write `output/output_zeta_rpa_dispersion.dat` with columns $q$, $\omega_p^{\mathrm{RPA}}$, $\omega_p^\zeta$, $\Im\varepsilon^{\mathrm{RPA}}$, $\Im\varepsilon^\zeta$, Bohm–Gross. Full Python “Figure X: Zeta-RPA Rescue” plot is deferred pending Imperator approval of this C++ architecture.
-
-### CLI usage (Phase Z1 complete)
+### CLI usage (Phase Z4 versioned switch)
 
 ```bash
-# Manuscript default — two-component StandardRPA (unchanged figure pipelines)
+# Production default — multi-component Zeta-RPA structure factors + dispersion
 ./simulator/build/mosaiq_simulator 1.0 10000
+./simulator/build/mosaiq_simulator --pathway zeta-rpa 1.0 10000
+
+# Legacy undressed two-component RPA
 ./simulator/build/mosaiq_simulator --pathway standard-rpa 1.0 10000
 
-# Scalar Zeta-RPA diagnostic (does NOT overwrite manuscript structure-factor .dat)
-./simulator/build/mosaiq_simulator --pathway zeta-rpa --gamma 50 1.0 1000
-./simulator/build/mosaiq_simulator --pathway zeta-rpa-experimental --gamma 200 1.0 1000
+# Opt-in scalar Zeta diagnostic grids
+./simulator/build/mosaiq_simulator --scalar-diagnostic --pathway zeta-rpa --gamma 50 1.0 1000
 # → output/output_zeta_rpa_scalar.dat
-# → output/output_zeta_rpa_dispersion.dat  (Phase Z2: ω_p^RPA vs ω_p^ζ comparison)
-# Plot rescue figure:
+# → output/output_zeta_rpa_dispersion.dat
 #   python3 scripts/plot_zeta_rpa_dispersion.py
-#   → output/zeta_rpa_dispersion.pdf
 
-# Static S(q) Gamma sweep (always StandardRPA)
+# Static S(q) Gamma sweep (inherits --pathway; default ZetaRPA)
 ./simulator/build/mosaiq_simulator --gamma-sweep 1 10,50,100,150
+./simulator/build/mosaiq_simulator --pathway standard-rpa --gamma-sweep 1 10,50,100,150
 ```
 
-Stderr prints a pathway header, e.g. `ResponsePathway: ZetaRPA (strong-coupling bypass enabled; scalar diagnostic)`.
-Zeta pathways write `output/output_zeta_rpa_scalar.dat` and `output/output_zeta_rpa_dispersion.dat`.
+Stderr prints a pathway header, e.g. `ResponsePathway: ZetaRPA (production multi-component Zeta-RPA; strong-coupling window)`.
 
 Strong-coupling exploration: `verify_zeta_rpa_scalar` → `output/zeta_rpa_strong_coupling_{sweep,rescue}.dat`;
 plot with `scripts/plot_zeta_rpa_strong_coupling.py`.
@@ -509,7 +507,7 @@ Manuscript figure pipelines remain on `StandardRPA` until an explicit versioned 
 
 1. **Algebraic continuity:** When all $W_\zeta^{st}\to 1$, `ZetaRpaMatrixResult` must match `evaluate_rpa_susceptibility` within tolerance (matrix analogue of the weak-coupling identity).
 2. **Species asymmetry:** Electron and ion Lindhard inputs remain independent; zeta weights may depend on $\Gamma_e$, $\Gamma_i$, and cross-coupling.
-3. **No rewrite of history:** Published two-component RPA figures stay on `ResponsePathway::StandardRPA` until a versioned manuscript revision explicitly switches them.
+3. **No rewrite of history (superseded by Phase Z4):** Phase Z4 versioned switch promotes multi-component `ZetaRPA` as the default production pathway for structure-factor / Gamma-sweep exports. Legacy `StandardRPA` remains available via `--pathway standard-rpa`.
 4. **Extractor reuse:** `PlasmonPoleExtractor` continues to consume a `DielectricFunction` concept; multi-component $\varepsilon^\zeta$ is supplied as a callable, preserving Brent’s derivative-free contract.
 
 ### 9.3 Dependency direction

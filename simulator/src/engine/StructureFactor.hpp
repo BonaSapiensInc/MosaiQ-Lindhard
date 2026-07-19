@@ -12,6 +12,7 @@
 
 #include "core/Concepts.hpp"
 #include "engine/RPA.hpp"
+#include "engine/ZetaRPA.hpp"
 
 #include <complex>
 #include <optional>
@@ -86,6 +87,12 @@ struct StaticStructureFactor {
 
 [[nodiscard]] double temperature_kelvin_from_gamma(double rs, double gamma) noexcept;
 
+/// Plasma coupling Γ = 311775 / (r_s T[K]) — inverse of temperature_kelvin_from_gamma.
+[[nodiscard]] double plasma_coupling_from_kelvin(double rs, double T_kelvin) noexcept;
+
+/// Recover absolute temperature [K] from electron reduced thermodynamics.
+[[nodiscard]] double temperature_kelvin_from_plasma(const PlasmaContext& plasma) noexcept;
+
 [[nodiscard]] BarePotentials<> coulomb_potentials_rational(double q_rational) noexcept;
 
 [[nodiscard]] double bose_einstein_factor(double omega_bar, double tau) noexcept;
@@ -101,19 +108,24 @@ struct StaticStructureFactor {
 [[nodiscard]] DynamicStructureFactorSample evaluate_dynamic_sample(
     double q,
     double omega_e,
-    const PlasmaContext& plasma) noexcept;
+    const PlasmaContext& plasma,
+    ResponsePathway pathway = ResponsePathway::ZetaRPA) noexcept;
 
-/// Lindhard → DOS-restored RPA at electron phase-space coordinates (q̄_e, ω̄_e).
-[[nodiscard]] RpaResult<> evaluate_rpa_response(double q,
-                                                double omega_e,
-                                                const PlasmaContext& plasma) noexcept;
+/// Lindhard (reduced) → DOS-restored response at (q̄_e, ω̄_e).
+/// Default production pathway is multi-component Zeta-RPA (Phase Z4 versioned switch).
+[[nodiscard]] ZetaRpaMatrixResult<> evaluate_rpa_response(
+    double q,
+    double omega_e,
+    const PlasmaContext& plasma,
+    ResponsePathway pathway = ResponsePathway::ZetaRPA) noexcept;
 
 [[nodiscard]] StaticStructureFactor integrate_static_structure_factor(
     double q,
     const PlasmaContext& plasma,
     double omega_min,
     double omega_max,
-    double omega_step) noexcept;
+    double omega_step,
+    ResponsePathway pathway = ResponsePathway::ZetaRPA) noexcept;
 
 /// Kinematic $\bar{\omega}$ upper bound for the wide-range dynamic structure-factor mesh.
 [[nodiscard]] double dynamic_structure_factor_omega_max(double q,

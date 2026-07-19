@@ -71,15 +71,17 @@ inline constexpr const char* zeta_dispersion_filename = "output_zeta_rpa_dispers
 void print_usage(const char* program)
 {
     std::cerr << "Usage:\n"
-              << "  " << program << " [--pathway NAME] [--gamma GAMMA] <r_s> <T_kelvin>\n"
-              << "  " << program << " --gamma-sweep <r_s> <gamma_1>,<gamma_2>,...\n"
+              << "  " << program << " [--pathway NAME] [--gamma GAMMA] [--scalar-diagnostic] "
+                 "<r_s> <T_kelvin>\n"
+              << "  " << program << " [--pathway NAME] --gamma-sweep <r_s> <gamma_1>,<gamma_2>,...\n"
               << "\n"
               << "  r_s       Wigner-Seitz radius in Bohr radii (e.g. 1.0)\n"
               << "  T_kelvin  temperature in kelvin (e.g. 10000.0)\n"
               << "  --pathway standard-rpa | zeta-rpa | zeta-rpa-experimental\n"
-              << "            (default: standard-rpa — manuscript two-component pipeline)\n"
-              << "  --gamma   plasma coupling Gamma for Zeta-RPA scalar diagnostic (optional)\n"
-              << "  Zeta pathways write scalar response + plasmon comparison grids\n"
+              << "            (default: zeta-rpa — multi-component manuscript pipeline)\n"
+              << "  --gamma   plasma coupling Gamma for optional scalar diagnostic export\n"
+              << "  --scalar-diagnostic  write scalar Zeta-RPA grids (opt-in; does not replace "
+                 "S(q,ω))\n"
               << "  gamma     plasma coupling parameter Gamma (Eq. plasma-coupling-parameter-Hartree)\n";
 }
 
@@ -87,11 +89,13 @@ void print_pathway_header(ResponsePathway pathway, bool strong_coupling) noexcep
 {
     std::cerr << "ResponsePathway: " << pathway_label(pathway);
     if (pathway == ResponsePathway::StandardRPA) {
-        std::cerr << " (manuscript default; two-component RPA export)\n";
+        std::cerr << " (legacy undressed two-component RPA)\n";
+    } else if (pathway == ResponsePathway::ZetaRPA_Experimental) {
+        std::cerr << " (experimental multi-component dress)\n";
     } else if (strong_coupling) {
-        std::cerr << " (strong-coupling bypass enabled; scalar diagnostic)\n";
+        std::cerr << " (production multi-component Zeta-RPA; strong-coupling window)\n";
     } else {
-        std::cerr << " (scalar diagnostic; force_pathway for weak-coupling probe)\n";
+        std::cerr << " (production multi-component Zeta-RPA; W_ζ → 1 at weak Γ)\n";
     }
 }
 
@@ -225,13 +229,21 @@ void write_run_header(std::ostream& out,
     return rows_written;
 }
 
-int run_standard_mode(double rs, double T_kelvin)
+int run_standard_mode(double rs, double T_kelvin, ResponsePathway pathway)
 {
     PlasmaContext plasma{};
     if (!build_plasma_context(rs, T_kelvin, plasma)) {
         std::cerr << "Error: failed to initialize plasma state.\n";
         return EXIT_FAILURE;
     }
+
+    const double gamma_plasma = plasma_coupling_from_kelvin(rs, T_kelvin);
+    const CouplingRegime<> regime{
+        .rs = rs,
+        .gamma_plasma = gamma_plasma,
+        .tau = plasma.electron.tau.raw(),
+    };
+    print_pathway_header(pathway, is_strong_coupling(regime));
 
     const std::filesystem::path output_dir{output_directory};
     std::error_code ec;
@@ -264,11 +276,15 @@ int run_standard_mode(double rs, double T_kelvin)
         return EXIT_FAILURE;
     }
 
-    structure_factor_output << "# MosaiQ-Lindhard CLI — multi-component RPA structure factors\n";
+    structure_factor_output << "# MosaiQ-Lindhard CLI — multi-component structure factors\n";
+    structure_factor_output << "# ResponsePathway = " << pathway_label(pathway) << '\n';
+    structure_factor_output << "# Gamma_plasma = " << std::scientific << std::setprecision(12)
+                             << gamma_plasma << '\n';
     write_run_header(structure_factor_output, rs, T_kelvin, plasma);
     write_run_header(lindhard_base_output, rs, T_kelvin, plasma);
     structure_factor_output << "# omega column: electron reduced units [E_F/e/hbar]\n";
     structure_factor_output << "# S_ei uses tau_e (electron thermal reference)\n";
+    structure_factor_output << "# DOS-restored susceptibilities; core columns unchanged for plots\n";
     structure_factor_output << "# columns: q omega Im(chi_ee) S_ee Im(chi_ii) S_ii Im(chi_ei) S_ei\n";
 
     dispersion_output << "# MosaiQ-Lindhard CLI — plasmon dispersion Re[epsilon]=0 trajectory\n";
@@ -312,7 +328,8 @@ int run_standard_mode(double rs, double T_kelvin)
              omega_e <= structure_factor_export_omega_max + 0.5 * default_omega_step;
              omega_e += default_omega_step) {
             const double omega_i = omega_e * plasma.electron.E_F / plasma.ion.E_F;
-            const RpaResult<> rpa = evaluate_rpa_response(q, omega_e, plasma);
+            const ZetaRpaMatrixResult<> rpa =
+                evaluate_rpa_response(q, omega_e, plasma, pathway);
 
             const double S_ee =
                 dynamic_structure_factor(rpa.chi_ee, omega_e, plasma.electron.tau.raw());
@@ -346,13 +363,17 @@ int run_standard_mode(double rs, double T_kelvin)
     std::cout << "Wrote " << rows_written << " rows to " << structure_factor_path << '\n';
     std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
               << dispersion_roots << " roots)\n";
-    std::cout << "  r_s = " << rs << ", T = " << T_kelvin << " K\n";
+    std::cout << "  ResponsePathway = " << pathway_label(pathway) << '\n';
+    std::cout << "  r_s = " << rs << ", T = " << T_kelvin << " K, Gamma = " << gamma_plasma
+              << '\n';
     std::cout << "  tau_e = " << plasma.electron.tau.raw()
               << ", tau_i = " << plasma.ion.tau.raw() << '\n';
     return EXIT_SUCCESS;
 }
 
-int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
+int run_gamma_sweep_mode(double rs,
+                         const std::vector<double>& gammas,
+                         ResponsePathway pathway)
 {
     const std::filesystem::path output_dir{output_directory};
     std::error_code ec;
@@ -371,6 +392,7 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
     }
 
     output << "# MosaiQ-Lindhard CLI — static structure factor gamma sweep\n";
+    output << "# ResponsePathway = " << pathway_label(pathway) << '\n';
     output << "# S(q) = integral S(q, omega) d omega_bar over ["
            << static_omega_min << ", Dynamic Bound] step "
            << static_omega_step << '\n';
@@ -404,7 +426,8 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
                 plasma,
                 static_omega_min,
                 static_omega_max,
-                static_omega_step);
+                static_omega_step,
+                pathway);
 
             if (!std::isfinite(static_sq.S_ee) || !std::isfinite(static_sq.S_ii) ||
                 !std::isfinite(static_sq.S_ei)) {
@@ -430,11 +453,12 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
     }
 
     std::cout << "Wrote " << blocks_written << " Gamma blocks to " << output_path << '\n';
+    std::cout << "  ResponsePathway = " << pathway_label(pathway) << '\n';
     std::cout << "  r_s = " << rs << '\n';
     return EXIT_SUCCESS;
 }
 
-/// Scalar Zeta-RPA diagnostic export (does not rewrite manuscript two-component .dat files).
+/// Scalar Zeta-RPA diagnostic export (opt-in via --scalar-diagnostic).
 [[nodiscard]] int run_zeta_scalar_mode(double rs,
                                        double T_kelvin,
                                        double gamma_plasma,
@@ -618,8 +642,9 @@ int run_gamma_sweep_mode(double rs, const std::vector<double>& gammas)
 }
 
 struct CliOptions {
-    ResponsePathway pathway{ResponsePathway::StandardRPA};
+    ResponsePathway pathway{ResponsePathway::ZetaRPA};
     bool pathway_explicit{false};
+    bool scalar_diagnostic{false};
     std::optional<double> gamma_plasma{};
     std::vector<std::string_view> positionals{};
 };
@@ -651,6 +676,10 @@ struct CliOptions {
                 return std::nullopt;
             }
             opts.gamma_plasma = g;
+            continue;
+        }
+        if (arg == "--scalar-diagnostic") {
+            opts.scalar_diagnostic = true;
             continue;
         }
         if (arg == "--gamma-sweep") {
@@ -697,8 +726,9 @@ int main(int argc, char* argv[])
             print_usage(argv[0]);
             return EXIT_FAILURE;
         }
-        std::cerr << "ResponsePathway: StandardRPA (gamma-sweep manuscript static S(q))\n";
-        return run_gamma_sweep_mode(rs, *gammas);
+        std::cerr << "ResponsePathway: " << pathway_label(parsed->pathway)
+                  << " (gamma-sweep static S(q))\n";
+        return run_gamma_sweep_mode(rs, *gammas, parsed->pathway);
     }
 
     if (parsed->positionals.size() != 2) {
@@ -724,11 +754,15 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (parsed->pathway == ResponsePathway::StandardRPA) {
-        print_pathway_header(ResponsePathway::StandardRPA, false);
-        return run_standard_mode(rs, T_kelvin);
+    if (parsed->scalar_diagnostic) {
+        if (parsed->pathway == ResponsePathway::StandardRPA) {
+            std::cerr << "Error: --scalar-diagnostic requires a Zeta pathway "
+                         "(--pathway zeta-rpa[...]).\n";
+            return EXIT_FAILURE;
+        }
+        const double gamma = parsed->gamma_plasma.value_or(constants::zeta_rpa_gamma_star);
+        return run_zeta_scalar_mode(rs, T_kelvin, gamma, parsed->pathway);
     }
 
-    const double gamma = parsed->gamma_plasma.value_or(constants::zeta_rpa_gamma_star);
-    return run_zeta_scalar_mode(rs, T_kelvin, gamma, parsed->pathway);
+    return run_standard_mode(rs, T_kelvin, parsed->pathway);
 }
