@@ -9,7 +9,7 @@
 
 **Doctrine (absolute).** Zeta-RPA is permitted to dress the interaction ladder; it is forbidden to renegotiate causality (KK/sinc pathway remains absolute).
 
-**Dual-pathway numbering (manuscript).** Pathway~A = PolyLog-RPA (formal $\mathrm{Li}_s$ definition); Pathway~B = LFC–Zeta / Zeta-RPA (production). Zeta-RPA is **retained** as the live default; PolyLog-RPA is formalized for a parallel production evaluator (`--pathway polylog-rpa`, next sprint).
+**Dual-pathway numbering (manuscript).** Pathway~A = PolyLog-RPA (formal $\mathrm{Li}_s$ definition; scalar CLI live); Pathway~B = LFC–Zeta / Zeta-RPA (production). Zeta-RPA is **retained** as the live multi-component default; PolyLog-RPA is available via `--pathway polylog-rpa --scalar-diagnostic`.
 
 **Implementation status (Phase Z4 — versioned switch).** `evaluate_rpa_response` defaults to multi-component `ZetaRPA` via DOS-restored `evaluate_zeta_rpa_matrix`. CLI default is `--pathway zeta-rpa`. Legacy undressed RPA remains `--pathway standard-rpa`. Scalar grids are opt-in via `--scalar-diagnostic`.
 
@@ -23,8 +23,8 @@
 # Legacy undressed two-component RPA
 ./simulator/build/mosaiq_simulator --pathway standard-rpa 1.0 10000
 
-# Pathway A — PolyLog-RPA (reserved; evaluator sprint next)
-# ./simulator/build/mosaiq_simulator --pathway polylog-rpa 1.0 10000
+# Pathway A — PolyLog-RPA (scalar diagnostic)
+# ./simulator/build/mosaiq_simulator --pathway polylog-rpa --scalar-diagnostic --gamma 50 1.0 10000
 
 # Opt-in scalar Zeta diagnostic grids
 ./simulator/build/mosaiq_simulator --scalar-diagnostic --pathway zeta-rpa --gamma 50 1.0 1000
@@ -52,10 +52,10 @@ Full equations and the $x\to 1$ bridge live in [`theory.md`](theory.md). In one 
 
 | Pathway | Role | Formula | CLI |
 |---------|------|---------|-----|
-| **A** PolyLog-RPA | Formal diagrammatic definition (**scalar** ladder) | $\chi^{(s)}=\chi^L\mathrm{Li}_s(v\chi^L)$ | `polylog-rpa` (next) |
+| **A** PolyLog-RPA | Formal diagrammatic definition (**scalar** ladder) | $\chi^{(s)}=\chi^L\mathrm{Li}_s(v\chi^L)$, $s=f$ | `polylog-rpa` + `--scalar-diagnostic` |
 | **B** LFC–Zeta | Production Ansatz (default; **multi-component**) | $\chi^{\zeta}=\chi^L/(1-W_\zeta v\chi^L)$ | `zeta-rpa` (**live**) |
 
-Shared $s=1+f(\Gamma,r_s,\tau)$; asymptotic bridge $\mathrm{Li}_s(1)=\zeta(s)\leftrightarrow W/(1-W)$. Pathway~B remains the manuscript numerical path—including the asymmetric two-component zeta matrix—because a scalar $\mathrm{Li}_s$ does not promote cleanly to coupled RPA without a separate matrix-function calculus. Pathway~A is reserved for scalar formal definition and diagnostic validation until that calculus is specified.
+Shared thermodynamic distance $f(\Gamma,r_s,\tau)$; Pathway~A uses $s=f$ while Pathway~B uses zeta argument $1+f$ in $W_\zeta=f\,\zeta(1+f)$. Asymptotic bridge $\mathrm{Li}_s(1)=\zeta(s)\leftrightarrow W/(1-W)$ at $x\to 1$. Pathway~B remains the manuscript numerical path—including the asymmetric two-component zeta matrix—because a scalar $\mathrm{Li}_s$ does not promote cleanly to coupled RPA without a separate matrix-function calculus. Pathway~A is live for scalar diagnostics (`--scalar-diagnostic`).
 
 ---
 

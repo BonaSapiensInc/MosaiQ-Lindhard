@@ -43,6 +43,8 @@ constexpr double eps_pole_floor = 1.0e-12;
     switch (p) {
     case ResponsePathway::StandardRPA:
         return "StandardRPA";
+    case ResponsePathway::PolyLogRPA:
+        return "PolyLogRPA";
     case ResponsePathway::ZetaRPA:
         return "ZetaRPA";
     case ResponsePathway::ZetaRPA_Experimental:

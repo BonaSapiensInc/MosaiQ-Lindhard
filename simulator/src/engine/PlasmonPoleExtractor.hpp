@@ -13,6 +13,7 @@
 #include "core/BrentRootFinder.hpp"
 #include "core/Concepts.hpp"
 #include "engine/Lindhard.hpp"
+#include "engine/PolyLogRPA.hpp"
 #include "engine/RPA.hpp"
 #include "engine/ZetaRPA.hpp"
 #include "physics/Constants.hpp"
@@ -72,7 +73,8 @@ struct PlasmonPoleInputs {
 };
 
 /// Opt-in **scalar** dielectric root inputs (Phase Z2 diagnostic; isolated from manuscript
-/// two-component RPA). Supports `StandardRPA` (ε = 1 − v χ^L) and Zeta pathways (ε^ζ).
+/// two-component RPA). Supports `StandardRPA` (ε = 1 − v χ^L), PolyLog-RPA (ε^(s)), and
+/// Zeta pathways (ε^ζ).
 template<ScalarPhysical T = double>
 struct PlasmonPoleZetaInputs {
     WaveVector<T> q{};
@@ -258,6 +260,32 @@ std::complex<T> PlasmonPoleExtractor::evaluate_epsilon_scalar(PlasmonPoleZetaInp
             evaluate_lindhard(inputs.q, omega, inputs.tau, inputs.gamma);
         const std::complex<T> one{T{1}, T{0}};
         return one - inputs.bare_potential * as_complex(chi_l);
+    }
+    if (inputs.pathway == ResponsePathway::PolyLogRPA) {
+        const LindhardResult<T> chi_l =
+            evaluate_lindhard(inputs.q, omega, inputs.tau, inputs.gamma);
+        PolyLogRpaInputs<double> pl_in{
+            .q = WaveVector<double>{static_cast<double>(inputs.q.raw())},
+            .omega = Frequency<double>{static_cast<double>(omega.raw())},
+            .chi_lindhard =
+                LindhardResult<double>{
+                    static_cast<double>(chi_l.real()),
+                    static_cast<double>(chi_l.imag()),
+                },
+            .bare_potential = static_cast<double>(inputs.bare_potential),
+            .regime =
+                CouplingRegime<double>{
+                    static_cast<double>(inputs.regime.rs),
+                    static_cast<double>(inputs.regime.gamma_plasma),
+                    static_cast<double>(inputs.regime.tau),
+                },
+            .weight_params = inputs.weight_params,
+        };
+        const auto pl = evaluate_polylog_rpa(pl_in);
+        if (!pl) {
+            return {std::numeric_limits<T>::quiet_NaN(), std::numeric_limits<T>::quiet_NaN()};
+        }
+        return {static_cast<T>(pl->epsilon.real()), static_cast<T>(pl->epsilon.imag())};
     }
     return evaluate_epsilon_zeta(inputs, omega);
 }

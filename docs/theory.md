@@ -1,6 +1,6 @@
 # Dual-Pathway Strong-Coupling Regularization
 
-**Status:** Theory frozen in `manuscript/two-fermi.tex` (Sec.~V + Appendix D); Pathway~B (LFC–Zeta) is live in the C++ engine; Pathway~A (PolyLog-RPA) is the formal diagrammatic definition with production evaluator **specified** for the next engine sprint.  
+**Status:** Theory frozen in `manuscript/two-fermi.tex` (Sec.~V + Appendix D); Pathway~B (LFC–Zeta) is the live multi-component production default; Pathway~A (PolyLog-RPA) is live as a **scalar** CLI diagnostic (`--pathway polylog-rpa --scalar-diagnostic`).  
 **Parent:** [`zeta_rpa_integration.md`](zeta_rpa_integration.md) · [`simulator_architecture.md`](simulator_architecture.md)  
 **Numbering:** Matches manuscript appearance order — **A = PolyLog-RPA**, **B = LFC–Zeta (production)**.
 

@@ -68,6 +68,11 @@ ResponsePathway select_response_pathway(CouplingRegime<double> regime,
         }
         return ResponsePathway::StandardRPA;
 
+    case ResponsePathway::PolyLogRPA:
+        // Scalar Pathway A: keep the requested pathway so the evaluator can apply
+        // s = f (including the weak-coupling RPA identity gate). Never auto-promote.
+        return ResponsePathway::PolyLogRPA;
+
     case ResponsePathway::ZetaRPA:
     case ResponsePathway::ZetaRPA_Experimental:
         if (strong || force_pathway) {

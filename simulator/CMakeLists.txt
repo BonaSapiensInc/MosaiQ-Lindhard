@@ -42,6 +42,7 @@ add_library(mosaiq STATIC
     src/engine/Lindhard.cpp
     src/engine/RPA.cpp
     src/engine/ZetaRPA.cpp
+    src/engine/PolyLogRPA.cpp
     src/engine/PlasmonPoleExtractor.cpp
     src/engine/StructureFactor.cpp
 )

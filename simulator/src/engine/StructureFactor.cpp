@@ -240,7 +240,10 @@ ZetaRpaMatrixResult<> evaluate_rpa_response(double q,
         chi_i_reduced.imag() * dos_i,
     };
 
-    if (pathway == ResponsePathway::StandardRPA) {
+    // PolyLog-RPA is scalar Pathway A only; the coupled matrix stays on StandardRPA /
+    // Zeta-RPA. Callers that request PolyLog for multi-component S(q,ω) should be
+    // rejected upstream (CLI); here we refuse silent PolyLog matrix invention.
+    if (pathway == ResponsePathway::StandardRPA || pathway == ResponsePathway::PolyLogRPA) {
         const RpaResult<> rpa = evaluate_rpa_susceptibility(chi_e, chi_i, potentials);
         const auto epsilon = evaluate_dielectric(chi_e, chi_i, potentials);
         return ZetaRpaMatrixResult<>{

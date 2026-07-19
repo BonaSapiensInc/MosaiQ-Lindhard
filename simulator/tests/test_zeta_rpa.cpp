@@ -45,6 +45,9 @@ void test_pathway_selection()
     // Auto-bypass never selects Experimental.
     assert(select_response_pathway(strong, ResponsePathway::StandardRPA, false, true) !=
            ResponsePathway::ZetaRPA_Experimental);
+    // Pathway A is sticky (scalar formal route; no demotion to StandardRPA).
+    assert(select_response_pathway(weak, ResponsePathway::PolyLogRPA) ==
+           ResponsePathway::PolyLogRPA);
 
     std::cout << "Pathway selection OK.\n";
 }

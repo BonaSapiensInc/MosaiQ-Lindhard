@@ -80,6 +80,12 @@ struct ZetaRpaMatrixInputs {
     ZetaWeightParameters weight_params{};
 };
 
+/// Thermodynamic distance for locked W_ζ / PolyLog s-parameter:
+///   f = α Γ^β / (1 + γ r_s^{-δ} τ).
+[[nodiscard]] std::optional<double> evaluate_coupling_shape_factor(
+    CouplingRegime<double> regime,
+    ZetaWeightParameters params = {});
+
 /// Locked production weight:
 ///   f = α Γ^β / (1 + γ r_s^{-δ} τ),
 ///   W = ζ(1+f)/ζ(1)  ≅  f·ζ(1+f)  (Laurent regularization; W=1 at f=0).

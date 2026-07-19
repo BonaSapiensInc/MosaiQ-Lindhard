@@ -13,9 +13,9 @@
 | `zeta-rpa` | **Pathway~B** — LFC–Zeta production (multi-component) | **Live default** |
 | `standard-rpa` | Undressed two-component RPA | Live |
 | `zeta-rpa-experimental` | Alternate locked weight (diagnostics) | Live |
-| `polylog-rpa` | **Pathway~A** — PolyLog-RPA $\chi^L\mathrm{Li}_s(v\chi^L)$ | **Specified** (evaluator sprint next); CLI token reserved |
+| `polylog-rpa` | **Pathway~A** — PolyLog-RPA $\chi^L\mathrm{Li}_s(v\chi^L)$, $s=f$ | **Live** (scalar only; requires `--scalar-diagnostic`) |
 
-Aliases accepted in docs / future parser: `zeta` → `zeta-rpa`, `polylog` → `polylog-rpa`.
+Aliases: `rpa` → `standard-rpa`, `polylog` → `polylog-rpa`.
 
 ```text
 --pathway standard-rpa | zeta-rpa | zeta-rpa-experimental | polylog-rpa
@@ -36,8 +36,8 @@ Zeta-RPA is **not** removed when PolyLog-RPA lands. Both pathways remain selecta
 # Legacy undressed RPA
 ./simulator/build/mosaiq_simulator --pathway standard-rpa 1.0 10000
 
-# Pathway A — PolyLog-RPA (after evaluator lands)
-./simulator/build/mosaiq_simulator --pathway polylog-rpa 1.0 10000
+# Pathway A — PolyLog-RPA (scalar diagnostic; multi-component S(q,ω) stays on zeta-rpa)
+./simulator/build/mosaiq_simulator --pathway polylog-rpa --scalar-diagnostic --gamma 50 1.0 10000
 
 # Scalar Zeta diagnostic grids (Pathway B)
 ./simulator/build/mosaiq_simulator --scalar-diagnostic --pathway zeta-rpa --gamma 50 1.0 1000
@@ -61,7 +61,7 @@ Stderr prints a pathway header, e.g.
 | **B — LFC–Zeta** | One scalar $W_\zeta(f)$ (or channel-wise $W_\zeta^{st}$) then RPA algebra | Production meshes, manuscript figures, Γ-sweeps |
 | **A — PolyLog-RPA** | Complex $\mathrm{Li}_s(z)$ at every causal $(q,\omega)$ node | Diagnostic benchmarks and theoretical validation; expect substantially higher wall time |
 
-PolyLog-RPA requires a deterministic complex polylogarithm (series / analytic continuation) on $|z|$ near and beyond the unit disk when the kernel approaches the catastrophe. Prefer Pathway~B for routine campaigns until the PolyLog evaluator is profiled and pinned.
+PolyLog-RPA evaluates complex $\mathrm{Li}_s(z)$ (series for $|z|<0.75$, sinc–Mellin otherwise) at every causal $(q,\omega)$ node. Prefer Pathway~B for routine campaigns and manuscript figures.
 
 ---
 
@@ -71,8 +71,6 @@ Both pathways use the same thermodynamic distance
 
 $$
 f=\alpha\frac{\Gamma^{\beta}}{1+\gamma\,r_s^{-\delta}\,\tau}\,,
-\qquad
-s=1+f\,,
 $$
 
-with production locks $\alpha=0.05$, $\beta=\gamma=\delta=1$. Weak coupling ($f\to 0$) returns ordinary RPA on both pathways.
+with production locks $\alpha=0.05$, $\beta=\gamma=\delta=1$. Pathway~A sets the polylog order $s=f$; Pathway~B uses the zeta argument $1+f$ in $W_\zeta=f\,\zeta(1+f)$. Weak coupling ($f\to 0$) returns ordinary RPA on both pathways.

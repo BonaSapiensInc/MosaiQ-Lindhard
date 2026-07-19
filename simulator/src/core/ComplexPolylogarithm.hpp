@@ -20,17 +20,27 @@ namespace mosaiq {
 
 /// Policy for deterministic complex polylogarithm Li_s(z) (Pathway A / PolyLog-RPA).
 /// Fast path: power series inside |z| < series_radius.
-/// Heavy path: integral analytic continuation (Sinc-Quadrature) — stubbed for next sprint.
+/// Heavy path: Mellin integral on the real line after t = e^u, summed by a
+/// truncated sinc / trapezoidal rule on u ∈ [-N h, N h].
 struct PolylogPolicy {
     std::size_t max_series_terms{1000};
     double tolerance{1.0e-12};
     /// Use the Taylor series only for |z| strictly below this radius.
     double series_radius{0.75};
+    /// Half-range truncation for the infinite-line sinc sum (k = -N … N).
+    /// Defaults target ≈ double precision on the double-exponentially decaying integrand.
+    std::size_t sinc_N{128};
+    /// Uniform step h in the u-variable (t = e^u).
+    double sinc_h{0.1};
+    /// Relative floor for |e^{e^u} − z|; below this the real-axis pole is too close.
+    double pole_guard{1.0e-14};
 };
 
-/// Evaluate Li_s(z) for real s > 1 and complex z.
-/// Returns nullopt if s ≤ 1, inputs are non-finite, the series fails to converge,
-/// or the heavy-path analytic continuation is not yet implemented for this z.
+/// Evaluate Li_s(z) for real s > 0 and complex z.
+/// Returns nullopt if s ≤ 0, inputs are non-finite, the series fails to converge,
+/// z = 1 with s ≤ 1 (ζ pole / harmonic divergence), the integrand encounters a
+/// near-pole on the positive real axis (branch cut), or the heavy-path quadrature
+/// fails finiteness checks. The z → 1 identity Li_s(1) = ζ(s) requires s > 1.
 [[nodiscard]] std::optional<std::complex<double>>
 evaluate_complex_polylog(double s,
                          std::complex<double> z,

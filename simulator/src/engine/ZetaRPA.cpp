@@ -18,9 +18,30 @@ namespace mosaiq {
 
 namespace {
 
-/// f = α Γ^β / (1 + γ r_s^{-δ} τ)
-[[nodiscard]] std::optional<double> coupling_shape_factor(CouplingRegime<double> regime,
-                                                         ZetaWeightParameters params) noexcept
+/// Laurent-regularized ζ(1+f)/ζ(1) ≡ f·ζ(1+f) for f>0; identity 1 at f=0.
+[[nodiscard]] std::optional<double> locked_zeta_weight(double f, BorweinPolicy borwein)
+{
+    if (f <= constants::zeta_weight_f_floor) {
+        return 1.0;
+    }
+
+    const double s = 1.0 + f;
+    const auto zeta = riemann_zeta_borwein(s, borwein);
+    if (!zeta) {
+        return std::nullopt;
+    }
+
+    const double weight = f * (*zeta);
+    if (!std::isfinite(weight) || weight <= 0.0) {
+        return std::nullopt;
+    }
+    return weight;
+}
+
+}  // namespace
+
+std::optional<double> evaluate_coupling_shape_factor(CouplingRegime<double> regime,
+                                                      ZetaWeightParameters params)
 {
     if (!std::isfinite(regime.gamma_plasma) || regime.gamma_plasma < 0.0 ||
         !std::isfinite(regime.rs) || regime.rs <= 0.0 || !std::isfinite(regime.tau) ||
@@ -47,28 +68,6 @@ namespace {
     return f;
 }
 
-/// Laurent-regularized ζ(1+f)/ζ(1) ≡ f·ζ(1+f) for f>0; identity 1 at f=0.
-[[nodiscard]] std::optional<double> locked_zeta_weight(double f, BorweinPolicy borwein)
-{
-    if (f <= constants::zeta_weight_f_floor) {
-        return 1.0;
-    }
-
-    const double s = 1.0 + f;
-    const auto zeta = riemann_zeta_borwein(s, borwein);
-    if (!zeta) {
-        return std::nullopt;
-    }
-
-    const double weight = f * (*zeta);
-    if (!std::isfinite(weight) || weight <= 0.0) {
-        return std::nullopt;
-    }
-    return weight;
-}
-
-}  // namespace
-
 std::optional<double> evaluate_zeta_weight(ResponsePathway pathway,
                                            CouplingRegime<double> regime,
                                            BorweinPolicy borwein,
@@ -78,8 +77,12 @@ std::optional<double> evaluate_zeta_weight(ResponsePathway pathway,
     case ResponsePathway::StandardRPA:
         return 1.0;
 
+    case ResponsePathway::PolyLogRPA:
+        // Pathway A does not use W_ζ; refuse rather than invent a dress.
+        return std::nullopt;
+
     case ResponsePathway::ZetaRPA: {
-        const auto f = coupling_shape_factor(regime, params);
+        const auto f = evaluate_coupling_shape_factor(regime, params);
         if (!f) {
             return std::nullopt;
         }

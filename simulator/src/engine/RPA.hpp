@@ -38,8 +38,10 @@ struct RpaResult {
 };
 
 /// Explicit response pathway — never silent. Experimental is never auto-selected.
+/// PolyLogRPA is scalar Pathway A (formal); production multi-component stays on ZetaRPA.
 enum class ResponsePathway {
     StandardRPA,
+    PolyLogRPA,
     ZetaRPA,
     ZetaRPA_Experimental,
 };

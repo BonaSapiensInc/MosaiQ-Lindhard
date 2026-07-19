@@ -54,6 +54,14 @@ target_compile_options(test_zeta_rpa PRIVATE -UNDEBUG)
 
 add_test(NAME ZetaRPATest COMMAND test_zeta_rpa)
 
+add_executable(test_polylog_rpa test_polylog_rpa.cpp)
+
+target_link_libraries(test_polylog_rpa PRIVATE mosaiq::mosaiq)
+
+target_compile_options(test_polylog_rpa PRIVATE -UNDEBUG)
+
+add_test(NAME PolyLogRPATest COMMAND test_polylog_rpa)
+
 add_executable(verify_zeta_rpa_scalar verify_zeta_rpa_scalar.cpp)
 
 target_link_libraries(verify_zeta_rpa_scalar PRIVATE mosaiq::mosaiq)

@@ -11,6 +11,7 @@
 #include "core/Concepts.hpp"
 #include "engine/Lindhard.hpp"
 #include "engine/PlasmonPoleExtractor.hpp"
+#include "engine/PolyLogRPA.hpp"
 #include "engine/RPA.hpp"
 #include "engine/StructureFactor.hpp"
 #include "engine/ZetaRPA.hpp"
@@ -46,6 +47,8 @@ inline constexpr const char* zeta_dispersion_filename = "output_zeta_rpa_dispers
     switch (pathway) {
     case ResponsePathway::StandardRPA:
         return "StandardRPA";
+    case ResponsePathway::PolyLogRPA:
+        return "PolyLogRPA";
     case ResponsePathway::ZetaRPA:
         return "ZetaRPA";
     case ResponsePathway::ZetaRPA_Experimental:
@@ -58,6 +61,9 @@ inline constexpr const char* zeta_dispersion_filename = "output_zeta_rpa_dispers
 {
     if (token == "standard-rpa" || token == "rpa") {
         return ResponsePathway::StandardRPA;
+    }
+    if (token == "polylog-rpa" || token == "polylog") {
+        return ResponsePathway::PolyLogRPA;
     }
     if (token == "zeta-rpa") {
         return ResponsePathway::ZetaRPA;
@@ -77,11 +83,12 @@ void print_usage(const char* program)
               << "\n"
               << "  r_s       Wigner-Seitz radius in Bohr radii (e.g. 1.0)\n"
               << "  T_kelvin  temperature in kelvin (e.g. 10000.0)\n"
-              << "  --pathway standard-rpa | zeta-rpa | zeta-rpa-experimental\n"
+              << "  --pathway standard-rpa | polylog-rpa | zeta-rpa | zeta-rpa-experimental\n"
               << "            (default: zeta-rpa — multi-component manuscript pipeline)\n"
+              << "            polylog-rpa is scalar Pathway A (requires --scalar-diagnostic)\n"
               << "  --gamma   plasma coupling Gamma for optional scalar diagnostic export\n"
-              << "  --scalar-diagnostic  write scalar Zeta-RPA grids (opt-in; does not replace "
-                 "S(q,ω))\n"
+              << "  --scalar-diagnostic  write scalar Zeta/PolyLog-RPA grids (opt-in; does not "
+                 "replace S(q,ω))\n"
               << "  gamma     plasma coupling parameter Gamma (Eq. plasma-coupling-parameter-Hartree)\n";
 }
 
@@ -90,6 +97,8 @@ void print_pathway_header(ResponsePathway pathway, bool strong_coupling) noexcep
     std::cerr << "ResponsePathway: " << pathway_label(pathway);
     if (pathway == ResponsePathway::StandardRPA) {
         std::cerr << " (legacy undressed two-component RPA)\n";
+    } else if (pathway == ResponsePathway::PolyLogRPA) {
+        std::cerr << " (scalar Pathway A / PolyLog-RPA; s = f)\n";
     } else if (pathway == ResponsePathway::ZetaRPA_Experimental) {
         std::cerr << " (experimental multi-component dress)\n";
     } else if (strong_coupling) {
@@ -461,7 +470,7 @@ int run_gamma_sweep_mode(double rs,
     return EXIT_SUCCESS;
 }
 
-/// Scalar Zeta-RPA diagnostic export (opt-in via --scalar-diagnostic).
+/// Scalar Zeta / PolyLog-RPA diagnostic export (opt-in via --scalar-diagnostic).
 [[nodiscard]] int run_zeta_scalar_mode(double rs,
                                        double T_kelvin,
                                        double gamma_plasma,
@@ -487,9 +496,11 @@ int run_gamma_sweep_mode(double rs,
     if (selected == ResponsePathway::StandardRPA) {
         std::cerr << "Error: pathway selection resolved to StandardRPA; refusing silent fallback.\n"
                   << "  Hint: raise --gamma above Gamma★=" << constants::zeta_rpa_gamma_star
-                  << " or use a Zeta pathway with force in the scalar verifier.\n";
+                  << " or use a Zeta/PolyLog pathway with force in the scalar verifier.\n";
         return EXIT_FAILURE;
     }
+
+    const bool use_polylog = (selected == ResponsePathway::PolyLogRPA);
 
     const std::filesystem::path output_dir{output_directory};
     std::error_code ec;
@@ -514,18 +525,26 @@ int run_gamma_sweep_mode(double rs,
         return EXIT_FAILURE;
     }
 
-    out << "# MosaiQ-Lindhard CLI — scalar Zeta-RPA diagnostic (manuscript pipelines untouched)\n";
+    out << "# MosaiQ-Lindhard CLI — scalar "
+        << (use_polylog ? "PolyLog-RPA" : "Zeta-RPA")
+        << " diagnostic (manuscript pipelines untouched)\n";
     out << "# ResponsePathway = " << pathway_label(selected) << '\n';
     write_run_header(out, rs, T_kelvin, plasma);
     out << "# Gamma_plasma = " << std::scientific << std::setprecision(12) << gamma_plasma << '\n';
-    out << "# columns: q omega ReChiL ImChiL ReChiRPA ImChiRPA ReChiZeta ImChiZeta Wzeta "
-           "ReEps ImEps\n";
+    if (use_polylog) {
+        out << "# columns: q omega ReChiL ImChiL ReChiRPA ImChiRPA ReChiPL ImChiPL s "
+               "ReEps ImEps\n";
+    } else {
+        out << "# columns: q omega ReChiL ImChiL ReChiRPA ImChiRPA ReChiZeta ImChiZeta Wzeta "
+               "ReEps ImEps\n";
+    }
 
     PlasmonPolePolicy<> pole_policy{};
     pole_policy.bracket.scan_ceiling_factor = 8.0;
 
-    dispersion_out
-        << "# MosaiQ-Lindhard CLI — scalar Zeta-RPA vs RPA plasmon comparison (Phase Z2)\n";
+    dispersion_out << "# MosaiQ-Lindhard CLI — scalar "
+                   << (use_polylog ? "PolyLog-RPA" : "Zeta-RPA")
+                   << " vs RPA plasmon comparison\n";
     dispersion_out << "# ResponsePathway = " << pathway_label(selected) << '\n';
     write_run_header(dispersion_out, rs, T_kelvin, plasma);
     dispersion_out << "# Gamma_plasma = " << std::scientific << std::setprecision(12)
@@ -533,25 +552,25 @@ int run_gamma_sweep_mode(double rs,
     dispersion_out << "# omega columns: electron reduced units [E_F/hbar]\n";
     dispersion_out << "# ImEps evaluated at each pathway's extracted pole (NaN if no root)\n";
     dispersion_out << "# bohm_gross_estimate: long-wavelength Bohm-Gross anchor (same units)\n";
-    dispersion_out << "# columns: q omega_p_RPA omega_p_zeta ImEps_RPA ImEps_zeta "
+    dispersion_out << "# columns: q omega_p_RPA omega_p_path ImEps_RPA ImEps_path "
                       "bohm_gross_estimate\n";
 
     const double nan = std::numeric_limits<double>::quiet_NaN();
     std::size_t rows = 0;
     std::size_t finite_ok = 0;
-    std::size_t zeta_roots = 0;
+    std::size_t path_roots = 0;
     std::size_t rpa_roots = 0;
     const std::size_t total_q = grid_node_count(default_q_min, default_q_max, default_q_step);
 
-    std::cerr << "Tracing scalar RPA / Zeta plasmon comparison over " << total_q
-              << " q points...\n";
+    std::cerr << "Tracing scalar RPA / " << pathway_label(selected) << " plasmon comparison over "
+              << total_q << " q points...\n";
 
     for (double q = default_q_min; q <= default_q_max + 0.5 * default_q_step; q += default_q_step) {
         const double v = coulomb_potentials_rational(q).v_ee;
         const double bohm_gross = PlasmonPoleExtractor::bohm_gross_frequency(
             WaveVector<>{q}, plasma.electron.tau, rs);
 
-        PlasmonPoleZetaInputs<> zeta_pole{
+        PlasmonPoleZetaInputs<> path_pole{
             .q = WaveVector<>{q},
             .tau = plasma.electron.tau,
             .gamma = plasma.electron.gamma,
@@ -561,31 +580,32 @@ int run_gamma_sweep_mode(double rs,
             .pathway = selected,
             .force_pathway = force,
         };
-        PlasmonPoleZetaInputs<> rpa_pole = zeta_pole;
+        PlasmonPoleZetaInputs<> rpa_pole = path_pole;
         rpa_pole.pathway = ResponsePathway::StandardRPA;
         rpa_pole.force_pathway = true;
 
-        const auto zeta_state = PlasmonPoleExtractor::extract(zeta_pole, pole_policy);
+        const auto path_state = PlasmonPoleExtractor::extract(path_pole, pole_policy);
         const auto rpa_state = PlasmonPoleExtractor::extract(rpa_pole, pole_policy);
 
         const double omega_rpa = rpa_state ? rpa_state->omega_raw() : nan;
-        const double omega_zeta = zeta_state ? zeta_state->omega_raw() : nan;
+        const double omega_path = path_state ? path_state->omega_raw() : nan;
         const double im_rpa = rpa_state ? rpa_state->landau_damping : nan;
-        const double im_zeta = zeta_state ? zeta_state->landau_damping : nan;
+        const double im_path = path_state ? path_state->landau_damping : nan;
 
         if (rpa_state) {
             ++rpa_roots;
         }
-        if (zeta_state) {
-            ++zeta_roots;
+        if (path_state) {
+            ++path_roots;
         }
 
-        dispersion_out << q << ' ' << omega_rpa << ' ' << omega_zeta << ' ' << im_rpa << ' '
-                       << im_zeta << ' ' << bohm_gross << '\n';
+        dispersion_out << q << ' ' << omega_rpa << ' ' << omega_path << ' ' << im_rpa << ' '
+                       << im_path << ' ' << bohm_gross << '\n';
     }
 
     std::cerr << "  Scalar RPA roots: " << rpa_roots << " / " << total_q << '\n';
-    std::cerr << "  Zeta roots:       " << zeta_roots << " / " << total_q << '\n';
+    std::cerr << "  " << pathway_label(selected) << " roots: " << path_roots << " / " << total_q
+              << '\n';
 
     for (double q = default_q_min; q <= 4.0 + 0.5 * default_q_step; q += default_q_step) {
         const double v = coulomb_potentials_rational(q).v_ee;
@@ -599,45 +619,71 @@ int run_gamma_sweep_mode(double rs,
             const std::complex<double> chi_c = as_complex(chi_l);
             const std::complex<double> chi_rpa = evaluate_scalar_rpa(chi_c, v);
 
-            ZetaRpaInputs<> inputs{
-                .q = WaveVector<>{q},
-                .omega = Frequency<>{omega},
-                .chi_lindhard = chi_l,
-                .bare_potential = v,
-                .regime = regime,
-                .pathway = selected,
-                .force_pathway = force,
-            };
-            const auto zeta = evaluate_zeta_rpa(inputs);
-            if (!zeta) {
-                continue;
+            std::complex<double> chi_path{};
+            std::complex<double> eps_path{};
+            double dress_or_s = nan;
+
+            if (use_polylog) {
+                PolyLogRpaInputs<> inputs{
+                    .q = WaveVector<>{q},
+                    .omega = Frequency<>{omega},
+                    .chi_lindhard = chi_l,
+                    .bare_potential = v,
+                    .regime = regime,
+                };
+                const auto pl = evaluate_polylog_rpa(inputs);
+                if (!pl) {
+                    continue;
+                }
+                chi_path = pl->chi;
+                eps_path = pl->epsilon;
+                dress_or_s = pl->s_parameter;
+            } else {
+                ZetaRpaInputs<> inputs{
+                    .q = WaveVector<>{q},
+                    .omega = Frequency<>{omega},
+                    .chi_lindhard = chi_l,
+                    .bare_potential = v,
+                    .regime = regime,
+                    .pathway = selected,
+                    .force_pathway = force,
+                };
+                const auto zeta = evaluate_zeta_rpa(inputs);
+                if (!zeta) {
+                    continue;
+                }
+                chi_path = zeta->chi;
+                eps_path = zeta->epsilon;
+                dress_or_s = zeta->zeta_weight;
             }
 
             out << q << ' ' << omega << ' ' << chi_c.real() << ' ' << chi_c.imag() << ' '
-                << chi_rpa.real() << ' ' << chi_rpa.imag() << ' ' << zeta->chi.real() << ' '
-                << zeta->chi.imag() << ' ' << zeta->zeta_weight << ' ' << zeta->epsilon.real()
-                << ' ' << zeta->epsilon.imag() << '\n';
+                << chi_rpa.real() << ' ' << chi_rpa.imag() << ' ' << chi_path.real() << ' '
+                << chi_path.imag() << ' ' << dress_or_s << ' ' << eps_path.real() << ' '
+                << eps_path.imag() << '\n';
             ++rows;
             if (std::isfinite(chi_rpa.real()) && std::isfinite(chi_rpa.imag()) &&
-                std::isfinite(zeta->chi.real()) && std::isfinite(zeta->chi.imag())) {
+                std::isfinite(chi_path.real()) && std::isfinite(chi_path.imag())) {
                 ++finite_ok;
             }
         }
     }
 
     if (rows == 0) {
-        std::cerr << "Error: no scalar Zeta-RPA rows written.\n";
+        std::cerr << "Error: no scalar " << pathway_label(selected) << " rows written.\n";
         return EXIT_FAILURE;
     }
 
-    if (zeta_roots == 0) {
-        std::cerr << "Warning: no scalar Zeta plasmon roots were extracted on the q grid.\n";
+    if (path_roots == 0) {
+        std::cerr << "Warning: no scalar " << pathway_label(selected)
+                  << " plasmon roots were extracted on the q grid.\n";
     }
 
     std::cout << "Wrote " << rows << " rows to " << out_path << " (" << finite_ok
               << " fully finite)\n";
     std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
-              << rpa_roots << " RPA / " << zeta_roots << " Zeta roots)\n";
+              << rpa_roots << " RPA / " << path_roots << " " << pathway_label(selected)
+              << " roots)\n";
     std::cout << "  ResponsePathway = " << pathway_label(selected) << '\n';
     std::cout << "  r_s = " << rs << "  T = " << T_kelvin << " K  Gamma = " << gamma_plasma
               << '\n';
@@ -712,6 +758,11 @@ int main(int argc, char* argv[])
     }
 
     if (!parsed->positionals.empty() && parsed->positionals[0] == "--gamma-sweep") {
+        if (parsed->pathway == ResponsePathway::PolyLogRPA) {
+            std::cerr << "Error: --pathway polylog-rpa is scalar-only; use --scalar-diagnostic "
+                         "(not --gamma-sweep).\n";
+            return EXIT_FAILURE;
+        }
         if (parsed->positionals.size() != 3) {
             print_usage(argv[0]);
             return EXIT_FAILURE;
@@ -759,12 +810,20 @@ int main(int argc, char* argv[])
 
     if (parsed->scalar_diagnostic) {
         if (parsed->pathway == ResponsePathway::StandardRPA) {
-            std::cerr << "Error: --scalar-diagnostic requires a Zeta pathway "
-                         "(--pathway zeta-rpa[...]).\n";
+            std::cerr << "Error: --scalar-diagnostic requires PolyLog or Zeta pathway "
+                         "(--pathway polylog-rpa | zeta-rpa[...]).\n";
             return EXIT_FAILURE;
         }
         const double gamma = parsed->gamma_plasma.value_or(constants::zeta_rpa_gamma_star);
         return run_zeta_scalar_mode(rs, T_kelvin, gamma, parsed->pathway);
+    }
+
+    if (parsed->pathway == ResponsePathway::PolyLogRPA) {
+        std::cerr << "Error: --pathway polylog-rpa is scalar Pathway A only.\n"
+                  << "  Use: " << argv[0]
+                  << " --pathway polylog-rpa --scalar-diagnostic [--gamma G] <r_s> <T_kelvin>\n"
+                  << "  Multi-component S(q,ω) remains on --pathway zeta-rpa (Pathway B).\n";
+        return EXIT_FAILURE;
     }
 
     return run_standard_mode(rs, T_kelvin, parsed->pathway);
