@@ -542,70 +542,85 @@ int run_gamma_sweep_mode(double rs,
     PlasmonPolePolicy<> pole_policy{};
     pole_policy.bracket.scan_ceiling_factor = 8.0;
 
-    dispersion_out << "# MosaiQ-Lindhard CLI — scalar "
-                   << (use_polylog ? "PolyLog-RPA" : "Zeta-RPA")
-                   << " vs RPA plasmon comparison\n";
-    dispersion_out << "# ResponsePathway = " << pathway_label(selected) << '\n';
+    dispersion_out
+        << "# MosaiQ-Lindhard CLI — scalar 3-way plasmon comparison "
+           "(StandardRPA / PolyLog-RPA / Zeta-RPA)\n";
+    dispersion_out << "# RequestedPathway = " << pathway_label(selected)
+                   << " (chi-grid export only; dispersion always extracts all three)\n";
     write_run_header(dispersion_out, rs, T_kelvin, plasma);
     dispersion_out << "# Gamma_plasma = " << std::scientific << std::setprecision(12)
                     << gamma_plasma << '\n';
     dispersion_out << "# omega columns: electron reduced units [E_F/hbar]\n";
     dispersion_out << "# ImEps evaluated at each pathway's extracted pole (NaN if no root)\n";
     dispersion_out << "# bohm_gross_estimate: long-wavelength Bohm-Gross anchor (same units)\n";
-    dispersion_out << "# columns: q omega_p_RPA omega_p_path ImEps_RPA ImEps_path "
-                      "bohm_gross_estimate\n";
+    dispersion_out << "# columns: q omega_RPA omega_PolyLog omega_Zeta "
+                      "ImEps_RPA ImEps_PolyLog ImEps_Zeta BohmGross\n";
 
     const double nan = std::numeric_limits<double>::quiet_NaN();
     std::size_t rows = 0;
     std::size_t finite_ok = 0;
-    std::size_t path_roots = 0;
     std::size_t rpa_roots = 0;
+    std::size_t polylog_roots = 0;
+    std::size_t zeta_roots = 0;
     const std::size_t total_q = grid_node_count(default_q_min, default_q_max, default_q_step);
 
-    std::cerr << "Tracing scalar RPA / " << pathway_label(selected) << " plasmon comparison over "
-              << total_q << " q points...\n";
+    std::cerr << "Tracing scalar RPA / PolyLog / Zeta plasmon comparison over " << total_q
+              << " q points...\n";
 
     for (double q = default_q_min; q <= default_q_max + 0.5 * default_q_step; q += default_q_step) {
         const double v = coulomb_potentials_rational(q).v_ee;
         const double bohm_gross = PlasmonPoleExtractor::bohm_gross_frequency(
             WaveVector<>{q}, plasma.electron.tau, rs);
 
-        PlasmonPoleZetaInputs<> path_pole{
+        PlasmonPoleZetaInputs<> base_pole{
             .q = WaveVector<>{q},
             .tau = plasma.electron.tau,
             .gamma = plasma.electron.gamma,
             .bare_potential = v,
             .wigner_seitz_radius = rs,
             .regime = regime,
-            .pathway = selected,
-            .force_pathway = force,
+            .pathway = ResponsePathway::StandardRPA,
+            .force_pathway = true,
         };
-        PlasmonPoleZetaInputs<> rpa_pole = path_pole;
-        rpa_pole.pathway = ResponsePathway::StandardRPA;
-        rpa_pole.force_pathway = true;
 
-        const auto path_state = PlasmonPoleExtractor::extract(path_pole, pole_policy);
+        PlasmonPoleZetaInputs<> rpa_pole = base_pole;
+        rpa_pole.pathway = ResponsePathway::StandardRPA;
+
+        PlasmonPoleZetaInputs<> polylog_pole = base_pole;
+        polylog_pole.pathway = ResponsePathway::PolyLogRPA;
+
+        PlasmonPoleZetaInputs<> zeta_pole = base_pole;
+        zeta_pole.pathway = ResponsePathway::ZetaRPA;
+
         const auto rpa_state = PlasmonPoleExtractor::extract(rpa_pole, pole_policy);
+        const auto polylog_state = PlasmonPoleExtractor::extract(polylog_pole, pole_policy);
+        const auto zeta_state = PlasmonPoleExtractor::extract(zeta_pole, pole_policy);
 
         const double omega_rpa = rpa_state ? rpa_state->omega_raw() : nan;
-        const double omega_path = path_state ? path_state->omega_raw() : nan;
+        const double omega_polylog = polylog_state ? polylog_state->omega_raw() : nan;
+        const double omega_zeta = zeta_state ? zeta_state->omega_raw() : nan;
         const double im_rpa = rpa_state ? rpa_state->landau_damping : nan;
-        const double im_path = path_state ? path_state->landau_damping : nan;
+        const double im_polylog = polylog_state ? polylog_state->landau_damping : nan;
+        const double im_zeta = zeta_state ? zeta_state->landau_damping : nan;
 
         if (rpa_state) {
             ++rpa_roots;
         }
-        if (path_state) {
-            ++path_roots;
+        if (polylog_state) {
+            ++polylog_roots;
+        }
+        if (zeta_state) {
+            ++zeta_roots;
         }
 
-        dispersion_out << q << ' ' << omega_rpa << ' ' << omega_path << ' ' << im_rpa << ' '
-                       << im_path << ' ' << bohm_gross << '\n';
+        dispersion_out << q << ' ' << omega_rpa << ' ' << omega_polylog << ' ' << omega_zeta << ' '
+                       << im_rpa << ' ' << im_polylog << ' ' << im_zeta << ' ' << bohm_gross
+                       << '\n';
     }
 
-    std::cerr << "  Scalar RPA roots: " << rpa_roots << " / " << total_q << '\n';
-    std::cerr << "  " << pathway_label(selected) << " roots: " << path_roots << " / " << total_q
-              << '\n';
+    std::cerr << "  Scalar RPA roots:     " << rpa_roots << " / " << total_q << '\n';
+    std::cerr << "  PolyLog-RPA roots:    " << polylog_roots << " / " << total_q << '\n';
+    std::cerr << "  Zeta-RPA roots:       " << zeta_roots << " / " << total_q << '\n';
 
     for (double q = default_q_min; q <= 4.0 + 0.5 * default_q_step; q += default_q_step) {
         const double v = coulomb_potentials_rational(q).v_ee;
@@ -674,17 +689,17 @@ int run_gamma_sweep_mode(double rs,
         return EXIT_FAILURE;
     }
 
-    if (path_roots == 0) {
-        std::cerr << "Warning: no scalar " << pathway_label(selected)
-                  << " plasmon roots were extracted on the q grid.\n";
+    if (rpa_roots == 0 && polylog_roots == 0 && zeta_roots == 0) {
+        std::cerr << "Warning: no scalar plasmon roots were extracted on the q grid "
+                     "(RPA/PolyLog/Zeta).\n";
     }
 
     std::cout << "Wrote " << rows << " rows to " << out_path << " (" << finite_ok
               << " fully finite)\n";
     std::cout << "Wrote " << total_q << " dispersion rows to " << dispersion_path << " ("
-              << rpa_roots << " RPA / " << path_roots << " " << pathway_label(selected)
-              << " roots)\n";
-    std::cout << "  ResponsePathway = " << pathway_label(selected) << '\n';
+              << rpa_roots << " RPA / " << polylog_roots << " PolyLog / " << zeta_roots
+              << " Zeta roots)\n";
+    std::cout << "  ResponsePathway = " << pathway_label(selected) << " (chi-grid)\n";
     std::cout << "  r_s = " << rs << "  T = " << T_kelvin << " K  Gamma = " << gamma_plasma
               << '\n';
     return EXIT_SUCCESS;

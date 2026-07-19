@@ -1043,15 +1043,22 @@ Plasmon poles of the scalar dielectric are extracted by the same derivative-free
 used in Sec.~\ref{sec:plasmon-pole-extraction}, now applied to $\Re\varepsilon^{\zeta}(q,\omega)=0$,
 with Landau damping reported as $\Im\varepsilon^{\zeta}$ on the extracted root.
 Figure~\ref{fig:zeta-rpa-dispersion} contrasts the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949},
-the scalar RPA dispersion $\omega_p^{\mathrm{RPA}}(q)$, and the Zeta-RPA branch $\omega_p^{\zeta}(q)$
+the scalar RPA dispersion $\omega_p^{\mathrm{RPA}}(q)$, the Pathway~A (PolyLog-RPA) branch $\omega_p^{(s)}(q)$,
+and the Pathway~B (Zeta-RPA) branch $\omega_p^{\zeta}(q)$
 at strong coupling ($\Gamma=100$, $r_s=2.0$, $T=10\,000\,\mathrm{K}$).
 Where the scalar RPA root bracket collapses or the branch terminates prematurely,
 the zeta-dressed dielectric retains a continuous $\Re\varepsilon^{\zeta}=0$ trajectory,
 with a correspondingly modified on-pole dissipation spectrum
-$|\Im\varepsilon^{\zeta}|$ [Fig.~\ref{fig:zeta-rpa-dispersion}(b)].
+$|\Im\varepsilon^{\zeta}|$ [Fig.~\ref{fig:zeta-rpa-dispersion}(b)],
+while the pure PolyLog series exhibits the continuum over-tracking discussed below.
 The scalar construction above is the controlled single-component diagnostic;
 the production two-component pathway is the asymmetric zeta matrix of
 Sec.~\ref{sec:zeta-rpa-matrix}.
+The physical necessity of this dual-pathway architecture is starkly revealed during scalar plasmon pole extraction at extreme coupling (e.g., $\Gamma=100$).
+While Pathway~A (PolyLog-RPA) furnishes the rigorous microscopic diagrammatic summation, forcing this exact series deep into the strongly coupled regime causes the roots to unphysically track spurious resonances and extreme Landau damping tails deep into the single-particle continuum.
+Pathway~B (LFC-Zeta), by contrast, projects the exact topological boundary of the Riemann zeta function onto a macroscopic local-field skeleton.
+This projection intrinsically suppresses the spurious microscopic tracking artifacts of Pathway~A, yielding a highly stable, continuous collective mode and a properly regularized dissipation spectrum.
+This pronounced diagnostic contrast strictly justifies the designation of Pathway~B as the production evaluator for all multi-component structure factors in this campaign.
 
 \subsection{Multi-component Promotion: The Asymmetric Zeta Matrix}
 \label{sec:zeta-rpa-matrix}
@@ -2133,13 +2140,13 @@ or ensemble-inconsistent response formulations.
 Rather than treating the Kramers--Kr\"onig relation as an \emph{a posteriori} consistency check,
 the present formulation elevates causality to the primary construction principle of the finite-temperature response function,
 recovering the exact $T=0$ Lindhard benchmark~\cite{Lindhard1954} as a special case of the grand-canonical Hilbert-transform route.
-The Zeta-RPA extension of Sec.~\ref{sec:zeta-rpa} carries that healed bare response into the strongly coupled liquid by dressing $v(q)$ with the locked weight $W_\zeta$ of Eq.~(\ref{eq:zeta-weight}), without resurrecting Matsubara pole sums or altering $\Im\chi^L$; Fig.~\ref{fig:zeta-rpa-dispersion} documents the scalar plasmon-root rescue at $\Gamma=100$, while Sec.~\ref{sec:zeta-rpa-matrix} promotes the same dress to the production two-component asymmetric zeta matrix.
+The Zeta-RPA extension of Sec.~\ref{sec:zeta-rpa} carries that healed bare response into the strongly coupled liquid by dressing $v(q)$ with the locked weight $W_\zeta$ of Eq.~(\ref{eq:zeta-weight}), without resurrecting Matsubara pole sums or altering $\Im\chi^L$; Fig.~\ref{fig:zeta-rpa-dispersion} documents the three-way scalar plasmon cross-check (Standard RPA / PolyLog-RPA / Zeta-RPA) at $\Gamma=100$, while Sec.~\ref{sec:zeta-rpa-matrix} promotes the Zeta dress to the production two-component asymmetric zeta matrix.
 The present deterministic formulation, supported by our open-source implementation,
 provides a rigorous, reproducible benchmark for evaluating causality-constrained linear response functions
 against standard contour-based formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
 
 \section*{Data and Code Availability}
-The deterministic C++20 engine (MosaiQ-Lindhard) and the associated Python visualization scripts used to generate the results in this study are open-source and publicly available. To facilitate independent verification of the macroscopic sum rules, the deterministic plasmon dispersion extraction, and the mathematical breakdown of the standard contour-integration routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} at the highly degenerate $T \to 0$ limit, readers are strongly encouraged to clone the repository and reproduce the findings. The complete source code, test suites, and build instructions are available on GitHub at \url{https://github.com/BonaSapiensInc/MosaiQ-Lindhard} and permanently archived on Zenodo at \url{https://doi.org/10.5281/zenodo.21331277} (release \texttt{v1.0.2-stratonovich-update}).
+The deterministic C++20 engine (MosaiQ-Lindhard) and the associated Python visualization scripts used to generate the results in this study are open-source and publicly available. To facilitate independent verification of the macroscopic sum rules, the deterministic plasmon dispersion extraction, and the mathematical breakdown of the standard contour-integration routes of Refs.~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978} at the highly degenerate $T \to 0$ limit, readers are strongly encouraged to clone the repository and reproduce the findings. The complete source code, test suites, and build instructions are available on GitHub at \url{https://github.com/BonaSapiensInc/MosaiQ-Lindhard} and permanently archived on Zenodo at \url{https://doi.org/10.5281/zenodo.21331277} (release \texttt{v2.0.0-dual-pathway}).
 
 \appendix
 
@@ -3712,10 +3719,10 @@ Compressibility sum rule & Eq.~(\ref{compressibility-sum-rule}) & Long-wavelengt
     gives the zeros of its denominator $e^{\left( \kappa^2 - \gamma \right) / \tau} + 1$
     are also presented schematically.
 
-    \item \textbf{FIG. 2.} Scalar Zeta-RPA plasmon rescue at strong coupling ($\Gamma = 100$, $r_s = 2.0$, $T = 10\,000\,\mathrm{K}$), constructed from the deterministic dielectric roots of Sec.~\ref{sec:zeta-rpa}.
-    Fig.~\ref{fig:zeta-rpa-dispersion}(a) overlays the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949} (gray dashed), the standard scalar RPA dispersion $\bar{\omega}_p^{\mathrm{RPA}}(\bar{q})$ from $\Re\varepsilon^{\mathrm{RPA}}=0$ (crimson), and the Zeta-RPA branch $\bar{\omega}_p^{\zeta}(\bar{q})$ from $\Re\varepsilon^{\zeta}=0$ (blue) on the reduced wavevector window $\bar{q}\le 4$.
-    Open markers and the shaded continuum region highlight wave vectors where the standard RPA root bracket collapses, while the zeta-dressed dielectric retains a continuous, finite pole trajectory.
-    Fig.~\ref{fig:zeta-rpa-dispersion}(b) reports the corresponding on-pole Landau damping $|\Im\varepsilon|$, demonstrating that the analytic Riemann-zeta continuation of Eq.~(\ref{eq:zeta-weight}) heals the many-body divergence and shifts the dissipation spectrum without altering the underlying Kramers--Kr\"onig-constrained Lindhard input $\chi^L$.
+    \item \textbf{FIG. 2.} Three-way scalar plasmon cross-check at strong coupling ($\Gamma = 100$, $r_s = 2.0$, $T = 10\,000\,\mathrm{K}$), constructed from the deterministic dielectric roots of Sec.~\ref{sec:zeta-rpa}.
+    Fig.~\ref{fig:zeta-rpa-dispersion}(a) overlays the classical Bohm--Gross long-wavelength anchor~\cite{Bohm-Gross1949} (gray dashed), the standard scalar RPA dispersion $\bar{\omega}_p^{\mathrm{RPA}}(\bar{q})$ from $\Re\varepsilon^{\mathrm{RPA}}=0$ (crimson), the Pathway~A (PolyLog-RPA) branch $\bar{\omega}_p^{(s)}(\bar{q})$ from $\Re\varepsilon^{(s)}=0$ (teal), and the Pathway~B (Zeta-RPA) branch $\bar{\omega}_p^{\zeta}(\bar{q})$ from $\Re\varepsilon^{\zeta}=0$ (blue) on the reduced wavevector window $\bar{q}\le 4$.
+    The shaded continuum region marks wave vectors where the standard RPA root bracket collapses; Pathway~A continues to track spurious continuum resonances, whereas the zeta-dressed dielectric retains a continuous, physically stable collective trajectory.
+    Fig.~\ref{fig:zeta-rpa-dispersion}(b) reports the corresponding on-pole Landau damping $|\Im\varepsilon|$, demonstrating that the macroscopic LFC projection of Eq.~(\ref{eq:zeta-weight}) suppresses the extreme PolyLog dissipation artifacts while healing the many-body divergence without altering the underlying Kramers--Kr\"onig-constrained Lindhard input $\chi^L$.
 
     \item \textbf{FIG. 3.} Schematic positions of the infinite series of simple poles
     and the contour of integral of the Fermi-Dirac integrals~(\ref{transformed-Fermi-Dirac-integrals})

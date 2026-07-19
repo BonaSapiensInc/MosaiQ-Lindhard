@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(MosaiQ_Lindhard
-    VERSION 0.1.0
+    VERSION 2.0.0
     DESCRIPTION "C++20 deterministic physics sandbox for finite-temperature Lindhard / RPA"
     LANGUAGES CXX
 )
