@@ -2093,6 +2093,60 @@ Fig.~\ref{fig:Sq-gamma-ii} resolves the heavy-ion coordination spikes with the i
 The induction of that $S_{ei}$ feature, despite its small magnitude ($\mathcal{O}(10^{-3})$), quantifies the exact electron-drag effect where the light electron fluid adheres to the heavy-ion acoustic manifold.
 The ability to resolve these subtle features simultaneously with the macroscopic $1.0$ plateau demonstrates the extreme dynamic range and deterministic stability of the MosaiQ-Lindhard integration pipeline.
 
+\section{Numerical Architecture for Electron-Phonon Supergraphs}
+\label{sec:berezinian_numerics}
+
+\subsection{Topological overcounting and graded supermatrices}
+In the strong-coupling regime of semiconductor physics (e.g., silicon), the standard random-phase approximation (RPA)~\cite{RPA} catastrophically breaks down due to the topological overcounting of composite ring diagrams~\cite{Fetter-Walecka1971,Holstein1959}.
+This manifests macroscopically as the uniform hardening of phonon spectra and the breakdown of the Born--Oppenheimer approximation~\cite{Ashcroft-Mermin1976}.
+
+To resolve this analytically and numerically, we treat the coupled electron--phonon system as a \textit{graded supergraph}.
+The statistical sign difference between fermions (electrons) and bosons (phonons) requires substituting the conventional matrix determinant with the Berezinian (superdeterminant)~\cite{Berezin1987,DeWitt1992}.
+For an asymmetric supermatrix $\mathcal{M}$ coupling the electronic block $A_{ee}$ and the phononic block $D_{pp}$ via off-diagonal interactions $B_{ep}$ and $C_{pe}$,
+\begin{equation}
+\mathcal{M}
+=
+\begin{pmatrix}
+A_{ee} & B_{ep} \\
+C_{pe} & D_{pp}
+\end{pmatrix},
+\end{equation}
+the Berezinian is defined via the Schur complement,
+\begin{equation}
+\label{eq:berezinian-schur}
+\operatorname{sdet}(\mathcal{M})
+=
+\frac{\det\!\bigl(A_{ee} - B_{ep} D_{pp}^{-1} C_{pe}\bigr)}{\det(D_{pp})}.
+\end{equation}
+
+\subsection{The $DX = C$ strategy and zero-dependency factorization}
+A naive computational approach attempts to form $D_{pp}^{-1}$ explicitly.
+However, explicit inversion is numerically unstable and computationally wasteful~\cite{NR,Golub-VanLoan2013}.
+The MosaiQ engine therefore enforces a strict $DX = C$ strategy:
+we solve the linear system $D_{pp} X = C_{pe}$, and construct the Schur complement by a single matrix multiplication
+$\tilde{A} = A_{ee} - B_{ep} X$.
+
+Since the phonon dynamical matrix $D_{pp}$ is inherently symmetric, we utilize an in-place LDLT factorization~\cite{NR,Golub-VanLoan2013}.
+The required scalar determinant $\det(D_{pp})$ is harvested directly from the diagonal elements of the factorized matrix ($\prod_i d_{ii}$) at zero additional $\mathcal{O}(N^3)$ cost, after which
+\begin{equation}
+\operatorname{sdet}(\mathcal{M})
+=
+\frac{\det(\tilde{A})}{\det(D_{pp})}
+\end{equation}
+is evaluated from the same factors without a second cubic factorization of $D_{pp}$.
+
+\subsection{Retarded regularization for Keldysh causality}
+The strict preservation of physical causality on the real-frequency axis (the Keldysh contour)~\cite{Kadanoff1962,Stefanucci2013,Kim2018} demands that the poles of the response function remain analytically regulated.
+Before factorization, a retarded regularization term $i\eta$ is loaded onto the diagonal of the phonon block:
+\begin{equation}
+\label{eq:retarded-eta}
+D_{\mathrm{reg}}
+=
+D_{pp} + i\eta\,\mathbf{I}.
+\end{equation}
+Unit tests within the engine confirm that this diagonal loading stabilizes the Berezinian against singular configurations (e.g., $\det(D_{pp})\to 0$) without triggering NaN propagation, thereby preserving the structural integrity of the causal response.
+The corresponding C++20 interfaces---\texttt{SuperMatrix.hpp}, \texttt{LinalgUtils.hpp}, and \texttt{Berezinian.hpp}---are archived with the MosaiQ-Lindhard release cited in the Data and Code Availability statement.
+
 \section{Conclusion}
 \label{sec:conclusion}
 
@@ -2141,6 +2195,7 @@ Rather than treating the Kramers--Kr\"onig relation as an \emph{a posteriori} co
 the present formulation elevates causality to the primary construction principle of the finite-temperature response function,
 recovering the exact $T=0$ Lindhard benchmark~\cite{Lindhard1954} as a special case of the grand-canonical Hilbert-transform route.
 The Zeta-RPA extension of Sec.~\ref{sec:zeta-rpa} carries that healed bare response into the strongly coupled liquid by dressing $v(q)$ with the locked weight $W_\zeta$ of Eq.~(\ref{eq:zeta-weight}), without resurrecting Matsubara pole sums or altering $\Im\chi^L$; Fig.~\ref{fig:zeta-rpa-dispersion} documents the three-way scalar plasmon cross-check (Standard RPA / PolyLog-RPA / Zeta-RPA) at $\Gamma=100$, while Sec.~\ref{sec:zeta-rpa-matrix} promotes the Zeta dress to the production two-component asymmetric zeta matrix.
+Sec.~\ref{sec:berezinian_numerics} further freezes the zero-dependency Schur/$DX{=}C$/$i\eta$ architecture that elevates the same causal engine from two-fermion RPA tensors to electron--phonon graded supergraphs via the Berezinian of Eq.~(\ref{eq:berezinian-schur}).
 The present deterministic formulation, supported by our open-source implementation,
 provides a rigorous, reproducible benchmark for evaluating causality-constrained linear response functions
 against standard contour-based formulations~\cite{Giuliani-Vignale2005,Gouedard-Deutsch1978}.
@@ -3689,6 +3744,14 @@ see also Ref.~\cite{Arfken-Weber1995}.
 \bibitem{Fried-Conte1961} B. D. Fried and S. D. Conte,  ``The Plasma Dispersion Function'' (Academic Press, New York, 1961).
 
 \bibitem{Melrose-Mushtaq2010} D. B. Melrose and A. Mushtaq, Phys. Plasmas \textbf{17}, 122103 (2010).
+
+\bibitem{Berezin1987} F. A. Berezin, \textit{Introduction to Superanalysis}, edited by A. A. Kirillov
+(D. Reidel, Dordrecht, 1987).
+
+\bibitem{DeWitt1992} B. DeWitt, \textit{Supermanifolds}, 2nd ed. (Cambridge University Press, Cambridge, 1992).
+
+\bibitem{Golub-VanLoan2013} G. H. Golub and C. F. Van Loan, \textit{Matrix Computations}, 4th ed.
+(Johns Hopkins University Press, Baltimore, 2013).
 \end{thebibliography}
 
 \clearpage
