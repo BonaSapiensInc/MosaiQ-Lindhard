@@ -9,6 +9,22 @@
 
 Companion manuscript: *Linear response representation of two-fermion plasmas* ([`manuscript/two-fermi.tex`](manuscript/two-fermi.tex)).
 
+## Citation Policy & Magnum Opus (The Springer Monograph)
+
+The foundational theory of this codebase (*"Linear response representation of two-fermion plasmas"*) and its numerical extension to graded supergraphs (*Berezinian architecture for electron-phonon systems*) are permanently archived and mathematically secured via CERN's **Zenodo**.
+
+We do not wait for the approval of conventional journal editors. This repository serves as the exact, bare-metal C++20 computational proof for the forthcoming 3-volume Springer Monograph:
+
+> **«A Practical Guide to Quantum Electrodynamics through Baym-Kadanoff-Keldysh formalism»** (Working Title)
+> *by In-Gee Kim (Bona Sapiens, Inc.)*
+
+If you utilize the exact causality constraints, Zeta-RPA, or the $DX=C$ Berezinian superdeterminant modules from the MosaiQ engine in your research, **please cite the permanent Zenodo DOI directly:**
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21438736.svg)](https://doi.org/10.5281/zenodo.21438736)
+
+**Reference:**
+> In-Gee Kim. (2026). *Linear response representation of two-fermion plasmas & MosaiQ-Lindhard Engine*. Zenodo. https://doi.org/10.5281/zenodo.21438736
+
 ---
 
 ## Overview
@@ -195,9 +211,9 @@ If you use MosaiQ-Lindhard in academic work, please cite the accompanying *Physi
 
 > *Citation for the PRE manuscript will be provided upon publication.*
 
-Until the PRE manuscript DOI is available, please cite the Zenodo archive:
+Until the PRE manuscript DOI is available, please cite the Zenodo archive (see also [Citation Policy & Magnum Opus](#citation-policy--magnum-opus-the-springer-monograph) above):
 
-> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v2.0.0-dual-pathway). Zenodo. https://doi.org/10.5281/zenodo.21438736
+> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v3.0.0-berezinian-freeze). Zenodo. https://doi.org/10.5281/zenodo.21438736
 
 Repository: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
 
@@ -209,7 +225,7 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
-**Zenodo archive:** [https://doi.org/10.5281/zenodo.21438736](https://doi.org/10.5281/zenodo.21438736) (release `v2.0.0-dual-pathway`)
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.21438736](https://doi.org/10.5281/zenodo.21438736) (release `v3.0.0-berezinian-freeze`)
 
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 
