@@ -121,3 +121,19 @@ add_test(
     COMMAND sweep_lindhard_rs_t
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
 )
+
+# --- Phase 2 Berezinian (GoogleTest; prefer system / Homebrew install) ---
+find_package(GTest REQUIRED)
+
+add_executable(test_berezinian test_berezinian.cpp)
+
+target_link_libraries(test_berezinian PRIVATE mosaiq::mosaiq GTest::gtest_main)
+
+# Parent tree enables -Werror; AppleClang rejects a char8_t conversion inside gtest headers.
+target_compile_options(test_berezinian PRIVATE
+    -UNDEBUG
+    $<$<CXX_COMPILER_ID:AppleClang,Clang>:-Wno-character-conversion>
+    $<$<CXX_COMPILER_ID:AppleClang,Clang>:-Wno-error=character-conversion>
+)
+
+add_test(NAME BerezinianTest COMMAND test_berezinian)

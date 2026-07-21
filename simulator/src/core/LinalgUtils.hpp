@@ -95,18 +95,15 @@ void gemm(std::size_t m,
     }
 }
 
-/// In-place LU with partial pivoting: A → P^{-1} L U (unit lower L).
-/// `pivots[i]` = row exchanged with i at step i.
+/// In-place LU with partial pivoting: P A = L U (unit lower L).
+/// `pivots[k]` = row index swapped with k at step k (LAPACK-style ipiv).
+/// Sign of P is (−1) raised to the number of indices with `pivots[i] != i`.
 template<typename T>
 [[nodiscard]] bool lu_factorize(MatrixView<T> A, std::span<std::size_t> pivots)
 {
     const std::size_t n = A.rows;
     if (A.rows != A.cols || pivots.size() != n) {
         throw std::invalid_argument("lu_factorize: square matrix and pivot length required");
-    }
-
-    for (std::size_t i = 0; i < n; ++i) {
-        pivots[i] = i;
     }
 
     for (std::size_t k = 0; k < n; ++k) {
@@ -122,11 +119,11 @@ template<typename T>
         if (max_val < static_cast<decltype(max_val)>(k_pivot_epsilon)) {
             return false;
         }
+        pivots[k] = pivot;
         if (pivot != k) {
             for (std::size_t j = 0; j < n; ++j) {
                 std::swap(A(k, j), A(pivot, j));
             }
-            std::swap(pivots[k], pivots[pivot]);
         }
 
         const T akk = A(k, k);
@@ -141,6 +138,27 @@ template<typename T>
     return true;
 }
 
+/// det(A) from an in-place `lu_factorize` result: ∏ U_ii with pivot sign flips.
+template<typename T>
+[[nodiscard]] T lu_determinant(MatrixView<T> LU, std::span<const std::size_t> pivots)
+{
+    const std::size_t n = LU.rows;
+    if (LU.rows != LU.cols || pivots.size() != n) {
+        throw std::invalid_argument("lu_determinant: dimension mismatch");
+    }
+
+    T det{1};
+    for (std::size_t i = 0; i < n; ++i) {
+        det *= LU(i, i);
+    }
+    for (std::size_t i = 0; i < n; ++i) {
+        if (pivots[i] != i) {
+            det = -det;
+        }
+    }
+    return det;
+}
+
 /// Solve A X = B after `lu_factorize(A, pivots)`. B is n×nrhs, overwritten with X.
 template<typename T>
 void lu_solve(MatrixView<T> LU, std::span<const std::size_t> pivots, MatrixView<T> B)
@@ -151,16 +169,13 @@ void lu_solve(MatrixView<T> LU, std::span<const std::size_t> pivots, MatrixView<
         throw std::invalid_argument("lu_solve: dimension mismatch");
     }
 
-    // Apply the same row permutation recorded during factorization.
-    std::vector<T> scratch(static_cast<std::size_t>(n * nrhs));
-    for (std::size_t i = 0; i < n; ++i) {
-        for (std::size_t j = 0; j < nrhs; ++j) {
-            scratch[i * nrhs + j] = B(pivots[i], j);
-        }
-    }
-    for (std::size_t i = 0; i < n; ++i) {
-        for (std::size_t j = 0; j < nrhs; ++j) {
-            B(i, j) = scratch[i * nrhs + j];
+    // Apply the same sequence of row swaps recorded in ipiv.
+    for (std::size_t k = 0; k < n; ++k) {
+        const std::size_t pivot = pivots[k];
+        if (pivot != k) {
+            for (std::size_t j = 0; j < nrhs; ++j) {
+                std::swap(B(k, j), B(pivot, j));
+            }
         }
     }
 
@@ -220,6 +235,22 @@ template<typename T>
         }
     }
     return true;
+}
+
+/// det(A) from an in-place `ldlt_factorize` result: ∏ d_ii (L has unit diagonal).
+template<typename T>
+[[nodiscard]] T ldlt_determinant(MatrixView<T> LD)
+{
+    const std::size_t n = LD.rows;
+    if (LD.rows != LD.cols) {
+        throw std::invalid_argument("ldlt_determinant: square matrix required");
+    }
+
+    T det{1};
+    for (std::size_t i = 0; i < n; ++i) {
+        det *= LD(i, i);
+    }
+    return det;
 }
 
 /// Solve A X = B after `ldlt_factorize(A)`. B is n×nrhs, overwritten with X.

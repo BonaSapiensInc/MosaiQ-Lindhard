@@ -31,6 +31,8 @@ struct SchurComplementResult {
     std::size_t n_e{0};
     std::size_t n_p{0};
     Real eta{0};
+    /// det(D_reg) extracted from the successful LU/LDLT factor (no extra O(N³)).
+    std::complex<Real> det_D{1};
     /// Row-major Ã (N_e × N_e).
     std::vector<std::complex<Real>> A_tilde{};
     /// Row-major X solving D_reg X = C (N_p × N_e); retained for audits.
@@ -57,8 +59,8 @@ void apply_retarded_eta(std::span<std::complex<Real>> D, std::size_t n, Real eta
 ///
 /// Steps:
 ///   1. Copy D_pp → D_reg and load iη on the diagonal (causality).
-///   2. Copy C_pe → X and solve D_reg X = C (LDLT preferred; LU fallback).
-///   3. Ã = A_ee − B_ep X.
+///   2. Factor D_reg (LDLT preferred; LU fallback); harvest det(D_reg) from the factor.
+///   3. Solve D_reg X = C on the same factor; Ã = A_ee − B_ep X.
 ///
 /// Never forms D^{-1} explicitly.
 template<ScalarPhysical Real = double>
@@ -92,12 +94,26 @@ template<ScalarPhysical Real = double>
     auto try_solve = [&](bool use_ldlt) -> bool {
         std::vector<Z> D_try = D_work;
         std::vector<Z> X_try = out.X;
-        const bool ok =
-            linalg::solve_DX_eq_C<Z>(D_try, n_p, X_try, n_e, use_ldlt);
-        if (ok) {
-            out.X.swap(X_try);
+        auto D_view = linalg::make_view(std::span<Z>{D_try}, n_p, n_p);
+        auto X_view = linalg::make_view(std::span<Z>{X_try}, n_p, n_e);
+
+        if (use_ldlt) {
+            if (!linalg::ldlt_factorize(D_view)) {
+                return false;
+            }
+            out.det_D = linalg::ldlt_determinant(D_view);
+            linalg::ldlt_solve(D_view, X_view);
+        } else {
+            std::vector<std::size_t> pivots(n_p);
+            if (!linalg::lu_factorize(D_view, pivots)) {
+                return false;
+            }
+            out.det_D = linalg::lu_determinant(D_view, pivots);
+            linalg::lu_solve(D_view, pivots, X_view);
         }
-        return ok;
+
+        out.X.swap(X_try);
+        return true;
     };
 
     bool solved = false;
@@ -134,6 +150,30 @@ template<ScalarPhysical Real = double>
     promote(M_real.C(), M.C());
     promote(M_real.D(), M.D());
     return computeSchurComplement<Real>(M, eta, prefer_ldlt);
+}
+
+/// Berezinian (superdeterminant): sdet(M) = det(Ã) / det(D_reg), Ã = A − B D_reg^{-1} C.
+template<ScalarPhysical Real = double>
+[[nodiscard]] std::complex<Real> computeBerezinian(
+    const ElectronPhononSuperMatrix<std::complex<Real>>& M,
+    Real eta)
+{
+    using Z = std::complex<Real>;
+
+    const auto schur = computeSchurComplement<Real>(M, eta);
+    if (schur.det_D == Z{}) {
+        throw std::runtime_error("computeBerezinian: det(D_reg) vanished");
+    }
+
+    std::vector<Z> A_work = schur.A_tilde;
+    auto A_view = linalg::make_view(std::span<Z>{A_work}, schur.n_e, schur.n_e);
+    std::vector<std::size_t> pivots(schur.n_e);
+    if (!linalg::lu_factorize(A_view, pivots)) {
+        throw std::runtime_error("computeBerezinian: Schur block Ã is singular");
+    }
+
+    const Z det_A = linalg::lu_determinant(A_view, pivots);
+    return det_A / schur.det_D;
 }
 
 }  // namespace mosaiq
