@@ -176,9 +176,9 @@ For licensing inquiries, fee schedules, and contract negotiation:
 
 If you use MosaiQ-Lindhard in academic work—including the causality-constrained Lindhard pipeline, Zeta-RPA, or the $DX=C$ Berezinian modules—please cite the permanent Zenodo archive:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21438736.svg)](https://doi.org/10.5281/zenodo.21438736)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21465936.svg)](https://doi.org/10.5281/zenodo.21465936)
 
-> In-Gee Kim (2026). *Linear response representation of two-fermion plasmas & MosaiQ-Lindhard Engine* (v3.0.0-berezinian-freeze). Zenodo. https://doi.org/10.5281/zenodo.21438736
+> In-Gee Kim (2026). *Linear response representation of two-fermion plasmas & MosaiQ-Lindhard Engine* (v3.0.0-berezinian-freeze). Zenodo. https://doi.org/10.5281/zenodo.21465936
 
 Manuscript source: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
 
@@ -190,7 +190,7 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
-**Zenodo archive:** [https://doi.org/10.5281/zenodo.21438736](https://doi.org/10.5281/zenodo.21438736) (release `v3.0.0-berezinian-freeze`)
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.21465936](https://doi.org/10.5281/zenodo.21465936) (release `v3.0.0-berezinian-freeze`)
 
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 
