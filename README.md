@@ -9,22 +9,6 @@
 
 Companion manuscript: *Linear response representation of two-fermion plasmas* ([`manuscript/two-fermi.tex`](manuscript/two-fermi.tex)).
 
-## Citation Policy & Magnum Opus (The Springer Monograph)
-
-The foundational theory of this codebase (*"Linear response representation of two-fermion plasmas"*) and its numerical extension to graded supergraphs (*Berezinian architecture for electron-phonon systems*) are permanently archived and mathematically secured via CERN's **Zenodo**.
-
-We do not wait for the approval of conventional journal editors. This repository serves as the exact, bare-metal C++20 computational proof for the forthcoming 3-volume Springer Monograph:
-
-> **«A Practical Guide to Quantum Electrodynamics through Baym-Kadanoff-Keldysh formalism»** (Working Title)
-> *by In-Gee Kim (Bona Sapiens, Inc.)*
-
-If you utilize the exact causality constraints, Zeta-RPA, or the $DX=C$ Berezinian superdeterminant modules from the MosaiQ engine in your research, **please cite the permanent Zenodo DOI directly:**
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21438736.svg)](https://doi.org/10.5281/zenodo.21438736)
-
-**Reference:**
-> In-Gee Kim. (2026). *Linear response representation of two-fermion plasmas & MosaiQ-Lindhard Engine*. Zenodo. https://doi.org/10.5281/zenodo.21438736
-
 ---
 
 ## Overview
@@ -47,10 +31,10 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | Path | Purpose |
 |------|---------|
 | [`simulator/`](simulator/) | C++20 engine (`mosaiq_simulator` CLI) and CTest suite |
-| [`scripts/`](scripts/) | Python figure generators, figure sync, and APS submission packaging |
+| [`scripts/`](scripts/) | Python figure generators, figure sync, and manuscript packaging |
 | [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
-| [`manuscript/figures/`](manuscript/figures/) | APS submission figure PDFs (synced from `output/`) |
-| [`manuscript/submission.zip`](manuscript/submission.zip) | APS upload bundle (`two-fermi.tex` + cited PDFs only; generated locally, not in git) |
+| [`manuscript/figures/`](manuscript/figures/) | Manuscript figure PDFs (synced from `output/`) |
+| [`manuscript/submission.zip`](manuscript/submission.zip) | Optional manuscript zip (`two-fermi.tex` + cited PDFs only; generated locally, not in git) |
 | [`docs/`](docs/) | Architecture map ([`docs/README.md`](docs/README.md)); dual-pathway theory ([`theory.md`](docs/theory.md)), CLI ([`usage.md`](docs/usage.md)), Phase~2 Berezinian ([`BEREZINIAN_ARCHITECTURE.md`](docs/BEREZINIAN_ARCHITECTURE.md)) |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
@@ -70,7 +54,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`regenerate_figures_3_4.sh`](scripts/regenerate_figures_3_4.sh) | Batch regenerate Figs. 3–4 |
 | [`regenerate_sq_gamma.sh`](scripts/regenerate_sq_gamma.sh) | Batch regenerate Fig. 8 data |
 | [`sync_manuscript_figures.py`](scripts/sync_manuscript_figures.py) | Copy cited PDFs from `output/` to `manuscript/figures/` |
-| [`package_aps_submission.sh`](scripts/package_aps_submission.sh) | Build `manuscript/submission.zip` for APS upload |
+| [`package_aps_submission.sh`](scripts/package_aps_submission.sh) | Build `manuscript/submission.zip` (`two-fermi.tex` + cited PDFs) |
 
 ---
 
@@ -142,7 +126,7 @@ python3 scripts/plot_Sq_gamma.py
 python3 scripts/plot_lindhard_t0_2d.py
 python3 scripts/plot_t0_error.py   # requires output/output_t0_limit.dat from CTest
 
-# Sync manuscript/figures/ and build APS submission.zip
+# Sync manuscript/figures/ (optional zip via package script)
 python3 scripts/sync_manuscript_figures.py
 ./scripts/package_aps_submission.sh   # → manuscript/submission.zip
 ```
@@ -168,23 +152,6 @@ From `manuscript/`, after all referenced `figures/*.pdf` exist (run `python3 scr
 cd manuscript && pdflatex two-fermi.tex && pdflatex two-fermi.tex
 ```
 
-### Submit to APS
-
-Upload a self-contained bundle from `manuscript/`:
-
-- `two-fermi.tex` (and `two-fermi.bib` if used)
-- `figures/` — all PDFs referenced by `\includegraphics`
-- optional local `cover-letter.pdf`
-
-Do not rely on `../output/` paths; the submission server expects figures beside the main `.tex` file.
-
-Build a validator-safe zip (only `two-fermi.tex` + cited PDFs; no cover letter, build artifacts, or `.DS_Store`):
-
-```bash
-./scripts/package_aps_submission.sh
-# → manuscript/submission.zip
-```
-
 ---
 
 ## License & Commercial Use
@@ -207,15 +174,13 @@ For licensing inquiries, fee schedules, and contract negotiation:
 
 ## Citation
 
-If you use MosaiQ-Lindhard in academic work, please cite the accompanying *Physical Review E* manuscript:
+If you use MosaiQ-Lindhard in academic work—including the causality-constrained Lindhard pipeline, Zeta-RPA, or the $DX=C$ Berezinian modules—please cite the permanent Zenodo archive:
 
-> *Citation for the PRE manuscript will be provided upon publication.*
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21438736.svg)](https://doi.org/10.5281/zenodo.21438736)
 
-Until the PRE manuscript DOI is available, please cite the Zenodo archive (see also [Citation Policy & Magnum Opus](#citation-policy--magnum-opus-the-springer-monograph) above):
+> In-Gee Kim (2026). *Linear response representation of two-fermion plasmas & MosaiQ-Lindhard Engine* (v3.0.0-berezinian-freeze). Zenodo. https://doi.org/10.5281/zenodo.21438736
 
-> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v3.0.0-berezinian-freeze). Zenodo. https://doi.org/10.5281/zenodo.21438736
-
-Repository: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
+Manuscript source: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
 
 ---
 
