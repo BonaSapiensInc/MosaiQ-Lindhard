@@ -31,8 +31,8 @@ simulator/
 │   │   ├── RootFinder.hpp              # Newton–Raphson (chemical potential only)
 │   │   ├── BrentRootFinder.hpp         # Bracketed Brent root solver (Phase 6)
 │   │   ├── FermiDirac.hpp / .cpp       # Occupation functions & half-integer FD integrals
-│   │   ├── supermatrix.hpp             # Phase 2: ElectronPhononSuperMatrix + std::span blocks
-│   │   └── linalg_utils.hpp            # Phase 2: LU/LDLT, DX=C, Schur gemm (zero-dep)
+│   │   ├── SuperMatrix.hpp             # Phase 2: ElectronPhononSuperMatrix + std::span blocks
+│   │   └── LinalgUtils.hpp             # Phase 2: LU/LDLT, DX=C, Schur gemm (zero-dep)
 │   ├── physics/
 │   │   ├── Constants.hpp               # constexpr atomic Hartree, ℏ, k_B, …
 │   │   └── ChemicalPotential.hpp / .cpp
@@ -40,7 +40,7 @@ simulator/
 │   │   ├── Lindhard.hpp / .cpp         # χ⁰(q, ω; T) real & imaginary parts
 │   │   ├── RPA.hpp / .cpp              # Two-component coupling, ε(q, ω), S(q, ω)
 │   │   ├── PlasmonPoleExtractor.hpp / .cpp  # Re[ε]=0 root finding, ω_p(q) (Phase 6)
-│   │   └── berezinian.hpp              # Phase 2: Schur complement + iη regularization
+│   │   └── Berezinian.hpp              # Phase 2: Schur complement + iη regularization
 │   └── main.cpp                        # CLI entry: parameter ingest → pipeline → output
 └── tests/
     ├── test_sinc_quadrature.cpp        # Error bound regression (target: 10⁻²⁵⁹ class)

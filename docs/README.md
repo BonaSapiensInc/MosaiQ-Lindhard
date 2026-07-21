@@ -24,7 +24,7 @@ Documentation is organized by **engine phase**. Phase 1 is the live two-fermion 
 |----------|------|
 | [`BEREZINIAN_ARCHITECTURE.md`](BEREZINIAN_ARCHITECTURE.md) | Graded supergraph / Schur / $DX{=}C$ / $i\eta$ / `std::span` numerical doctrine |
 
-**Live headers:** [`simulator/src/core/supermatrix.hpp`](../simulator/src/core/supermatrix.hpp), [`simulator/src/core/linalg_utils.hpp`](../simulator/src/core/linalg_utils.hpp), [`simulator/src/engine/berezinian.hpp`](../simulator/src/engine/berezinian.hpp) — see §4 of the Berezinian architecture note.
+**Live headers:** [`simulator/src/core/SuperMatrix.hpp`](../simulator/src/core/SuperMatrix.hpp), [`simulator/src/core/LinalgUtils.hpp`](../simulator/src/core/LinalgUtils.hpp), [`simulator/src/engine/Berezinian.hpp`](../simulator/src/engine/Berezinian.hpp) — see §4 of the Berezinian architecture note.
 
 **Doctrine continuity:** Phase 2 inherits Phase 1 causality (real-axis / Kramers–Kronig / sinc) and extends the matrix response to a fermion–boson graded supermatrix. Zeta-RPA dresses the electron ladder; the Berezinian controls electron–phonon topology.
 

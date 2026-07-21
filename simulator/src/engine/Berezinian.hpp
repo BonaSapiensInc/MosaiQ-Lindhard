@@ -11,8 +11,8 @@
 #pragma once
 
 #include "core/Concepts.hpp"
-#include "core/linalg_utils.hpp"
-#include "core/supermatrix.hpp"
+#include "core/LinalgUtils.hpp"
+#include "core/SuperMatrix.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -57,7 +57,7 @@ void apply_retarded_eta(std::span<std::complex<Real>> D, std::size_t n, Real eta
 ///
 /// Steps:
 ///   1. Copy D_pp → D_reg and load iη on the diagonal (causality).
-///   2. Copy C_pe → X and solve D_reg X = C (LDLᵀ preferred; LU fallback).
+///   2. Copy C_pe → X and solve D_reg X = C (LDLT preferred; LU fallback).
 ///   3. Ã = A_ee − B_ep X.
 ///
 /// Never forms D^{-1} explicitly.

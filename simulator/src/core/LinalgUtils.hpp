@@ -187,7 +187,7 @@ void lu_solve(MatrixView<T> LU, std::span<const std::size_t> pivots, MatrixView<
     }
 }
 
-/// In-place LDLᵀ for real-symmetric / complex-symmetric matrices (no pivoting).
+/// In-place LDLT for real-symmetric / complex-symmetric matrices (no pivoting).
 /// Overwrites A with L (unit lower, strict) below diagonal and D on diagonal.
 /// Returns false if a diagonal pivot is singular.
 template<typename T>
@@ -264,7 +264,7 @@ void ldlt_solve(MatrixView<T> LD, MatrixView<T> B)
 }
 
 /// Solve D X = RHS for square D (n×n) and RHS (n×nrhs).
-/// Prefers LDLᵀ when `prefer_ldlt` is true; on LDLᵀ failure returns false without
+/// Prefers LDLT when `prefer_ldlt` is true; on LDLT failure returns false without
 /// attempting LU on the mutated factor (caller must retry with a fresh D copy and
 /// `prefer_ldlt == false`). When `prefer_ldlt` is false, uses LU with partial pivoting.
 template<typename T>

@@ -44,9 +44,9 @@ To adhere to the Zero-Dependency philosophy, we avoid external tensor libraries 
 
 Live tree (`simulator/src/`), aligned to Phase~1 layout:
 
-*   `simulator/src/core/supermatrix.hpp`: Defines `ElectronPhononSuperMatrix<T>` with $N_e \neq N_p$ dimension support and `std::span` block views.
-*   `simulator/src/core/linalg_utils.hpp`: Implements standalone LU/LDLT decomposition, forward/backward substitution, and block multiplication (`DX=C`).
-*   `simulator/src/engine/berezinian.hpp`: Orchestrates the Schur complement computation (`computeSchurComplement`) applying the $DX=C$ strategy and $i\eta$ regularization.
+*   `simulator/src/core/SuperMatrix.hpp`: Defines `ElectronPhononSuperMatrix<T>` with $N_e \neq N_p$ dimension support and `std::span` block views.
+*   `simulator/src/core/LinalgUtils.hpp`: Implements standalone LU/LDLT decomposition, forward/backward substitution, and block multiplication (`DX=C`).
+*   `simulator/src/engine/Berezinian.hpp`: Orchestrates the Schur complement computation (`computeSchurComplement`) applying the $DX=C$ strategy and $i\eta$ regularization.
 
 ---
 *Note: This theoretical baseline directly supports the Keldysh dynamics transition (MosaiQ-Keldysh) and serves as the numerical proof for the forthcoming Springer Monograph.*
