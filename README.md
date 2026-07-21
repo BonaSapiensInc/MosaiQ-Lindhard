@@ -35,7 +35,7 @@ Standard contour-integration and Matsubara formulations of finite-temperature Li
 | [`manuscript/`](manuscript/) | LaTeX manuscript source (`two-fermi.tex`, `two-fermi.bib`; cover letter kept locally, not synced) |
 | [`manuscript/figures/`](manuscript/figures/) | APS submission figure PDFs (synced from `output/`) |
 | [`manuscript/submission.zip`](manuscript/submission.zip) | APS upload bundle (`two-fermi.tex` + cited PDFs only; generated locally, not in git) |
-| [`docs/`](docs/) | Architecture notes; dual-pathway theory ([`theory.md`](docs/theory.md)) and CLI ([`usage.md`](docs/usage.md)) |
+| [`docs/`](docs/) | Architecture map ([`docs/README.md`](docs/README.md)); dual-pathway theory ([`theory.md`](docs/theory.md)), CLI ([`usage.md`](docs/usage.md)), Phase~2 Berezinian ([`BEREZINIAN_ARCHITECTURE.md`](docs/BEREZINIAN_ARCHITECTURE.md)) |
 | [`output/`](output/) | Simulator grids (`.dat`, local only) and manuscript figures (`*.pdf`, tracked) |
 | [`LICENSE`](LICENSE) | MosaiQ-Lindhard Source Code License Agreement |
 
@@ -197,7 +197,7 @@ If you use MosaiQ-Lindhard in academic work, please cite the accompanying *Physi
 
 Until the PRE manuscript DOI is available, please cite the Zenodo archive:
 
-> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v2.0.0-dual-pathway). Zenodo. https://doi.org/10.5281/zenodo.21331277
+> In-Gee Kim (2026). *MosaiQ-Lindhard: Deterministic Linear Response Representation of Two-Fermion Plasmas* (v2.0.0-dual-pathway). Zenodo. https://doi.org/10.5281/zenodo.21438736
 
 Repository: [`manuscript/two-fermi.tex`](manuscript/two-fermi.tex).
 
@@ -209,7 +209,7 @@ Source code, test suites, and build instructions are published under the **Mosai
 
 **Repository:** [https://github.com/BonaSapiensInc/MosaiQ-Lindhard](https://github.com/BonaSapiensInc/MosaiQ-Lindhard)
 
-**Zenodo archive:** [https://doi.org/10.5281/zenodo.21331277](https://doi.org/10.5281/zenodo.21331277) (release `v2.0.0-dual-pathway`)
+**Zenodo archive:** [https://doi.org/10.5281/zenodo.21438736](https://doi.org/10.5281/zenodo.21438736) (release `v2.0.0-dual-pathway`)
 
 **What is in git:** C++ engine, Python plotting scripts, LaTeX manuscript, and regenerated **figure PDFs** under `output/`.
 

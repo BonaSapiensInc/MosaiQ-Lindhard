@@ -2,7 +2,7 @@
 
 **Release tag:** `v2.0.0-dual-pathway`  
 **Previous:** `v1.0.2-stratonovich-update`  
-**Archive:** [Zenodo DOI 10.5281/zenodo.21331277](https://doi.org/10.5281/zenodo.21331277)
+**Archive:** [Zenodo DOI 10.5281/zenodo.21438736](https://doi.org/10.5281/zenodo.21438736)
 
 This major release freezes the dual-pathway strong-coupling architecture in the public engine and documentation, alongside the deterministic complex polylogarithm core used by Pathway~A.
 

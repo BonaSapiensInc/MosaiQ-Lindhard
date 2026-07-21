@@ -1,7 +1,8 @@
 # MosaiQ-Lindhard: C++20 Deterministic Physics Sandbox
 
-**Status:** Architecture Blueprint  
+**Status:** Architecture Blueprint (Phase 1 — two-fermion plasma)  
 **Theory Reference:** `manuscript/two-fermi.tex` — *Linear response representation of two-fermion plasmas*  
+**Docs map:** [`README.md`](README.md) · Phase~2 extension: [`BEREZINIAN_ARCHITECTURE.md`](BEREZINIAN_ARCHITECTURE.md)  
 **Purpose:** Bare-metal validation of the finite-temperature Lindhard function and RPA structure factor using the Kramers–Krönig / sinc-quadrature pathway formalized in Section IV, bypassing the analytically defective Matsubara pole-summation routes documented in Appendices F and G.
 
 ---
